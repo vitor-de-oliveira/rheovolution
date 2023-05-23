@@ -27,22 +27,22 @@ main(int argc, char *argv[])
 
 	// system parameters
 	double mu = mu;
-	double ic_x = ic_x;
-	double ic_y = ic_y;
-	double ic_z = ic_z;
-	double ic_x_dot = ic_x_dot;
-	double ic_y_dot = ic_y_dot;
-	double ic_z_dot = ic_z_dot;
+	double x0 = x0;
+	double y0 = y0;
+	double z0 = z0;
+	double x0_dot = x0_dot;
+	double y0_dot = y0_dot;
+	double z0_dot = z0_dot;
 	FILE *in1 = fopen(argv[1], "r");
 	while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
 		if (strcmp(var_name, "mu") == 0)				mu = var_value;
-		else if (strcmp(var_name, "ic_x") == 0)			ic_x = var_value;
-		else if (strcmp(var_name, "ic_y") == 0)			ic_y = var_value;
-		else if (strcmp(var_name, "ic_z") == 0)			ic_z = var_value;
-		else if (strcmp(var_name, "ic_x_dot") == 0)		ic_x_dot = var_value;
-		else if (strcmp(var_name, "ic_y_dot") == 0)		ic_y_dot = var_value;
-		else if (strcmp(var_name, "ic_z_dot") == 0)		ic_z_dot = var_value;
+		else if (strcmp(var_name, "x0") == 0)			x0 = var_value;
+		else if (strcmp(var_name, "y0") == 0)			y0 = var_value;
+		else if (strcmp(var_name, "z0") == 0)			z0 = var_value;
+		else if (strcmp(var_name, "x0_dot") == 0)		x0_dot = var_value;
+		else if (strcmp(var_name, "y0_dot") == 0)		y0_dot = var_value;
+		else if (strcmp(var_name, "z0_dot") == 0)		z0_dot = var_value;
 	}
 	fclose(in1);
 
@@ -80,13 +80,13 @@ main(int argc, char *argv[])
 
 	// integration loop variables
 	double t = t0;
-	double y[3];
-	y[0] = ic_x;
-	y[1] = ic_y;
-	y[2] = ic_z;
-	y[3] = ic_x_dot;
-	y[4] = ic_y_dot;
-	y[5] = ic_z_dot;
+	double y[6];
+	y[0] = x0;
+	y[1] = y0;
+	y[2] = z0;
+	y[3] = x0_dot;
+	y[4] = y0_dot;
+	y[5] = z0_dot;
 
 	// integration loop
 	int counter = 0;
