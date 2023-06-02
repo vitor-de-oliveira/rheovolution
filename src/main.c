@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 	    	exit(4);
    	}
 
-	// variables for fscanf
+	// auxiliary variables for fscanf
 	char var_name[100];
 	double var_value;
 
