@@ -3,13 +3,15 @@
 
 #include <math.h>
 
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
+/* field for 1 extended body and 1 point mass */
 int
-field (double t, const double y[], double f[],
-       void *params);
+field_1EB1PM(double t, const double y[], double f[],
+       		 void *params);
 
 int
 hat_map(double x_hat[9], const double x[3]);
