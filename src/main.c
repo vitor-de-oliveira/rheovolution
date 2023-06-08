@@ -93,11 +93,12 @@ main(int argc, char *argv[])
 	fclose(in1_again);
 
 	/* setting Voigt elements */
-	double	*alpha_elements, *eta_elements;
+	double	*alpha_elements, *eta_elements, *bk;
 	if (elements > 0)
 	{
 		alpha_elements 	= (double *) malloc(elements * sizeof(double));
 		eta_elements 	= (double *) malloc(elements * sizeof(double));
+		bk				= (double *) calloc(elements * 9, sizeof(double));
 
 		char name_element_alpha[20], name_element_eta[20];
 		bool element_alpha_found[elements];
@@ -206,12 +207,6 @@ main(int argc, char *argv[])
 	for (int i = 0; i < 9; i++) 		params[7 + (2*elements) + i] = omega_hat[i];
 	for (int i = 0; i < 9; i++)			params[16 + (2*elements) + i] = b[i];
 
-	if (elements > 0)	// there is no use for them anymore
-	{
-		free(alpha_elements);
-		free(eta_elements);	
-	}
-
 	/* integration loop variables */
 	int		dim = 33 + (elements * 9);	// optmize this
 	double 	t = t0;
@@ -221,7 +216,7 @@ main(int argc, char *argv[])
 	for (int i = 0; i < 9; i++) 				y[6 + i] = l_hat[i];
 	for (int i = 0; i < 9; i++) 				y[15 + i] = b0_matrix[i];
 	for (int i = 0; i < 9; i++) 				y[24 + i] = u[i];
-	for (int i = 0; i < (elements * 9); i++) 	y[33 + i] = 0.0;
+	for (int i = 0; i < (elements * 9); i++) 	y[33 + i] = bk[i];
 
 	/* GSL variables */
 	const gsl_odeiv2_step_type * ode_type
@@ -267,6 +262,14 @@ main(int argc, char *argv[])
 		sys.params = params;
 
 		counter++;
+	}
+
+	/* free Voigt elements */
+	if (elements > 0)
+	{
+		free(alpha_elements);
+		free(eta_elements);	
+		free(bk);
 	}
 
 	/* free GSL variables */

@@ -8,15 +8,32 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	/* preparing parameters */
 
-	double *par = (double *)params;
+	double 	*par = (double *)params;
+	double	*alpha_elements, *eta_elements, *bk;
+	double	omega_hat[9], b[9];
 
-	double G		= par[0];
-	double m1		= par[1];
-	double m2		= par[2];
-	double I0 		= par[3];
-	double alpha 	= par[4];
-	double eta 		= par[5];
-	double elements = par[6];
+	double 	G		 = par[0];
+	double 	m1		 = par[1];
+	double 	m2		 = par[2];
+	double 	I0 		 = par[3];
+	double 	alpha 	 = par[4];
+	double 	eta 	 = par[5];
+	int 	elements = par[6];
+
+	if (elements > 0)
+	{
+		alpha_elements 	= (double *) malloc(elements * sizeof(double));
+		eta_elements 	= (double *) malloc(elements * sizeof(double));
+		bk				= (double *) calloc(elements * 9, sizeof(double));
+	}
+
+	for (int i = 0; i < elements; i++) 	alpha_elements[i] = par[7 + (2*i)];
+	for (int i = 0; i < elements; i++) 	eta_elements[i] = par[8 + (2*i)];
+	for (int i = 0; i < 9; i++) 		omega_hat[i] = par[7 + (2*elements) + i];
+	for (int i = 0; i < 9; i++)			b[i] = par[16 + (2*elements) + i];
+
+	gsl_matrix_view omega_hat_gsl	= gsl_matrix_view_array(omega_hat, 3, 3);
+	gsl_matrix_view b_gsl			= gsl_matrix_view_array(b, 3, 3);
 	
   	double minus_G_times_total_mass = -1.0 * G * (m1 + m2);
 
@@ -33,6 +50,10 @@ field_1EB1PM(double t, const double y[], double f[],
 	double u[]				= { y[24], y[25], y[26],
 								y[27], y[28], y[29],
 								y[30], y[31], y[32] };
+	for (int i = 0; i < (elements * 9); i++)
+	{
+		bk[i] = y[33 + i];
+	}
 
 	gsl_vector_view tilde_x_gsl		= gsl_vector_view_array(tilde_x, 3);
 	gsl_vector_view tilde_X_dot_gsl = gsl_vector_view_array(tilde_x_dot, 3);
@@ -70,6 +91,15 @@ field_1EB1PM(double t, const double y[], double f[],
 	gsl_vector_view component_tilde_x_dot_2nd_term_gsl 
 		= gsl_vector_view_array(component_tilde_x_dot_2nd_term, 3);
 		
+	gsl_blas_dgemv(CblasNoTrans, 1.0, &b_gsl.matrix, &tilde_x_gsl.vector, 
+		0.0, &component_tilde_x_dot_2nd_term_gsl.vector);
+
+	double result_dot_product;
+	gsl_blas_ddot(&component_tilde_x_dot_2nd_term_gsl.vector, 
+		&tilde_x_gsl.vector, &result_dot_product);
+	
+
+	
 	// calculating the 3rd term of tilde_x_dot component
 
 	double component_tilde_x_dot_3rd_term[] = { 0.0, 0.0, 0.0};
@@ -120,7 +150,20 @@ field_1EB1PM(double t, const double y[], double f[],
   	f[30] = 0.0;
   	f[31] = 0.0;
   	f[32] = 0.0;
+
+	// calculating bk components
+
+	for (int i = 0; i < (elements * 9); i++) f[33 + i] = bk[i];
 	
+	/* freeing Voigt elements */
+
+	if (elements > 0)
+	{
+		free(alpha_elements);
+		free(eta_elements);
+		free(bk);
+	}
+
 	return GSL_SUCCESS;
 }
 
