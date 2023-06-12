@@ -3,10 +3,9 @@
 
 #include <math.h>
 
-#include <gsl/gsl_blas.h>
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv2.h>
+
+#include "algelin3d.h"
 
 /* field for 1 extended body and 1 point mass */
 int

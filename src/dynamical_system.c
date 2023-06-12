@@ -31,9 +31,6 @@ field_1EB1PM(double t, const double y[], double f[],
 	for (int i = 0; i < elements; i++) 	eta_elements[i] = par[8 + (2*i)];
 	for (int i = 0; i < 9; i++) 		omega_hat[i] = par[7 + (2*elements) + i];
 	for (int i = 0; i < 9; i++)			b[i] = par[16 + (2*elements) + i];
-
-	gsl_matrix_view omega_hat_gsl	= gsl_matrix_view_array(omega_hat, 3, 3);
-	gsl_matrix_view b_gsl			= gsl_matrix_view_array(b, 3, 3);
 	
   	double minus_G_times_total_mass = -1.0 * G * (m1 + m2);
 
@@ -55,74 +52,45 @@ field_1EB1PM(double t, const double y[], double f[],
 		bk[i] = y[33 + i];
 	}
 
-	gsl_vector_view tilde_x_gsl		= gsl_vector_view_array(tilde_x, 3);
-	gsl_vector_view tilde_X_dot_gsl = gsl_vector_view_array(tilde_x_dot, 3);
-	gsl_matrix_view l_hat_gsl 		= gsl_matrix_view_array(l_hat, 3, 3);
-	gsl_matrix_view b0_gsl 			= gsl_matrix_view_array(b0, 3, 3);
-	gsl_matrix_view u_gsl 			= gsl_matrix_view_array(u, 3, 3);
-
-	double tilde_x_norm 		= gsl_blas_dnrm2 (&tilde_x_gsl.vector);
+	double tilde_x_norm 		= norm_vector (tilde_x);
 	double tilde_x_norm_cube 	= pow(tilde_x_norm, 3.0);
 	double tilde_x_norm_fifth 	= pow(tilde_x_norm, 5.0);
 	double tilde_x_norm_seventh = pow(tilde_x_norm, 7.0);
 
-	/* preparing and writting components */
+	/* calculating components */
 
-	// calculating tilde_x component
+	// tilde_x component
 
 	double component_tilde_x[] = { tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2] };
 
-	for (int i = 0; i < 3; i++) f[i] = component_tilde_x[i];
-
-	// calculating the 1st term of tilde_x_dot component
+	// 1st term of tilde_x_dot component
 
 	double component_tilde_x_dot_1st_term[] = { 0.0, 0.0, 0.0};
+	scale_vector (component_tilde_x_dot_1st_term, 
+		minus_G_times_total_mass / tilde_x_norm_cube, tilde_x);
 
-	gsl_vector_view component_tilde_x_dot_1st_term_gsl 
-		= gsl_vector_view_array(component_tilde_x_dot_1st_term, 3);
-
-	gsl_blas_daxpy ((1.0 / tilde_x_norm_cube), &tilde_x_gsl.vector, 
-		&component_tilde_x_dot_1st_term_gsl.vector);
-
-	// calculating the 2nd term of tilde_x_dot component
+	// 2nd term of tilde_x_dot component
 
 	double component_tilde_x_dot_2nd_term[] = { 0.0, 0.0, 0.0};
 
-	gsl_vector_view component_tilde_x_dot_2nd_term_gsl 
-		= gsl_vector_view_array(component_tilde_x_dot_2nd_term, 3);
-		
-	gsl_blas_dgemv(CblasNoTrans, 1.0, &b_gsl.matrix, &tilde_x_gsl.vector, 
-		0.0, &component_tilde_x_dot_2nd_term_gsl.vector);
 
-	double result_dot_product;
-	gsl_blas_ddot(&component_tilde_x_dot_2nd_term_gsl.vector, 
-		&tilde_x_gsl.vector, &result_dot_product);
-	
-
-	
-	// calculating the 3rd term of tilde_x_dot component
+	// 3rd term of tilde_x_dot component
 
 	double component_tilde_x_dot_3rd_term[] = { 0.0, 0.0, 0.0};
 
-	gsl_vector_view component_tilde_x_dot_3rd_term_gsl 
-		= gsl_vector_view_array(component_tilde_x_dot_3rd_term, 3);
 
-	// calculating tilde_x_dot component
+	// tilde_x_dot component
 
 	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0};
+	linear_combination_three_vector(component_tilde_x_dot,
+		1.0, component_tilde_x_dot_1st_term, 
+		1.0, component_tilde_x_dot_2nd_term, 
+		1.0, component_tilde_x_dot_3rd_term);
 
-	gsl_vector_view component_tilde_x_dot_gsl 
-		= gsl_vector_view_array(component_tilde_x_dot, 3);
+	/* writing components */	
 
-	gsl_blas_daxpy (minus_G_times_total_mass, &component_tilde_x_dot_1st_term_gsl.vector, 
-		&component_tilde_x_dot_gsl.vector);
-	gsl_blas_daxpy (minus_G_times_total_mass, &component_tilde_x_dot_2nd_term_gsl.vector, 
-		&component_tilde_x_dot_gsl.vector);
-	gsl_blas_daxpy (minus_G_times_total_mass, &component_tilde_x_dot_3rd_term_gsl.vector, 
-		&component_tilde_x_dot_gsl.vector);
-
-	for (int i = 0; i < 3; i++) f[3 + i] = component_tilde_x_dot[i];
-
+	for (int i = 0; i < 3; i++) f[i] 		= component_tilde_x[i];
+	for (int i = 0; i < 3; i++) f[3 + i] 	= component_tilde_x_dot[i];
 	f[6]  = 0.0;
   	f[7]  = 0.0;
   	f[8]  = 0.0;
