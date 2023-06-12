@@ -60,13 +60,13 @@ main(int argc, char *argv[])
 	/* orbital parameters given by user */
 	double 	e, a, T;
 	/* state variables given by user*/
-	double 	b0[3];
+	double 	b0_diag[3];
 	/* non-state variables given by user */
-	double 	omega[3];
+	double 	omega_vec[3];
 	/* system parameters given by user */
 	int		elements = 0; //number of Voigt elements
-	double  I0, alpha_0, alpha, eta;
-	double 	G, m1, m2;
+	double  G, m1, m2, I0;
+	double	alpha_0, alpha, eta;
 
 	/* reading system specs from user */
 	FILE *in1_again = fopen(argv[1], "r");
@@ -79,12 +79,12 @@ main(int argc, char *argv[])
 		else if (strcmp(var_name, "m1") == 0)			m1 = var_value;
 		else if (strcmp(var_name, "m2") == 0)			m2 = var_value;
 		else if (strcmp(var_name, "I0") == 0)			I0 = var_value;
-		else if (strcmp(var_name, "b0_x") == 0)			b0[0] = var_value;
-		else if (strcmp(var_name, "b0_y") == 0)			b0[1] = var_value;
-		else if (strcmp(var_name, "b0_z") == 0)			b0[2] = var_value;
-		else if (strcmp(var_name, "omega_x") == 0)		omega[0] = var_value;
-		else if (strcmp(var_name, "omega_y") == 0)		omega[1] = var_value;
-		else if (strcmp(var_name, "omega_z") == 0)		omega[2] = var_value;
+		else if (strcmp(var_name, "b0_x") == 0)			b0_diag[0] = var_value;
+		else if (strcmp(var_name, "b0_y") == 0)			b0_diag[1] = var_value;
+		else if (strcmp(var_name, "b0_z") == 0)			b0_diag[2] = var_value;
+		else if (strcmp(var_name, "omega_x") == 0)		omega_vec[0] = var_value;
+		else if (strcmp(var_name, "omega_y") == 0)		omega_vec[1] = var_value;
+		else if (strcmp(var_name, "omega_z") == 0)		omega_vec[2] = var_value;
 		else if (strcmp(var_name, "alpha_0") == 0)		alpha_0 = var_value;
 		else if (strcmp(var_name, "alpha") == 0)		alpha = var_value;
 		else if (strcmp(var_name, "eta") == 0)			eta = var_value;
@@ -92,13 +92,12 @@ main(int argc, char *argv[])
 	}
 	fclose(in1_again);
 
-	/* setting Voigt elements */
-	double	*alpha_elements, *eta_elements, *bk;
+	/* setting up Voigt elements */
+	double	*alpha_elements, *eta_elements;
 	if (elements > 0)
 	{
 		alpha_elements 	= (double *) malloc(elements * sizeof(double));
 		eta_elements 	= (double *) malloc(elements * sizeof(double));
-		bk				= (double *) calloc(elements * 9, sizeof(double));
 
 		char name_element_alpha[20], name_element_eta[20];
 		bool element_alpha_found[elements];
@@ -157,43 +156,26 @@ main(int argc, char *argv[])
 	}
 	fclose(in2_again);
 
-	/* position and velocity at periapsis by Murray */
+	/* position and velocity at periapsis given by Murray */
 	double	tilde_x[3], tilde_x_dot[3];
 	double	n = (2.0 * PI) / T;
-	tilde_x[0] = a * (1.0 - e);
-	tilde_x[1] = 0.0;
-	tilde_x[2] = 0.0;	
-	tilde_x_dot[0] = 0.0;
-	tilde_x_dot[1] = n * a * sqrt((1.0 + e)/(1.0 - e));
-	tilde_x_dot[2] = 0.0;
+	tilde_x[0] 		= a * (1.0 - e);
+	tilde_x[1] 		= 0.0;
+	tilde_x[2] 		= 0.0;	
+	tilde_x_dot[0]	= 0.0;
+	tilde_x_dot[1] 	= n * a * sqrt((1.0 + e)/(1.0 - e));
+	tilde_x_dot[2] 	= 0.0;
 
-	double	omega_hat[9];
-	hat_map(omega_hat, omega);
-
-	double	b0_matrix[9];
-	for (int i = 0; i < 9; i++) b0_matrix[i] = 0.0;
-	b0_matrix[0] = b0[0];
-	b0_matrix[3] = b0[1];
-	b0_matrix[6] = b0[2];
-
-	/* state variables not given by user */
-	double l_hat[9], u[9];
-	/* non-state variables not given by user */
-	double b[9], f[9], lambda[9];
-	/* system parameters not given by user */
-	double gamma = parameter_gamma();
-
-	/* calculation of non-state variables values */
-	calculate_f(f, omega_hat, tilde_x, G, m2);
-	calculate_lambda(lambda, f, b0_matrix, u, gamma, alpha_0, alpha);
-	calculate_b(b, f, lambda, b0_matrix, gamma, alpha_0);
-
-	/* initialization of remainder state variables values */
-	calculate_l_hat(l_hat, omega_hat, b, I0);
-	for (int i = 0; i < 9; i++) u[i] = 0.0;
+	/* complete b0_me */
+	double b0_me[5];
+	b0_me[0] = b0_diag[0];
+	b0_me[1] = 0.0;
+	b0_me[2] = 0.0;
+	b0_me[3] = b0_diag[1];
+	b0_me[4] = 0.0;
 
 	/* variables and parameters passed as field parameters */
-	int		dim_params = 25 + (elements * 2); // optmize this
+	int		dim_params = 7 + (elements * 2); // optmize this
 	double	params[dim_params]; 
 	params[0] = G;
 	params[1] = m1;
@@ -202,21 +184,35 @@ main(int argc, char *argv[])
 	params[4] = alpha;
 	params[5] = eta;
 	params[6] = elements;
-	for (int i = 0; i < elements; i++) 	params[7 + (2*i)] = alpha_elements[i];
-	for (int i = 0; i < elements; i++) 	params[8 + (2*i)] = eta_elements[i];
-	for (int i = 0; i < 9; i++) 		params[7 + (2*elements) + i] = omega_hat[i];
-	for (int i = 0; i < 9; i++)			params[16 + (2*elements) + i] = b[i];
+	for (int i = 0; i < elements; i++)
+	{
+		params[7 + (2*i)] = alpha_elements[i];
+		params[8 + (2*i)] = eta_elements[i];
+	}
+
+	/* variables not given by user */
+	double u_me[5], *bk_me;
+	for (int i = 0; i < 5; i++) u_me[i] = 0.0;
+	if (elements > 0)
+	{
+		bk_me = (double *) calloc(elements * 5, sizeof(double));
+	}
+
+	/* calculate first l */
+	double 	b[9], l[3];
+	calculate_b(b);
+	calculate_l(l, I0, b, omega_vec);
 
 	/* integration loop variables */
-	int		dim = 33 + (elements * 9);	// optmize this
+	int		dim = 19 + (elements * 5);	// optmize this
 	double 	t = t0;
 	double 	y[dim];
 	for (int i = 0; i < 3; i++) 				y[0 + i] = tilde_x[i];
 	for (int i = 0; i < 3; i++) 				y[3 + i] = tilde_x_dot[i];
-	for (int i = 0; i < 9; i++) 				y[6 + i] = l_hat[i];
-	for (int i = 0; i < 9; i++) 				y[15 + i] = b0_matrix[i];
-	for (int i = 0; i < 9; i++) 				y[24 + i] = u[i];
-	for (int i = 0; i < (elements * 9); i++) 	y[33 + i] = bk[i];
+	for (int i = 0; i < 3; i++) 				y[6 + i] = l[i];
+	for (int i = 0; i < 5; i++) 				y[9 + i] = b0_me[i];
+	for (int i = 0; i < 5; i++) 				y[14 + i] = u_me[i];
+	for (int i = 0; i < (elements * 5); i++) 	y[19 + i] = bk_me[i];
 
 	/* GSL variables */
 	const gsl_odeiv2_step_type * ode_type
@@ -244,23 +240,6 @@ main(int argc, char *argv[])
 			printf ("%.5e %.5e %.5e\n", t, y[0], y[1]);
 		}
 
-		/* update b and omega_hat */
-		for (int i = 0; i < 1; i++)	// can be modified to add more loops
-		{
-			calculate_omega_hat(omega_hat, b, l_hat, I0);
-			calculate_f(f, omega_hat, tilde_x, G, m2);
-			calculate_lambda(lambda, f, b0_matrix, u, gamma, alpha_0, alpha);
-			calculate_b(b, f, lambda, b0_matrix, gamma, alpha_0);
-		}
-		calculate_omega_hat(omega_hat, b, l_hat, I0);
-
-		/* update params array */
-		for (int i = 0; i < 9; i++) params[7 + (2*elements) + i]  = omega_hat[i];
-		for (int i = 0; i < 9; i++) params[16 + (2*elements) + i] = b[i];
-		
-		/* update sys */
-		sys.params = params;
-
 		counter++;
 	}
 
@@ -269,7 +248,7 @@ main(int argc, char *argv[])
 	{
 		free(alpha_elements);
 		free(eta_elements);	
-		free(bk);
+		free(bk_me);
 	}
 
 	/* free GSL variables */

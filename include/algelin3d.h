@@ -1,3 +1,13 @@
+/**
+ * Library for simple linear algebra operations
+ * It is currently implemented for 3d but can be easily extended
+ * It is currently only implemented for double precision
+ * 
+ * Author: Vitor M. de Oliveira
+ * Date: 12 june 2023
+*/
+
+
 #ifndef ALGELIN3D_H
 #define ALGELIN3D_H
 
@@ -9,6 +19,12 @@
                 // to work on other dimensions
 
 /* vector */
+
+int
+null_vector(double x[]);
+
+int
+print_vector(const double x[]);
 
 int
 copy_vector(double y[], const double x[]);
@@ -39,6 +55,15 @@ linear_combination_three_vector(double v[], const double a, const double x[],
     const double b, const double y[], const double c, const double z[]);
 
 /* square matrix */
+
+int
+null_matrix(double I[]);
+
+int
+identity_matrix(double I[]);
+
+int
+print_square_matrix(const double M[]);
 
 int
 copy_square_matrix(double N[], const double M[]);

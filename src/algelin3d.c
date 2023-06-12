@@ -1,6 +1,27 @@
 #include "algelin3d.h"
 
 int
+null_vector(double x[])
+{
+	for (int i = 0; i < DIM_3; i++)
+	{
+		x[i] = 0.0;
+	}
+	return 0;
+}
+
+int
+print_vector(const double x[])
+{
+	for (int i = 0; i < DIM_3; i++)
+	{
+		printf("%1.10e ", x[i]);
+	}
+	printf("\n");
+	return 0;
+}
+
+int
 copy_vector(double y[], const double x[])
 {
 	for (int i = 0; i < DIM_3; i++)
@@ -101,6 +122,44 @@ linear_combination_three_vector(double v[], const double a, const double x[],
 		v[i] = ax[i] + by[i] + cz[i];
 	}
 
+	return 0;
+}
+
+int
+null_matrix(double I[])
+{
+	for (int i = 0; i < DIM_3*DIM_3; i++)
+	{
+		I[i] = 0.0;
+	}
+	return 0;
+}
+
+int
+identity_matrix(double I[])
+{
+	for (int i = 0; i < DIM_3*DIM_3; i++)
+	{
+		if (i % (DIM_3 + 1) == 0)
+		{
+			I[i] = 1.0;
+		}
+		else 
+		{
+			I[i] = 0.0;
+		}
+	}
+	return 0;
+}
+
+int
+print_square_matrix(const double M[])
+{
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		printf("%1.10e ", M[i]);
+		if ((i+1) % DIM_3 == 0) printf("\n");
+	}
 	return 0;
 }
 

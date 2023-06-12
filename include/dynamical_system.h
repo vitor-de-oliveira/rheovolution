@@ -15,30 +15,22 @@ field_1EB1PM(double t, const double y[], double f[],
 int
 hat_map(double x_hat[9], const double x[3]);
 
-double
-parameter_gamma();
+int
+construct_traceless_symmetric_matrix(double M[9], 
+	const double M_main_elements[5]);
 
 int
-calculate_f  (double f[9], double omega_hat[9],
-              double x[3], double G, double m2);
+get_main_elements_traceless_symmetric_matrix(double M_main_elements[5], 
+	const double M[9]);
 
 int
-calculate_lambda(double lambda[9], double f[9],
-                 double b0_matrix[9], double u[9],
-                 double gamma, double alpha_0,
-                 double alpha);
+calculate_b(double b[9]);
 
 int
-calculate_b (double b[9], double f[9], double lambda[9],
-             double b0_matrix[9],
-             double gamma, double alpha_0);
+calculate_l(double l[3], const double I0, 
+	const double b[9], const double omega[3]);
 
 int
-calculate_l_hat (double l_hat[9], double omega_hat[9], double b[9],
-		         double I0);
+calculate_omega();
 
-int
-calculate_omega_hat (double omega_hat[9], double b[9], double l_hat[9],
-	                 double I0);
-      
 #endif
