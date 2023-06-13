@@ -263,6 +263,25 @@ linear_combination_square_matrix(double O[], const double a, const double M[],
 }
 
 int
+linear_combination_three_square_matrix(double P[], const double a, const double M[], 
+    const double b, const double N[], const double c, const double O[])
+{
+	double aM[DIM_3*DIM_3];
+	scale_square_matrix(aM, a, M);
+	double bN[DIM_3*DIM_3];
+	scale_square_matrix(bN, b, N);
+	double cO[DIM_3*DIM_3];
+	scale_square_matrix(cO, c, O);
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		P[i] = aM[i] + bN[i] + cO[i];
+	}
+	
+	return 0;
+}
+
+int
 commutator(double O[], const double M[], const double N[])
 {
 	double MN[DIM_3*DIM_3];

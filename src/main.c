@@ -197,6 +197,10 @@ main(int argc, char *argv[])
 	{
 		bk_me = (double *) calloc(elements * 5, sizeof(double));
 	}
+	for (int i = 0; i < elements * 5; i ++)
+	{
+		bk_me[i] = (double) i;
+	}
 
 	/* calculate first l */
 	double 	b[9], l[3];

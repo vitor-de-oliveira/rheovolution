@@ -26,13 +26,17 @@ field_1EB1PM(double t, const double y[], double f[],
 		{
 			alpha_elements[i] 	= par[7 + (2*i)];
 			eta_elements[i]		= par[8 + (2*i)];
-		}			
+
+			/* for testing */
+			// printf("alpha_%d = %f\n", i, alpha_elements[i]);
+			// printf("eta_%d = %f\n", i, eta_elements[i]);
+		}
 	}
 
 	/* preparing variables */
 
 	double tilde_x[3], tilde_x_dot[3], l[3];
-	double b0_me[9], u_me[9], *bk_me;
+	double b0_me[9], u_me[9], **bk_me;
 
 	for (int i = 0; i < 3; i++)	tilde_x[i] 		= y[0 + i];
 	for (int i = 0; i < 3; i++) tilde_x_dot[i] 	= y[3 + i];
@@ -41,10 +45,17 @@ field_1EB1PM(double t, const double y[], double f[],
 	for (int i = 0; i < 5; i++) u_me[i] 		= y[14 + i];
 	if (elements > 0)
 	{
-		bk_me = (double *) malloc(elements * 5 * sizeof(double));
-		for (int i = 0; i < (elements * 5); i++)
+		bk_me = (double **) malloc(elements * sizeof(double));
+		for (int i = 0; i < elements; i++)
 		{
-			bk_me[i] = y[19 + i];
+			bk_me[i] = (double *) malloc(5 * sizeof(double));
+			for (int j = 0; j < 5; j++)
+			{
+				bk_me[i][j] = y[19 + j + (i*5)];
+
+				/* for testing */
+				// printf("bk_me = %f\n",bk_me[i][j]);
+			}
 		}
 	}
 
@@ -52,17 +63,27 @@ field_1EB1PM(double t, const double y[], double f[],
 	construct_traceless_symmetric_matrix(b0, b0_me);
 	construct_traceless_symmetric_matrix(u, u_me);
 
-	double *bk;
+	double **bk;
 	if (elements > 0)
 	{
-		bk = (double *) malloc(elements * 9 * sizeof(double));
-		construct_traceless_symmetric_matrix(bk, bk_me);
+		bk = (double **) malloc(elements * sizeof(double));
+		for (int i = 0; i < elements; i++)
+		{
+			bk[i] = (double *) malloc(9 * sizeof(double));
+			construct_traceless_symmetric_matrix(bk[i], bk_me[i]);
+
+			/* for testing */
+			// print_square_matrix(bk[i]);
+		}
 	}
 
 	/* calculate omega and b */
 	double omega[3], b[9]; 
-	calculate_omega();	// tricky part
+	calculate_omega(omega);	// tricky part
 	calculate_b(b);
+
+	double omega_hat[9];
+	hat_map(omega_hat, omega);
 
 	/* useful definitions */
 
@@ -73,10 +94,30 @@ field_1EB1PM(double t, const double y[], double f[],
 	double tilde_x_norm_fifth 	= pow(tilde_x_norm, 5.0);
 	double tilde_x_norm_seventh = pow(tilde_x_norm, 7.0);
 
+	double tau = eta / alpha;
+	double *tau_elements;
+	if (elements > 0)
+	{
+		tau_elements = (double *) malloc(elements * sizeof(double));
+		for (int i = 0; i < elements; i++)
+		{
+			tau_elements[i] = eta_elements[i] / alpha_elements[i];
+		}			
+	}
+
 	double bx[3];
 	square_matrix_times_vector(bx, b, tilde_x);
 	double bx_dot_x;
 	bx_dot_x = dot_product(bx, tilde_x);
+	double x_cross_bx[3];
+	cross_product(x_cross_bx, tilde_x, bx);
+
+	double lambda[9];
+	linear_combination_square_matrix(lambda, 1.0, u, alpha, b);
+	for (int i = 0; i < elements; i++)
+	{
+		linear_combination_square_matrix(lambda, 1.0, lambda, -1.0*alpha, bk[i]);
+	}
 
 	/* calculating components */
 
@@ -105,34 +146,93 @@ field_1EB1PM(double t, const double y[], double f[],
 		1.0, component_tilde_x_dot_2nd_term, 
 		1.0, component_tilde_x_dot_3rd_term);
 
+	// l component
+
+	double component_l[] = { 0.0, 0.0, 0.0 };
+	scale_vector (component_l, 
+		-3.0 * G * m2 * I0 / tilde_x_norm_fifth, x_cross_bx);
+
+	// b0 component
+
+	double component_b0[] = { 0.0, 0.0, 0.0,
+							  0.0, 0.0, 0.0,
+							  0.0, 0.0, 0.0 };
+	commutator(component_b0, omega_hat, b0);
+	double component_b0_me[] = { 0.0, 0.0, 0.0,
+							          0.0, 0.0 };
+	get_main_elements_traceless_symmetric_matrix(component_b0_me, component_b0);
+
+	// u component
+
+	double omega_hat_comm_u[9];
+	commutator(omega_hat_comm_u, omega_hat, u);
+	double component_u[] = { 0.0, 0.0, 0.0,
+							 0.0, 0.0, 0.0,
+							 0.0, 0.0, 0.0 };
+	linear_combination_square_matrix(component_u, 1.0, omega_hat_comm_u, -1.0 / tau, lambda);
+	double component_u_me[] = { 0.0, 0.0, 0.0,
+							         0.0, 0.0 };
+	get_main_elements_traceless_symmetric_matrix(component_u_me, component_u);
+
+	// bk components
+
+	double **component_bk_me;
+	if (elements > 0)
+	{
+		component_bk_me = (double **) malloc(elements * sizeof(double));
+		for (int i = 0; i < elements; i++)
+		{
+			component_bk_me[i] = (double *) malloc(5 * sizeof(double));
+
+			double omega_hat_comm_bk[9];
+			commutator(omega_hat_comm_bk, omega_hat, bk[i]);
+			double minus_bk_over_tau_elements[9];
+			scale_square_matrix(minus_bk_over_tau_elements, 
+			-1.0 / tau_elements[i], bk[i]);
+			double lambda_over_eta_elements[9];
+			scale_square_matrix(lambda_over_eta_elements,
+			1.0 / eta_elements[i], lambda);
+
+			double component_bk[] = { 0.0, 0.0, 0.0,
+							 		  0.0, 0.0, 0.0,
+							          0.0, 0.0, 0.0 };
+			linear_combination_three_square_matrix(component_bk,
+				1.0, omega_hat_comm_bk,
+				1.0, minus_bk_over_tau_elements,
+				1.0, lambda_over_eta_elements);
+
+			get_main_elements_traceless_symmetric_matrix(component_bk_me[i],
+				component_bk);
+		}
+	}
+
 	/* writing components */	
 
 	for (int i = 0; i < 3; i++) f[i] 		= component_tilde_x[i];
 	for (int i = 0; i < 3; i++) f[3 + i] 	= component_tilde_x_dot[i];
-
-	f[6]  = 0.0;
-  	f[7]  = 0.0;
-  	f[8]  = 0.0;
-	f[9]  = 0.0;
-  	f[10] = 0.0;
-  	f[11] = 0.0;
-	f[12] = 0.0;
-  	f[13] = 0.0;
-  	f[14] = 0.0;
-  	f[15] = 0.0;
-  	f[16] = 0.0;
-  	f[17] = 0.0;
-  	f[18] = 0.0;
-
-	for (int i = 0; i < (elements * 5); i++) f[19 + i] = 0.0;
+	for (int i = 0; i < 3; i++) f[6 + i] 	= component_l[i];
+	for (int i = 0; i < 5; i++) f[9 + i]	= component_b0_me[i];
+	for (int i = 0; i < 5; i++) f[14 + i]	= component_u_me[i];
+	for (int i = 0; i < elements; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			f[19 + j + (i*5)] = component_bk_me[i][j];
+		}
+	}
 	
 	/* freeing Voigt elements */
 	if (elements > 0)
 	{
 		free(alpha_elements);
 		free(eta_elements);
+		free(tau_elements);
+		for (int i = 0; i < elements; i++) free(bk_me[i]);
 		free(bk_me);
+		for (int i = 0; i < elements; i++) free(bk[i]);
 		free(bk);
+		for (int i = 0; i < elements; i++) free(component_bk_me[i]);
+		free(component_bk_me);
 	}
 
 	return GSL_SUCCESS;
@@ -211,7 +311,7 @@ calculate_b(double b[9])
 {
 	double null_M[9];
 	null_matrix(null_M);
-	copy_vector(b, null_M);
+	copy_square_matrix(b, null_M);
 	return 0;
 }
 
@@ -228,7 +328,10 @@ calculate_l(double l[3], const double I0,
 }
 
 int
-calculate_omega()
+calculate_omega(double omega[3])
 {
+	double null_v[3];
+	null_vector(null_v);
+	copy_vector(omega, null_v);
 	return 0;
 }
