@@ -14,9 +14,11 @@ field_1EB1PM(double t, const double y[], double f[],
 	double 	m1		 = par[1];
 	double 	m2		 = par[2];
 	double 	I0 		 = par[3];
-	double 	alpha 	 = par[4];
-	double 	eta 	 = par[5];
-	int 	elements = par[6];
+	double	gamma	 = par[4];
+	double 	alpha 	 = par[5];
+	double 	eta 	 = par[6];
+	double	alpha_0	 = par[7];
+	int 	elements = par[8];
 	double	*alpha_elements, *eta_elements;
 	if (elements > 0)
 	{
@@ -24,8 +26,8 @@ field_1EB1PM(double t, const double y[], double f[],
 		eta_elements 	= (double *) malloc(elements * sizeof(double));
 		for (int i = 0; i < elements; i++)
 		{
-			alpha_elements[i] 	= par[7 + (2*i)];
-			eta_elements[i]		= par[8 + (2*i)];
+			alpha_elements[i] 	= par[9 + (2*i)];
+			eta_elements[i]		= par[10 + (2*i)];
 
 			/* for testing */
 			// printf("alpha_%d = %f\n", i, alpha_elements[i]);
@@ -36,7 +38,7 @@ field_1EB1PM(double t, const double y[], double f[],
 	/* preparing variables */
 
 	double tilde_x[3], tilde_x_dot[3], l[3];
-	double b0_me[9], u_me[9], **bk_me;
+	double b0_me[9], u_me[9], *bk_me, **bk_me_2d_array;
 
 	for (int i = 0; i < 3; i++)	tilde_x[i] 		= y[0 + i];
 	for (int i = 0; i < 3; i++) tilde_x_dot[i] 	= y[3 + i];
@@ -45,16 +47,18 @@ field_1EB1PM(double t, const double y[], double f[],
 	for (int i = 0; i < 5; i++) u_me[i] 		= y[14 + i];
 	if (elements > 0)
 	{
-		bk_me = (double **) malloc(elements * sizeof(double));
+		bk_me = (double *) malloc(elements * 5 * sizeof(double));
+		bk_me_2d_array = (double **) malloc(elements * sizeof(double));
 		for (int i = 0; i < elements; i++)
 		{
-			bk_me[i] = (double *) malloc(5 * sizeof(double));
+			bk_me[i] = y[19 + i];
+			bk_me_2d_array[i] = (double *) malloc(5 * sizeof(double));
 			for (int j = 0; j < 5; j++)
 			{
-				bk_me[i][j] = y[19 + j + (i*5)];
+				bk_me_2d_array[i][j] = y[19 + j + (i*5)];
 
 				/* for testing */
-				// printf("bk_me = %f\n",bk_me[i][j]);
+				// printf("bk_me_2d_array = %f\n",bk_me_2d_array[i][j]);
 			}
 		}
 	}
@@ -70,7 +74,7 @@ field_1EB1PM(double t, const double y[], double f[],
 		for (int i = 0; i < elements; i++)
 		{
 			bk[i] = (double *) malloc(9 * sizeof(double));
-			construct_traceless_symmetric_matrix(bk[i], bk_me[i]);
+			construct_traceless_symmetric_matrix(bk[i], bk_me_2d_array[i]);
 
 			/* for testing */
 			// print_square_matrix(bk[i]);
@@ -80,7 +84,9 @@ field_1EB1PM(double t, const double y[], double f[],
 	/* calculate omega and b */
 	double omega[3], b[9]; 
 	calculate_omega(omega);	// tricky part
-	calculate_b(b);
+	null_matrix(b);
+	// calculate_b(b, G, m2, gamma, alpha_0, alpha,
+	// 	tilde_x, omega, b0_me, u_me, elements, bk_me);
 
 	double omega_hat[9];
 	hat_map(omega_hat, omega);
@@ -227,8 +233,9 @@ field_1EB1PM(double t, const double y[], double f[],
 		free(alpha_elements);
 		free(eta_elements);
 		free(tau_elements);
-		for (int i = 0; i < elements; i++) free(bk_me[i]);
 		free(bk_me);
+		for (int i = 0; i < elements; i++) free(bk_me_2d_array[i]);
+		free(bk_me_2d_array);
 		for (int i = 0; i < elements; i++) free(bk[i]);
 		free(bk);
 		for (int i = 0; i < elements; i++) free(component_bk_me[i]);
@@ -306,12 +313,100 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 	return 0;
 }
 
-int
-calculate_b(double b[9])
+double
+parameter_gamma_homogeneous_body(const double G,
+	const double I0, const double R)
 {
-	double null_M[9];
-	null_matrix(null_M);
-	copy_square_matrix(b, null_M);
+	return 2.0 * I0 * G / pow(R, 5.0);
+}
+
+int
+calculate_b(double b[9], const double G, const double m2, 
+	const double gamma, const double alpha_0, const double alpha,
+	const double tilde_x[3], const double omega[3], 
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[])
+{
+	double b0[9], u[9];
+	construct_traceless_symmetric_matrix(b0, b0_me);
+	construct_traceless_symmetric_matrix(u, u_me);
+	double omega_hat[9];
+	hat_map(omega_hat, omega);
+	
+	double x_tensor_x[9];
+	tensor_product(x_tensor_x, tilde_x, tilde_x);
+	double Id[9];
+	identity_matrix(Id);
+	double scaled_id[9];
+	scale_square_matrix(scaled_id, 
+		norm_squared_vector(tilde_x) / 3.0, Id);
+	double tilde_x_norm_fifth = pow(norm_vector(tilde_x), 5.0);
+	double f_tide[9];
+	linear_combination_square_matrix(f_tide, 
+		 3.0 * G * m2 / tilde_x_norm_fifth, x_tensor_x,
+		-3.0 * G * m2 / tilde_x_norm_fifth, scaled_id);
+
+	double alpha_0_b0[9];
+	scale_square_matrix(alpha_0_b0, alpha_0, b0);
+	double g[9];
+	linear_combination_three_square_matrix(g,
+		 1.0, f_tide,
+		 1.0, alpha_0_b0,
+		-1.0, u);
+
+	double **bk_me_2d_array, **bk;
+	if (elements > 0)
+	{
+		bk_me_2d_array 	= (double **) malloc(elements * sizeof(double));
+		bk 				= (double **) malloc(elements * sizeof(double));
+		for (int i = 0; i < elements; i++)
+		{
+			bk_me_2d_array[i] = (double *) malloc(5 * sizeof(double));
+			for (int j = 0; j < 5; j++)
+			{
+				bk_me_2d_array[i][j] = bk_me[j + (i*5)];
+
+				/* for testing */
+				// printf("bk_me = %f\n",bk_me[i][j]);
+			}
+			bk[i] = (double *) malloc(9 * sizeof(double));
+			construct_traceless_symmetric_matrix(bk[i], bk_me_2d_array[i]);
+
+			/* for testing */
+			// print_square_matrix(bk[i]);
+
+			linear_combination_square_matrix(g,
+				1.0,   g,
+				alpha, bk[i]);
+		}
+	}
+	
+	double c = gamma + alpha_0 + alpha;
+
+	double omega_hat_squared[9];
+	square_matrix_times_square_matrix(omega_hat_squared,
+		omega_hat, omega_hat);
+	double trace_omega_hat_squared;
+	trace_omega_hat_squared = trace_square_matrix(omega_hat_squared);
+	double scaled_id_2[9];
+	scale_square_matrix(scaled_id_2, 
+		trace_omega_hat_squared / 3.0, Id);
+
+	linear_combination_three_square_matrix(b,
+		-1.0 / c, omega_hat_squared,
+		 1.0 / c, scaled_id_2,
+		 1.0 / c, g);
+
+	/* freeing Voigt elements */
+	if (elements > 0)
+	{
+		for (int i = 0; i < elements; i++) free(bk_me_2d_array[i]);
+		free(bk_me_2d_array);
+		for (int i = 0; i < elements; i++) free(bk[i]);
+		free(bk);
+	}
+
+	
 	return 0;
 }
 

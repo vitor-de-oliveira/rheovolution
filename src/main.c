@@ -62,10 +62,10 @@ main(int argc, char *argv[])
 	/* state variables given by user*/
 	double 	b0_diag[3];
 	/* non-state variables given by user */
-	double 	omega_vec[3];
+	double 	omega[3];
 	/* system parameters given by user */
 	int		elements = 0; //number of Voigt elements
-	double  G, m1, m2, I0;
+	double  G, m1, m2, I0, R;
 	double	alpha_0, alpha, eta;
 
 	/* reading system specs from user */
@@ -79,12 +79,13 @@ main(int argc, char *argv[])
 		else if (strcmp(var_name, "m1") == 0)			m1 = var_value;
 		else if (strcmp(var_name, "m2") == 0)			m2 = var_value;
 		else if (strcmp(var_name, "I0") == 0)			I0 = var_value;
+		else if (strcmp(var_name, "R") == 0)			R = var_value;
 		else if (strcmp(var_name, "b0_x") == 0)			b0_diag[0] = var_value;
 		else if (strcmp(var_name, "b0_y") == 0)			b0_diag[1] = var_value;
 		else if (strcmp(var_name, "b0_z") == 0)			b0_diag[2] = var_value;
-		else if (strcmp(var_name, "omega_x") == 0)		omega_vec[0] = var_value;
-		else if (strcmp(var_name, "omega_y") == 0)		omega_vec[1] = var_value;
-		else if (strcmp(var_name, "omega_z") == 0)		omega_vec[2] = var_value;
+		else if (strcmp(var_name, "omega_x") == 0)		omega[0] = var_value;
+		else if (strcmp(var_name, "omega_y") == 0)		omega[1] = var_value;
+		else if (strcmp(var_name, "omega_z") == 0)		omega[2] = var_value;
 		else if (strcmp(var_name, "alpha_0") == 0)		alpha_0 = var_value;
 		else if (strcmp(var_name, "alpha") == 0)		alpha = var_value;
 		else if (strcmp(var_name, "eta") == 0)			eta = var_value;
@@ -174,38 +175,45 @@ main(int argc, char *argv[])
 	b0_me[3] = b0_diag[1];
 	b0_me[4] = 0.0;
 
-	/* variables and parameters passed as field parameters */
-	int		dim_params = 7 + (elements * 2); // optmize this
-	double	params[dim_params]; 
-	params[0] = G;
-	params[1] = m1;
-	params[2] = m2;
-	params[3] = I0;
-	params[4] = alpha;
-	params[5] = eta;
-	params[6] = elements;
-	for (int i = 0; i < elements; i++)
-	{
-		params[7 + (2*i)] = alpha_elements[i];
-		params[8 + (2*i)] = eta_elements[i];
-	}
-
 	/* variables not given by user */
+	double gamma = parameter_gamma_homogeneous_body(G, I0, R);
+
 	double u_me[5], *bk_me;
 	for (int i = 0; i < 5; i++) u_me[i] = 0.0;
 	if (elements > 0)
 	{
 		bk_me = (double *) calloc(elements * 5, sizeof(double));
 	}
-	for (int i = 0; i < elements * 5; i ++)
-	{
-		bk_me[i] = (double) i;
-	}
+	/* for testing */
+	// for (int i = 0; i < elements * 5; i ++)
+	// {
+	// 	bk_me[i] = (double) i;
+	// }
 
 	/* calculate first l */
 	double 	b[9], l[3];
-	calculate_b(b);
-	calculate_l(l, I0, b, omega_vec);
+	null_matrix(b);
+	// calculate_b(b, G, m2, gamma, alpha_0, alpha,
+	// 	tilde_x, omega, b0_me, u_me, elements, bk_me);
+	calculate_l(l, I0, b, omega);
+
+	/* variables and parameters passed as field parameters */
+	int		dim_params = 9 + (elements * 2); // optmize this
+	double	params[dim_params]; 
+	params[0] = G;
+	params[1] = m1;
+	params[2] = m2;
+	params[3] = I0;
+	params[4] = gamma;
+	params[5] = alpha;
+	params[6] = eta;
+	params[7] = alpha_0;
+	params[8] = elements;
+	for (int i = 0; i < elements; i++)
+	{
+		params[9 + (2*i)] = alpha_elements[i];
+		params[10 + (2*i)] = eta_elements[i];
+	}
 
 	/* integration loop variables */
 	int		dim = 19 + (elements * 5);	// optmize this

@@ -126,11 +126,11 @@ linear_combination_three_vector(double v[], const double a, const double x[],
 }
 
 int
-null_matrix(double I[])
+null_matrix(double N[])
 {
 	for (int i = 0; i < DIM_3*DIM_3; i++)
 	{
-		I[i] = 0.0;
+		N[i] = 0.0;
 	}
 	return 0;
 }
@@ -171,6 +171,17 @@ copy_square_matrix(double N[], const double M[])
 		N[i] = M[i];
 	}
 	return 0;
+}
+
+double
+trace_square_matrix(const double M[])
+{
+	double trace = 0.0;
+	for (int i = 0; i < DIM_3*DIM_3; i = i + (DIM_3 + 1))
+	{
+		trace += M[i];
+	}
+	return trace;
 }
 
 int

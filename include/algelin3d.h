@@ -57,7 +57,7 @@ linear_combination_three_vector(double v[], const double a, const double x[],
 /* square matrix */
 
 int
-null_matrix(double I[]);
+null_matrix(double N[]);
 
 int
 identity_matrix(double I[]);
@@ -67,6 +67,9 @@ print_square_matrix(const double M[]);
 
 int
 copy_square_matrix(double N[], const double M[]);
+
+double
+trace_square_matrix(const double M[]);
 
 int
 scale_square_matrix(double aM[], const double a, const double M[]);
