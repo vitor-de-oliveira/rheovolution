@@ -27,6 +27,19 @@ double
 parameter_gamma_homogeneous_body(const double G,
 	const double I0, const double R);
 
+double
+calculate_c(const double gamma, const double alpha_0, const double alpha);
+
+int
+calculate_f_tide(double f_tide[9], const double G, const double m2,
+	const double tilde_x[3]);
+
+int
+calculate_g(double g[9], const double G, const double m2, 
+	const double alpha_0, const double alpha, const double tilde_x[3], 
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[]);
+
 int
 calculate_b(double b[9], const double G, const double m2, 
 	const double gamma, const double alpha_0, const double alpha,
@@ -38,6 +51,6 @@ calculate_l(double l[3], const double I0,
 	const double b[9], const double omega[3]);
 
 int
-calculate_omega();
+calculate_omega(double omega[3]);
 
 #endif

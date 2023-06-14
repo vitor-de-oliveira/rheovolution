@@ -365,21 +365,16 @@ parameter_gamma_homogeneous_body(const double G,
 	return 2.0 * I0 * G / pow(R, 5.0);
 }
 
-int
-calculate_b(double b[9], const double G, const double m2, 
-	const double gamma, const double alpha_0, const double alpha,
-	const double tilde_x[3], const double omega[3], 
-	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[])
+double
+calculate_c(const double gamma, const double alpha_0, const double alpha)
 {
-	/* construct b0, u, and omega matrices */
-	double b0[9], u[9];
-	construct_traceless_symmetric_matrix(b0, b0_me);
-	construct_traceless_symmetric_matrix(u, u_me);
-	double omega_hat[9];
-	hat_map(omega_hat, omega);
-	
-	/* calculate f_tide */
+	return gamma + alpha_0 + alpha;
+}
+
+int
+calculate_f_tide(double f_tide[9], const double G, const double m2,
+	const double tilde_x[3])
+{
 	double x_tensor_x[9];
 	tensor_product(x_tensor_x, tilde_x, tilde_x);
 	double Id[9];
@@ -388,16 +383,31 @@ calculate_b(double b[9], const double G, const double m2,
 	scale_square_matrix(scaled_id, 
 		norm_squared_vector(tilde_x) / 3.0, Id);
 	double tilde_x_norm_fifth = pow(norm_vector(tilde_x), 5.0);
-	double f_tide[9];
 	linear_combination_square_matrix(f_tide, 
 		 3.0 * G * m2 / tilde_x_norm_fifth, x_tensor_x,
 		-3.0 * G * m2 / tilde_x_norm_fifth, scaled_id);
 
-	/* calculate g without Voigt elements */
+	return 0;
+}
 
+int
+calculate_g(double g[9], const double G, const double m2, 
+	const double alpha_0, const double alpha, const double tilde_x[3], 
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[])
+{
+	/* construct b0, and u matrices */
+	double b0[9], u[9];
+	construct_traceless_symmetric_matrix(b0, b0_me);
+	construct_traceless_symmetric_matrix(u, u_me);
+
+	/* calculate f_tide */
+	double f_tide[9];
+	calculate_f_tide(f_tide, G, m2, tilde_x);
+
+	/* calculate g without Voigt elements */
 	double alpha_0_b0[9];
 	scale_square_matrix(alpha_0_b0, alpha_0, b0);
-	double g[9];
 	linear_combination_three_square_matrix(g,
 		 1.0, f_tide,
 		 1.0, alpha_0_b0,
@@ -431,43 +441,12 @@ calculate_b(double b[9], const double G, const double m2,
 		}
 	}
 
-	/* calculate c */
-	double c = gamma + alpha_0 + alpha;
-
-	/* calculate b  */
-	double omega_hat_squared[9];
-	square_matrix_times_square_matrix(omega_hat_squared,
-		omega_hat, omega_hat);
-	double trace_omega_hat_squared;
-	trace_omega_hat_squared = trace_square_matrix(omega_hat_squared);
-	double scaled_id_2[9];
-	scale_square_matrix(scaled_id_2, 
-		trace_omega_hat_squared / 3.0, Id);
-	linear_combination_three_square_matrix(b,
-		-1.0 / c, omega_hat_squared,
-		 1.0 / c, scaled_id_2,
-		 1.0 / c, g);
-
 	/* for testing */
-	// printf("b = \n");
-	// print_square_matrix(b);
-	// printf("\ntilde_x = \n");
-	// print_vector(tilde_x);
-	// printf("\nb0 = \n");
-	// print_square_matrix(b0);
-	// printf("\nu = \n");
-	// print_square_matrix(u);
 	// for (int i  = 0; i < elements; i++)
 	// {
 	// 	printf("\nbk_%d = \n", i+1);
 	// 	print_square_matrix(bk[i]);
 	// }
-	// printf("\nG = %f\n", G);
-	// printf("\nm2 = %f\n", m2);
-	// printf("\ngamma = %f\n", gamma);
-	// printf("\nalpha = %f\n", alpha);
-	// printf("\nalpha_0 = %f\n", alpha_0);
-	// exit(42);
 
 	/* freeing Voigt elements */
 	if (elements > 0)
@@ -477,6 +456,61 @@ calculate_b(double b[9], const double G, const double m2,
 		for (int i = 0; i < elements; i++) free(bk[i]);
 		free(bk);
 	}
+
+	return 0;
+}
+
+int
+calculate_b(double b[9], const double G, const double m2, 
+	const double gamma, const double alpha_0, const double alpha,
+	const double tilde_x[3], const double omega[3], 
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[])
+{
+	/* calculate f_tide */
+	double f_tide[9];
+	calculate_f_tide(f_tide, G, m2, tilde_x);
+
+	/* calculate g */
+	double g[9];
+	calculate_g(g, G, m2, alpha_0, alpha, tilde_x, b0_me, u_me, elements, bk_me);
+
+	/* calculate c */
+	double c = calculate_c(gamma, alpha_0, alpha);
+
+	/* calculate b  */
+	double omega_hat[9];
+	hat_map(omega_hat, omega);
+	double omega_hat_squared[9];
+	square_matrix_times_square_matrix(omega_hat_squared,
+		omega_hat, omega_hat);
+	double trace_omega_hat_squared;
+	trace_omega_hat_squared = trace_square_matrix(omega_hat_squared);
+	double Id[9];
+	identity_matrix(Id);
+	double scaled_id_2[9];
+	scale_square_matrix(scaled_id_2, 
+		trace_omega_hat_squared / 3.0, Id);
+	linear_combination_three_square_matrix(b,
+		-1.0 / c, omega_hat_squared,
+		 1.0 / c, scaled_id_2,
+		 1.0 / c, g);
+
+	/* for testing */
+	// printf("\nb = \n");
+	// print_square_matrix(b);
+	// printf("\ntilde_x = \n");
+	// print_vector(tilde_x);
+	// printf("\nb0 = \n");
+	// print_square_matrix(b0);
+	// printf("\nu = \n");
+	// print_square_matrix(u);
+	// printf("\nG = %f\n", G);
+	// printf("\nm2 = %f\n", m2);
+	// printf("\ngamma = %f\n", gamma);
+	// printf("\nalpha = %f\n", alpha);
+	// printf("\nalpha_0 = %f\n", alpha_0);
+	// exit(42);
 
 	return 0;
 }
