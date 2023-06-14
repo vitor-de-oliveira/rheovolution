@@ -185,17 +185,26 @@ main(int argc, char *argv[])
 		bk_me = (double *) calloc(elements * 5, sizeof(double));
 	}
 	/* for testing */
-	// for (int i = 0; i < elements * 5; i ++)
+	// for (int i = 0; i < 5; i++)
+	// {
+	// 	u_me[i] = (double) (-1 * i);
+	// }
+	// for (int i = 0; i < elements * 5; i++)
 	// {
 	// 	bk_me[i] = (double) i;
 	// }
 
 	/* calculate first l */
 	double 	b[9], l[3];
-	null_matrix(b);
-	// calculate_b(b, G, m2, gamma, alpha_0, alpha,
-	// 	tilde_x, omega, b0_me, u_me, elements, bk_me);
+	calculate_b(b, G, m2, gamma, alpha_0, alpha,
+		tilde_x, omega, b0_me, u_me, elements, bk_me);
 	calculate_l(l, I0, b, omega);
+
+	/* for testing */
+	// printf("b = \n");
+	// print_square_matrix(b);
+	// exit(42);
+	// null_matrix(b);
 
 	/* variables and parameters passed as field parameters */
 	int		dim_params = 9 + (elements * 2); // optmize this
@@ -244,6 +253,8 @@ main(int argc, char *argv[])
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
 				ode_control, ode_step, &sys, &t, h, y);
+
+		// printf("status = %d\n", status);
 		
 		if (status != GSL_SUCCESS) break;
 		

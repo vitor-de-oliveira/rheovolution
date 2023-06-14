@@ -48,10 +48,13 @@ field_1EB1PM(double t, const double y[], double f[],
 	if (elements > 0)
 	{
 		bk_me = (double *) malloc(elements * 5 * sizeof(double));
+		for (int i  = 0; i < elements * 5; i++)
+		{
+			bk_me[i] = y[19 + i];
+		}
 		bk_me_2d_array = (double **) malloc(elements * sizeof(double));
 		for (int i = 0; i < elements; i++)
 		{
-			bk_me[i] = y[19 + i];
 			bk_me_2d_array[i] = (double *) malloc(5 * sizeof(double));
 			for (int j = 0; j < 5; j++)
 			{
@@ -84,9 +87,20 @@ field_1EB1PM(double t, const double y[], double f[],
 	/* calculate omega and b */
 	double omega[3], b[9]; 
 	calculate_omega(omega);	// tricky part
-	null_matrix(b);
-	// calculate_b(b, G, m2, gamma, alpha_0, alpha,
-	// 	tilde_x, omega, b0_me, u_me, elements, bk_me);
+	calculate_b(b, G, m2, gamma, alpha_0, alpha,
+		tilde_x, omega, b0_me, u_me, elements, bk_me);
+	
+	/* for testing */
+	// printf("b = \n");
+	// print_square_matrix(b);
+	// exit(42);
+	// null_matrix(b);
+	// double b_me[5];
+	// for (int i = 0; i < 5; i++)
+	// {
+	// 	b_me[i] = ((double) i) * 0.00000000001;
+	// }
+	// construct_traceless_symmetric_matrix(b, b_me);
 
 	double omega_hat[9];
 	hat_map(omega_hat, omega);
@@ -226,6 +240,37 @@ field_1EB1PM(double t, const double y[], double f[],
 			f[19 + j + (i*5)] = component_bk_me[i][j];
 		}
 	}
+
+	/* for testing */
+	// printf("tilde_x = \n");
+	// print_vector(tilde_x);
+	// printf("\ntilde_x_dot = \n");
+	// print_vector(tilde_x_dot);
+	// printf("\nl = \n");
+	// print_vector(l);
+	// printf("\nb0 = \n");
+	// print_square_matrix(b0);
+	// printf("\nu = \n");
+	// print_square_matrix(u);
+	// for (int i  = 0; i < elements; i++)
+	// {
+	// 	printf("\nbk_%d = \n", i+1);
+	// 	print_square_matrix(bk[i]);
+	// }
+	// printf("\nG = %f\n", G);
+	// printf("\nm1 = %f\n", m1);
+	// printf("\nm2 = %f\n", m2);
+	// printf("\nI0 = %f\n", I0);
+	// printf("\ngamma = %f\n", gamma);
+	// printf("\nalpha = %f\n", alpha);
+	// printf("\neta = %f\n", eta);
+	// printf("\nalpha_0 = %f\n", alpha_0);
+	// for (int i  = 0; i < elements; i++)
+	// {
+	// 	printf("\nalpha_%d = %f\n", i+1, alpha_elements[i]);
+	// 	printf("\neta%d = %f\n", i+1, eta_elements[i]);
+	// }
+	// exit(42);
 	
 	/* freeing Voigt elements */
 	if (elements > 0)
@@ -327,12 +372,14 @@ calculate_b(double b[9], const double G, const double m2,
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[])
 {
+	/* construct b0, u, and omega matrices */
 	double b0[9], u[9];
 	construct_traceless_symmetric_matrix(b0, b0_me);
 	construct_traceless_symmetric_matrix(u, u_me);
 	double omega_hat[9];
 	hat_map(omega_hat, omega);
 	
+	/* calculate f_tide */
 	double x_tensor_x[9];
 	tensor_product(x_tensor_x, tilde_x, tilde_x);
 	double Id[9];
@@ -346,6 +393,8 @@ calculate_b(double b[9], const double G, const double m2,
 		 3.0 * G * m2 / tilde_x_norm_fifth, x_tensor_x,
 		-3.0 * G * m2 / tilde_x_norm_fifth, scaled_id);
 
+	/* calculate g without Voigt elements */
+
 	double alpha_0_b0[9];
 	scale_square_matrix(alpha_0_b0, alpha_0, b0);
 	double g[9];
@@ -354,6 +403,7 @@ calculate_b(double b[9], const double G, const double m2,
 		 1.0, alpha_0_b0,
 		-1.0, u);
 
+	/* add Voigt elements to g */
 	double **bk_me_2d_array, **bk;
 	if (elements > 0)
 	{
@@ -380,9 +430,11 @@ calculate_b(double b[9], const double G, const double m2,
 				alpha, bk[i]);
 		}
 	}
-	
+
+	/* calculate c */
 	double c = gamma + alpha_0 + alpha;
 
+	/* calculate b  */
 	double omega_hat_squared[9];
 	square_matrix_times_square_matrix(omega_hat_squared,
 		omega_hat, omega_hat);
@@ -391,11 +443,31 @@ calculate_b(double b[9], const double G, const double m2,
 	double scaled_id_2[9];
 	scale_square_matrix(scaled_id_2, 
 		trace_omega_hat_squared / 3.0, Id);
-
 	linear_combination_three_square_matrix(b,
 		-1.0 / c, omega_hat_squared,
 		 1.0 / c, scaled_id_2,
 		 1.0 / c, g);
+
+	/* for testing */
+	// printf("b = \n");
+	// print_square_matrix(b);
+	// printf("\ntilde_x = \n");
+	// print_vector(tilde_x);
+	// printf("\nb0 = \n");
+	// print_square_matrix(b0);
+	// printf("\nu = \n");
+	// print_square_matrix(u);
+	// for (int i  = 0; i < elements; i++)
+	// {
+	// 	printf("\nbk_%d = \n", i+1);
+	// 	print_square_matrix(bk[i]);
+	// }
+	// printf("\nG = %f\n", G);
+	// printf("\nm2 = %f\n", m2);
+	// printf("\ngamma = %f\n", gamma);
+	// printf("\nalpha = %f\n", alpha);
+	// printf("\nalpha_0 = %f\n", alpha_0);
+	// exit(42);
 
 	/* freeing Voigt elements */
 	if (elements > 0)
@@ -406,7 +478,6 @@ calculate_b(double b[9], const double G, const double m2,
 		free(bk);
 	}
 
-	
 	return 0;
 }
 
