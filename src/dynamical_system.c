@@ -10,15 +10,16 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	double 	*par = (double *)params;
 
-	double 	G		 = par[0];
-	double 	m1		 = par[1];
-	double 	m2		 = par[2];
-	double 	I0 		 = par[3];
-	double	gamma	 = par[4];
-	double 	alpha 	 = par[5];
-	double 	eta 	 = par[6];
-	double	alpha_0	 = par[7];
-	int 	elements = par[8];
+	double	omega_seed[] 	= { par[0], par[1], par[2] };
+	double 	G				= par[3];
+	double 	m1		 		= par[4];
+	double 	m2		 		= par[5];
+	double 	I0 		 		= par[6];
+	double	gamma	 		= par[7];
+	double 	alpha 	 		= par[8];
+	double 	eta 	 		= par[9];
+	double	alpha_0	 		= par[10];
+	int 	elements 		= par[11];
 	double	*alpha_elements, *eta_elements;
 	if (elements > 0)
 	{
@@ -26,8 +27,8 @@ field_1EB1PM(double t, const double y[], double f[],
 		eta_elements 	= (double *) malloc(elements * sizeof(double));
 		for (int i = 0; i < elements; i++)
 		{
-			alpha_elements[i] 	= par[9 + (2*i)];
-			eta_elements[i]		= par[10 + (2*i)];
+			alpha_elements[i] 	= par[12 + (2*i)];
+			eta_elements[i]		= par[13 + (2*i)];
 
 			/* for testing */
 			// printf("alpha_%d = %f\n", i, alpha_elements[i]);
@@ -85,16 +86,21 @@ field_1EB1PM(double t, const double y[], double f[],
 	}
 
 	/* calculate omega and b */
-	double omega[3], b[9]; 
-	calculate_omega(omega);	// tricky part
+	double omega[3], b[9];
+	// copy_vector(omega, omega_seed); // for testing
+	calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
+		alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
 	calculate_b(b, G, m2, gamma, alpha_0, alpha,
 		tilde_x, omega, b0_me, u_me, elements, bk_me);
 	
 	/* for testing */
+	// printf("omega inside = \n");
+	// print_vector(omega);
 	// printf("b = \n");
 	// print_square_matrix(b);
 	// exit(42);
 	// null_matrix(b);
+	// null_matrix(omega);
 	// double b_me[5];
 	// for (int i = 0; i < 5; i++)
 	// {
@@ -156,9 +162,15 @@ field_1EB1PM(double t, const double y[], double f[],
 	scale_vector (component_tilde_x_dot_2nd_term, 
 		(15. * I0 * bx_dot_x) / (2. * m1 * tilde_x_norm_seventh), tilde_x);
 
+	// print_vector(component_tilde_x_dot_2nd_term);
+	// exit(43);
+
 	double component_tilde_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
 	scale_vector (component_tilde_x_dot_3rd_term, 
 		(-3.0 * I0) / (m1 * tilde_x_norm_fifth), bx);
+
+	// print_vector(component_tilde_x_dot_3rd_term);
+	// exit(43);
 
 	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0};
 	linear_combination_three_vector(component_tilde_x_dot,
@@ -194,6 +206,17 @@ field_1EB1PM(double t, const double y[], double f[],
 							         0.0, 0.0 };
 	get_main_elements_traceless_symmetric_matrix(component_u_me, component_u);
 
+	/* for testing */
+	// printf("\nomega_hat_comm_u = \n");
+	// print_square_matrix(omega_hat_comm_u);
+	// printf("\ntau = \n");
+	// printf("%f\n", tau);
+	// printf("\nlambda = \n");
+	// print_square_matrix(lambda);
+	// printf("\ncomponent_u = \n");
+	// print_square_matrix(component_u);	
+	// exit(42);
+
 	// bk components
 
 	double **component_bk_me;
@@ -213,6 +236,16 @@ field_1EB1PM(double t, const double y[], double f[],
 			scale_square_matrix(lambda_over_eta_elements,
 			1.0 / eta_elements[i], lambda);
 
+			/* for testing */
+			// printf("\ntau_%d = %f\n", i, tau_elements[i]);
+			// printf("\nminus_1_over_tau_%d = %f\n", i, -1.0 / tau_elements[i]);
+			// printf("\nomega_hat_comm_bk = \n");
+			// print_square_matrix(omega_hat_comm_bk);
+			// printf("\nminus_bk_over_tau_elements = \n");
+			// print_square_matrix(minus_bk_over_tau_elements);
+			// printf("\nlambda_over_eta_elements = \n");
+			// print_square_matrix(lambda_over_eta_elements);
+
 			double component_bk[] = { 0.0, 0.0, 0.0,
 							 		  0.0, 0.0, 0.0,
 							          0.0, 0.0, 0.0 };
@@ -223,8 +256,15 @@ field_1EB1PM(double t, const double y[], double f[],
 
 			get_main_elements_traceless_symmetric_matrix(component_bk_me[i],
 				component_bk);
+
+			/* for testing */
+			// printf("\nalpha_%d = %f\n", i, alpha_elements[i]);
+			// printf("\ntau_%d = %f\n", i, tau_elements[i]);
+			// printf("\ncomponent_bk = \n");
+			// print_square_matrix(component_bk);
 		}
 	}
+	// exit(43);
 
 	/* writing components */	
 
@@ -257,6 +297,8 @@ field_1EB1PM(double t, const double y[], double f[],
 	// 	printf("\nbk_%d = \n", i+1);
 	// 	print_square_matrix(bk[i]);
 	// }
+	// printf("\nomega = \n");
+	// print_vector(omega);
 	// printf("\nG = %f\n", G);
 	// printf("\nm1 = %f\n", m1);
 	// printf("\nm2 = %f\n", m2);
@@ -270,6 +312,18 @@ field_1EB1PM(double t, const double y[], double f[],
 	// 	printf("\nalpha_%d = %f\n", i+1, alpha_elements[i]);
 	// 	printf("\neta%d = %f\n", i+1, eta_elements[i]);
 	// }
+	// printf("\ncomponent_tilde_x = \n");
+	// print_vector(component_tilde_x);
+	// printf("\ncomponent_tilde_x_dot = \n");
+	// print_vector(component_tilde_x_dot);
+	// printf("\ncomponent_l = \n");
+	// print_vector(component_l);
+	// printf("\ncomponent_u = \n");
+	// print_square_matrix(component_u);	
+	// printf("\ncomponent_b0 = \n");
+	// print_square_matrix(component_b0);
+	// printf("\nlambda = \n");
+	// print_square_matrix(lambda);
 	// exit(42);
 	
 	/* freeing Voigt elements */
@@ -528,10 +582,119 @@ calculate_l(double l[3], const double I0,
 }
 
 int
-calculate_omega(double omega[3])
+calculate_omega(double omega[3], const double omega_seed[3], const double G, 
+	const double m2, const double I0, const double gamma, const double alpha_0, 
+	const double alpha, const double tilde_x[3], const double l[3],
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[])
 {
-	double null_v[3];
-	null_vector(null_v);
-	copy_vector(omega, null_v);
+	/* method parameters */
+	int 	number_of_iterates = 5;
+	double 	max_error = 1e-8;
+	double	error = 1.0;
+	double 	previous_omega[3];
+	copy_vector(omega, omega_seed);
+
+	for (int i = 0; i < number_of_iterates; i++)
+	{
+		/* store omega previous value */
+		copy_vector(previous_omega, omega);
+
+		/* calculate g */
+		double g[9];
+		calculate_g(g, G, m2, alpha_0, alpha, tilde_x, b0_me, u_me, elements, bk_me);
+
+		/* calculate c */
+		double c = calculate_c(gamma, alpha_0, alpha);
+
+		double Id[9];
+		identity_matrix(Id);
+		double Aux[9];
+		linear_combination_three_square_matrix(Aux,
+			1.0, Id,
+			-1.0 / c, g,
+			2.0 * norm_squared_vector(omega) / (3.0 * c), Id);
+		double Aux_times_omega[3];
+		square_matrix_times_vector(Aux_times_omega, Aux, omega);
+		double h[3];
+		linear_combination_vector(h, 
+			1.0, Aux_times_omega,
+			-1.0 / I0, l);
+		double minus_h[3];
+		scale_vector(minus_h, -1.0, h);
+
+		double omega_tensor_omega[9];
+		tensor_product(omega_tensor_omega, omega, omega);
+		double DH_third_term[9];
+		linear_combination_square_matrix(DH_third_term,
+			2.0 * norm_squared_vector(omega) / (3.0 * c), Id,
+			4.0 / (3.0 * c), omega_tensor_omega);
+		double DH[9];
+		linear_combination_three_square_matrix(DH,
+			1.0, Id,
+			-1.0 / c, g,
+			1.0, DH_third_term);
+
+		/* solving linear equation m*x=b using LU decomposition */
+
+		/* for testing */
+		// DH[0] = 0.18;
+		// DH[1] = 0.60;
+		// DH[2] = 0.57;
+		// DH[3] = -0.41;
+		// DH[4] = 0.24;
+		// DH[5] = 0.99;
+		// DH[6] = -0.14;
+		// DH[7] = 0.30;
+		// DH[8] = 0.97;
+		// h[0] = 1.0; h[1] = 2.0; h[2] = -3.0;
+
+		gsl_matrix_view m
+			= gsl_matrix_view_array (DH, 3, 3);
+
+		gsl_vector_view b
+			= gsl_vector_view_array (minus_h, 3);
+
+		double omega_minus_previous_omega[] = { 0.0, 0.0, 0.0};
+		gsl_vector_view x
+			= gsl_vector_view_array (omega_minus_previous_omega, 3);
+
+		int s;
+
+		gsl_permutation * p = gsl_permutation_alloc (3);
+
+		gsl_linalg_LU_decomp (&m.matrix, p, &s);
+
+		gsl_linalg_LU_solve (&m.matrix, p, &b.vector, &x.vector);
+
+		linear_combination_vector(omega, 
+			1.0, omega_minus_previous_omega,
+			1.0, previous_omega);
+
+		// error 
+		// 	= norm_vector(omega_minus_previous_omega) / norm_vector(previous_omega);
+		
+		error = norm_vector(omega_minus_previous_omega);
+
+		/* for testing */
+		// printf("iter = %d error = %1.5e\n", i+1, error);
+
+		gsl_permutation_free (p);
+
+	}
+
+	if (error > max_error)
+	{
+		printf("Warning: error higher than the max allowed\n");
+		printf("for omega calculation.\n");
+		exit(99);
+	}
+
+
+	/* for testing */
+	// printf("\nomega = \n");
+	// print_vector(omega);
+	// exit(42);
+
 	return 0;
 }

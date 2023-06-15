@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_linalg.h>
 
 #include "algelin3d.h"
 
@@ -51,6 +52,10 @@ calculate_l(double l[3], const double I0,
 	const double b[9], const double omega[3]);
 
 int
-calculate_omega(double omega[3]);
+calculate_omega(double omega[3], const double omega_seed[3], const double G, 
+	const double m2, const double I0, const double gamma, const double alpha_0, 
+	const double alpha, const double tilde_x[3], const double l[3],
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[]);
 
 #endif

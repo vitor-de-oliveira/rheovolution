@@ -93,6 +93,13 @@ main(int argc, char *argv[])
 	}
 	fclose(in1_again);
 
+	if (fabs(alpha) < 1e-10 || fabs(eta) < 1e-10)
+	{
+		printf("Warning: nor alpha nor eta should be zero.\n");
+		printf("Exiting the program now.\n");
+		exit(13);
+	}
+
 	/* setting up Voigt elements */
 	double	*alpha_elements, *eta_elements;
 	if (elements > 0)
@@ -136,6 +143,12 @@ main(int argc, char *argv[])
 			{
 				printf("Error: parameters missing for Voigt elements.\n");
 				exit(10);
+			}
+			if (alpha_elements[i] < 1e-10 || eta_elements[i] < 1e-10)
+			{
+				printf("Warning: nor alpha nor eta should be zero.\n");
+				printf("Exiting the program now.\n");
+				exit(13);
 			}
 		}
 	}
@@ -198,30 +211,44 @@ main(int argc, char *argv[])
 	double 	b[9], l[3];
 	calculate_b(b, G, m2, gamma, alpha_0, alpha,
 		tilde_x, omega, b0_me, u_me, elements, bk_me);
+	// printf("b = \n");
+	// print_square_matrix(b);
+	// exit(43);
 	calculate_l(l, I0, b, omega);
+	double omega_seed[3];
+	// copy_vector(omega_seed, omega);
+	// linear_combination_vector(omega_seed, 1.0, omega, 1e-5, omega);
+	// calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
+	// 	alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
+	// exit(43);
 
 	/* for testing */
 	// printf("b = \n");
 	// print_square_matrix(b);
+	// printf("\nomega = \n");
+	// print_vector(omega);
 	// exit(42);
 	// null_matrix(b);
 
 	/* variables and parameters passed as field parameters */
-	int		dim_params = 9 + (elements * 2); // optmize this
+	int		dim_params = 12 + (elements * 2); // optmize this
 	double	params[dim_params]; 
-	params[0] = G;
-	params[1] = m1;
-	params[2] = m2;
-	params[3] = I0;
-	params[4] = gamma;
-	params[5] = alpha;
-	params[6] = eta;
-	params[7] = alpha_0;
-	params[8] = elements;
+	params[0] = omega[0];
+	params[1] = omega[1];
+	params[2] = omega[2];
+	params[3] = G;
+	params[4] = m1;
+	params[5] = m2;
+	params[6] = I0;
+	params[7] = gamma;
+	params[8] = alpha;
+	params[9] = eta;
+	params[10] = alpha_0;
+	params[11] = elements;
 	for (int i = 0; i < elements; i++)
 	{
-		params[9 + (2*i)] = alpha_elements[i];
-		params[10 + (2*i)] = eta_elements[i];
+		params[12 + (2*i)] = alpha_elements[i];
+		params[13 + (2*i)] = eta_elements[i];
 	}
 
 	/* integration loop variables */
@@ -244,24 +271,51 @@ main(int argc, char *argv[])
     	= gsl_odeiv2_control_y_new (eps_abs, eps_rel);
   	gsl_odeiv2_evolve * ode_evolve
     	= gsl_odeiv2_evolve_alloc (dim);
-  	gsl_odeiv2_system sys = {field_1EB1PM, NULL, dim, params};
 
 	/* integration loop */
 	int counter = 0;
 	while (t < t1)
+	// while (counter < 1) // for testing
 	{
+		/* for testing */
+		// printf("omega 1 = \n");
+		// print_vector(omega);
+
+	  	gsl_odeiv2_system sys = {field_1EB1PM, NULL, dim, params};
+	
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
 				ode_control, ode_step, &sys, &t, h, y);
 
-		// printf("status = %d\n", status);
-		
-		if (status != GSL_SUCCESS) break;
-		
+		if (status != GSL_SUCCESS)
+		{
+			/* for testing */
+			printf("status = %d\n", status);
+			break;
+		}
+
+		/* update some variables for omega calculation */
+		for (int i = 0; i < 3; i++) 				tilde_x[i] = y[0 + i];
+		for (int i = 0; i < 3; i++) 				l[i] = y[6 + i];
+		for (int i = 0; i < 5; i++) 				b0_me[i] = y[9 + i];
+		for (int i = 0; i < 5; i++) 				u_me[i] = y[14 + i];
+		for (int i = 0; i < (elements * 5); i++) 	bk_me[i] = y[19 + i];
+
+		/* update omega */
+		copy_vector(omega_seed, omega);
+		calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
+			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
+		for (int i  = 0; i < 3; i++) params[i] = omega[i];
+
+		/* writes output */
 		if (counter % data_step == 0)
 		{
 			printf ("%.5e %.5e %.5e\n", t, y[0], y[1]);
 		}
+
+		/* for testing */
+		// printf("omega 2 = \n");
+		// print_vector(omega);
 
 		counter++;
 	}
