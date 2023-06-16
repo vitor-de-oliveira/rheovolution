@@ -39,7 +39,8 @@ field_1EB1PM(double t, const double y[], double f[],
 	/* preparing variables */
 
 	double tilde_x[3], tilde_x_dot[3], l[3];
-	double b0_me[9], u_me[9], *bk_me, **bk_me_2d_array;
+	double b0_me[9], u_me[9];
+	double *bk_me = *(&bk_me), **bk_me_2d_array;
 
 	for (int i = 0; i < 3; i++)	tilde_x[i] 		= y[0 + i];
 	for (int i = 0; i < 3; i++) tilde_x_dot[i] 	= y[3 + i];
@@ -162,15 +163,9 @@ field_1EB1PM(double t, const double y[], double f[],
 	scale_vector (component_tilde_x_dot_2nd_term, 
 		(15. * I0 * bx_dot_x) / (2. * m1 * tilde_x_norm_seventh), tilde_x);
 
-	// print_vector(component_tilde_x_dot_2nd_term);
-	// exit(43);
-
 	double component_tilde_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
 	scale_vector (component_tilde_x_dot_3rd_term, 
 		(-3.0 * I0) / (m1 * tilde_x_norm_fifth), bx);
-
-	// print_vector(component_tilde_x_dot_3rd_term);
-	// exit(43);
 
 	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0};
 	linear_combination_three_vector(component_tilde_x_dot,
@@ -637,18 +632,6 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 
 		/* solving linear equation m*x=b using LU decomposition */
 
-		/* for testing */
-		// DH[0] = 0.18;
-		// DH[1] = 0.60;
-		// DH[2] = 0.57;
-		// DH[3] = -0.41;
-		// DH[4] = 0.24;
-		// DH[5] = 0.99;
-		// DH[6] = -0.14;
-		// DH[7] = 0.30;
-		// DH[8] = 0.97;
-		// h[0] = 1.0; h[1] = 2.0; h[2] = -3.0;
-
 		gsl_matrix_view m
 			= gsl_matrix_view_array (DH, 3, 3);
 
@@ -685,11 +668,10 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 
 	if (error > max_error)
 	{
-		printf("Warning: error higher than the max allowed\n");
-		printf("for omega calculation.\n");
+		fprintf(stderr, "Error: error higher than the max allowed\n");
+		fprintf(stderr, "for omega calculation.\n");
 		exit(99);
 	}
-
 
 	/* for testing */
 	// printf("\nomega = \n");

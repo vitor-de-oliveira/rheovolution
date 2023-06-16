@@ -17,13 +17,13 @@ main(int argc, char *argv[])
 	/* check number of input files */
 	if( argc < 3 )
 	{
-	   	printf("Please, provide both the system parameters");
-		printf(" and the integrator parameters files\n");
+	   	fprintf(stderr, "Please, provide both the system parameters");
+		fprintf(stderr, " and the integrator parameters files\n");
 	   	exit(2);
    	}
    	else if ( argc > 3 )
    	{
-	   	printf("Too many arguments\n");
+	   	fprintf(stderr, "Too many arguments\n");
 	   	exit(4);
    	}
 
@@ -56,52 +56,143 @@ main(int argc, char *argv[])
 	/* auxiliary variables for fscanf */
 	char 	var_name[100];
 	double 	var_value;
-
+	
 	/* orbital parameters given by user */
-	double 	e, a, T;
+	double 	e = 0.0, a = 0.0, T = 0.0;
 	/* state variables given by user*/
-	double 	b0_diag[3];
+	double 	b0_diag[] = {0.0, 0.0, 0.0};
 	/* non-state variables given by user */
-	double 	omega[3];
+	double 	omega[] = {0.0, 0.0, 0.0};
 	/* system parameters given by user */
 	int		elements = 0; //number of Voigt elements
-	double  G, m1, m2, I0, R;
-	double	alpha_0, alpha, eta;
+	double  G = 0.0, m1 = 0.0, m2 = 0.0, I0 = 0.0, R = 0.0;
+	double	alpha_0 = 0.0, alpha = 0.0, eta = 0.0;
+
+	/* verification variables for system input */
+	int 	number_system_inputs = 18;
+	bool	input_system_received[number_system_inputs];
+	for (int i = 0; i < number_system_inputs; i++)
+	{
+		input_system_received[i] = false;
+	}
 
 	/* reading system specs from user */
 	FILE *in1_again = fopen(argv[1], "r");
 	while(fscanf(in1_again, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
-		if (strcmp(var_name, "e") == 0)					e = var_value;
-		else if (strcmp(var_name, "a") == 0)			a = var_value;
-		else if (strcmp(var_name, "T") == 0)			T = var_value;
-		else if (strcmp(var_name, "G") == 0)			G = var_value;
-		else if (strcmp(var_name, "m1") == 0)			m1 = var_value;
-		else if (strcmp(var_name, "m2") == 0)			m2 = var_value;
-		else if (strcmp(var_name, "I0") == 0)			I0 = var_value;
-		else if (strcmp(var_name, "R") == 0)			R = var_value;
-		else if (strcmp(var_name, "b0_x") == 0)			b0_diag[0] = var_value;
-		else if (strcmp(var_name, "b0_y") == 0)			b0_diag[1] = var_value;
-		else if (strcmp(var_name, "b0_z") == 0)			b0_diag[2] = var_value;
-		else if (strcmp(var_name, "omega_x") == 0)		omega[0] = var_value;
-		else if (strcmp(var_name, "omega_y") == 0)		omega[1] = var_value;
-		else if (strcmp(var_name, "omega_z") == 0)		omega[2] = var_value;
-		else if (strcmp(var_name, "alpha_0") == 0)		alpha_0 = var_value;
-		else if (strcmp(var_name, "alpha") == 0)		alpha = var_value;
-		else if (strcmp(var_name, "eta") == 0)			eta = var_value;
-		else if (strcmp(var_name, "elements") == 0)		elements = (int) var_value;
+		if (strcmp(var_name, "e") == 0)
+		{
+			e = var_value;
+			input_system_received[0] = true;
+		}					
+		else if (strcmp(var_name, "a") == 0)
+		{
+			a = var_value;
+			input_system_received[1] = true;
+		}
+		else if (strcmp(var_name, "T") == 0)
+		{
+			T = var_value;
+			input_system_received[2] = true;
+		}
+		else if (strcmp(var_name, "G") == 0)
+		{
+			G = var_value;
+			input_system_received[3] = true;
+		}
+		else if (strcmp(var_name, "m1") == 0)
+		{
+			m1 = var_value;
+			input_system_received[4] = true;
+		}
+		else if (strcmp(var_name, "m2") == 0)
+		{
+			m2 = var_value;
+			input_system_received[5] = true;
+		}
+		else if (strcmp(var_name, "I0") == 0)
+		{
+			I0 = var_value;
+			input_system_received[6] = true;
+		}
+		else if (strcmp(var_name, "R") == 0)
+		{
+			R = var_value;
+			input_system_received[7] = true;
+		}
+		else if (strcmp(var_name, "b0_x") == 0)
+		{
+			b0_diag[0] = var_value;
+			input_system_received[8] = true;
+		}
+		else if (strcmp(var_name, "b0_y") == 0)
+		{
+			b0_diag[1] = var_value;
+			input_system_received[9] = true;
+		}
+		else if (strcmp(var_name, "b0_z") == 0)
+		{
+			b0_diag[2] = var_value;
+			input_system_received[10] = true;
+		}
+		else if (strcmp(var_name, "omega_x") == 0)
+		{
+			omega[0] = var_value;
+			input_system_received[11] = true;
+		}
+		else if (strcmp(var_name, "omega_y") == 0)
+		{
+			omega[1] = var_value;
+			input_system_received[12] = true;
+		}
+		else if (strcmp(var_name, "omega_z") == 0)
+		{
+			omega[2] = var_value;
+			input_system_received[13] = true;
+		}
+		else if (strcmp(var_name, "alpha_0") == 0)
+		{
+			alpha_0 = var_value;
+			input_system_received[14] = true;
+		}
+		else if (strcmp(var_name, "alpha") == 0)
+		{
+			alpha = var_value;
+			input_system_received[15] = true;
+		}
+		else if (strcmp(var_name, "eta") == 0)
+		{
+			eta = var_value;
+			input_system_received[16] = true;
+		}
+		else if (strcmp(var_name, "elements") == 0)
+		{
+			elements = (int) var_value;
+			input_system_received[17] = true;
+		}
 	}
 	fclose(in1_again);
 
-	if (fabs(alpha) < 1e-10 || fabs(eta) < 1e-10)
+	/* system input verification */
+	for (int i = 0; i < number_system_inputs; i++)
 	{
-		printf("Warning: nor alpha nor eta should be zero.\n");
-		printf("Exiting the program now.\n");
+		if(input_system_received[i] == false)
+		{
+			fprintf(stderr, "Warning: there is at least one missing system input.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(13);
+		}
+	}
+	if (fabs(alpha) < 1e-14 || fabs(eta) < 1e-14)
+	{
+		fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
+		fprintf(stderr, "Exiting the program now.\n");
 		exit(13);
 	}
 
 	/* setting up Voigt elements */
-	double	*alpha_elements, *eta_elements;
+	double	*alpha_elements = *(&alpha_elements);
+	double	*eta_elements = *(&eta_elements);
 	if (elements > 0)
 	{
 		alpha_elements 	= (double *) malloc(elements * sizeof(double));
@@ -141,34 +232,76 @@ main(int argc, char *argv[])
 			if (element_alpha_found[i] == false || 
 				element_eta_found[i] == false)
 			{
-				printf("Error: parameters missing for Voigt elements.\n");
+				fprintf(stderr, "Error: parameters missing for Voigt elements.\n");
 				exit(10);
 			}
-			if (alpha_elements[i] < 1e-10 || eta_elements[i] < 1e-10)
+			if (alpha_elements[i] < 1e-13 || eta_elements[i] < 1e-13)
 			{
-				printf("Warning: nor alpha nor eta should be zero.\n");
-				printf("Exiting the program now.\n");
+				fprintf(stderr, "Error: nor alpha nor eta should be zero.\n");
 				exit(13);
 			}
 		}
 	}
 
 	/* integrator parameters */
-	double 	h, t0, t1, eps_abs, eps_rel;
-	int		data_step;
+	double 	h = 0.0, t0 = 0.0, t1 = 0.0;
+	double	eps_abs = 0.0, eps_rel = 0.0;
+	int		data_step = 0;
+
+	/* verification variables for integrator input */
+	int 	number_integrator_inputs = 6;
+	bool	input_integrator_received[number_integrator_inputs];
+	for (int i = 0; i < number_integrator_inputs; i++)
+	{
+		input_integrator_received[i] = false;
+	}
 
 	/* reading integrator specs from user */
 	FILE *in2_again = fopen(argv[2], "r");
 	while(fscanf(in2_again, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
-		if (strcmp(var_name, "h") == 0)					h = var_value;
-		else if (strcmp(var_name, "t0") == 0)			t0 = var_value;
-		else if (strcmp(var_name, "t1") == 0)			t1 = var_value;
-		else if (strcmp(var_name, "eps_abs") == 0)		eps_abs = var_value;
-		else if (strcmp(var_name, "eps_rel") == 0)		eps_rel = var_value;
-		else if (strcmp(var_name, "data_step") == 0)	data_step = (int) var_value;
+		if (strcmp(var_name, "h") == 0)
+		{
+			h = var_value;
+			input_integrator_received[0] = true;
+		}
+		else if (strcmp(var_name, "t0") == 0)
+		{
+			t0 = var_value;
+			input_integrator_received[1] = true;
+		}
+		else if (strcmp(var_name, "t1") == 0)
+		{
+			t1 = var_value;
+			input_integrator_received[2] = true;
+		}
+		else if (strcmp(var_name, "eps_abs") == 0)
+		{
+			eps_abs = var_value;
+			input_integrator_received[3] = true;
+		}
+		else if (strcmp(var_name, "eps_rel") == 0)
+		{
+			eps_rel = var_value;
+			input_integrator_received[4] = true;
+		}
+		else if (strcmp(var_name, "data_step") == 0)
+		{
+			data_step = (int) var_value;
+			input_integrator_received[5] = true;
+		}
 	}
 	fclose(in2_again);
+
+	/* parameter input verification */
+	for (int i = 0; i < number_integrator_inputs; i++)
+	{
+		if(input_integrator_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing integrator input.\n");
+			exit(13);
+		}
+	}
 
 	/* position and velocity at periapsis given by Murray */
 	double	tilde_x[3], tilde_x_dot[3];
@@ -190,13 +323,13 @@ main(int argc, char *argv[])
 
 	/* variables not given by user */
 	double gamma = parameter_gamma_homogeneous_body(G, I0, R);
-
-	double u_me[5], *bk_me;
+	double u_me[5], *bk_me = *(&bk_me);
 	for (int i = 0; i < 5; i++) u_me[i] = 0.0;
 	if (elements > 0)
 	{
 		bk_me = (double *) calloc(elements * 5, sizeof(double));
 	}
+
 	/* for testing */
 	// for (int i = 0; i < 5; i++)
 	// {
@@ -211,16 +344,7 @@ main(int argc, char *argv[])
 	double 	b[9], l[3];
 	calculate_b(b, G, m2, gamma, alpha_0, alpha,
 		tilde_x, omega, b0_me, u_me, elements, bk_me);
-	// printf("b = \n");
-	// print_square_matrix(b);
-	// exit(43);
 	calculate_l(l, I0, b, omega);
-	double omega_seed[3];
-	// copy_vector(omega_seed, omega);
-	// linear_combination_vector(omega_seed, 1.0, omega, 1e-5, omega);
-	// calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
-	// 	alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
-	// exit(43);
 
 	/* for testing */
 	// printf("b = \n");
@@ -281,6 +405,8 @@ main(int argc, char *argv[])
 		// printf("omega 1 = \n");
 		// print_vector(omega);
 
+		if (fabs(t1-t) < h) h = t1-t;	//smaller last step
+
 	  	gsl_odeiv2_system sys = {field_1EB1PM, NULL, dim, params};
 	
 		int status = 
@@ -289,8 +415,7 @@ main(int argc, char *argv[])
 
 		if (status != GSL_SUCCESS)
 		{
-			/* for testing */
-			printf("status = %d\n", status);
+			fprintf(stderr, "Error: GSL odeiv2 status = %d\n", status);
 			break;
 		}
 
@@ -302,10 +427,11 @@ main(int argc, char *argv[])
 		for (int i = 0; i < (elements * 5); i++) 	bk_me[i] = y[19 + i];
 
 		/* update omega */
+		double omega_seed[3];
 		copy_vector(omega_seed, omega);
 		calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
 			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
-		for (int i  = 0; i < 3; i++) params[i] = omega[i];
+		for (int i = 0; i < 3; i++) params[i] = omega[i];
 
 		/* writes output */
 		if (counter % data_step == 0)
