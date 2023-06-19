@@ -7,7 +7,7 @@ TARGET = TIDES
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -diag-disable=10441
 CC = icc
 
-CFLAGSL = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall
+CFLAGSL = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
 CCL = gcc
 
 DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/dynamical_system.c
