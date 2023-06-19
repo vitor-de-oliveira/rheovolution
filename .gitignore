@@ -1,0 +1,8 @@
+TIDES
+input/
+output/
+run_tides.sh
+err.err
+out.out
+nohup.out
+.vscode/
