@@ -27,32 +27,6 @@ main(int argc, char *argv[])
 	   	exit(4);
    	}
 
-	/* make a copy of the input files */
-	struct stat st = {0};
-	if (stat("output", &st) == -1) {
-		mkdir("output", 0700);
-	}
-	FILE *in1 = fopen(argv[1], "r");
-	FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
-	char ch = fgetc(in1);
-    while(ch != EOF)
-    {
-        fputc(ch, in1_copy);
-        ch = fgetc(in1);
-    }
-	fclose(in1);
-	fclose(in1_copy);
-	FILE *in2 = fopen(argv[2], "r");
-	FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
-	char ch2 = fgetc(in2);
-    while(ch2 != EOF)
-    {
-        fputc(ch2, in2_copy);
-        ch2 = fgetc(in2);
-    }
-	fclose(in2);
-	fclose(in2_copy);
-
 	/* auxiliary variables for fscanf */
 	char 	var_name[100];
 	double 	var_value;
@@ -77,8 +51,8 @@ main(int argc, char *argv[])
 	}
 
 	/* reading system specs from user */
-	FILE *in1_again = fopen(argv[1], "r");
-	while(fscanf(in1_again, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
+	FILE *in1 = fopen(argv[1], "r");
+	while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
 		if (strcmp(var_name, "e") == 0)
 		{
@@ -171,7 +145,7 @@ main(int argc, char *argv[])
 			input_system_received[17] = true;
 		}
 	}
-	fclose(in1_again);
+	fclose(in1);
 
 	/* system input verification */
 	for (int i = 0; i < number_system_inputs; i++)
@@ -208,7 +182,7 @@ main(int argc, char *argv[])
 		}
 
 		FILE *in1_elements = fopen(argv[1], "r");
-		while(fscanf(in1_again, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
+		while(fscanf(in1_elements, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 		{
 			for (int i = 0; i < elements; i++)
 			{
@@ -257,8 +231,8 @@ main(int argc, char *argv[])
 	}
 
 	/* reading integrator specs from user */
-	FILE *in2_again = fopen(argv[2], "r");
-	while(fscanf(in2_again, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
+	FILE *in2 = fopen(argv[2], "r");
+	while(fscanf(in2, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
 		if (strcmp(var_name, "h") == 0)
 		{
@@ -291,7 +265,7 @@ main(int argc, char *argv[])
 			input_integrator_received[5] = true;
 		}
 	}
-	fclose(in2_again);
+	fclose(in2);
 
 	/* parameter input verification */
 	for (int i = 0; i < number_integrator_inputs; i++)
@@ -302,6 +276,32 @@ main(int argc, char *argv[])
 			exit(13);
 		}
 	}
+
+	/* make a copy of the input files */
+	struct stat st = {0};
+	if (stat("output", &st) == -1) {
+		mkdir("output", 0700);
+	}
+	FILE *in1_to_copy = fopen(argv[1], "r");
+	FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
+	char ch = fgetc(in1_to_copy);
+    while(ch != EOF)
+    {
+        fputc(ch, in1_copy);
+        ch = fgetc(in1_to_copy);
+    }
+	fclose(in1_to_copy);
+	fclose(in1_copy);
+	FILE *in2_to_copy = fopen(argv[2], "r");
+	FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
+	char ch2 = fgetc(in2_to_copy);
+    while(ch2 != EOF)
+    {
+        fputc(ch2, in2_copy);
+        ch2 = fgetc(in2_to_copy);
+    }
+	fclose(in2_to_copy);
+	fclose(in2_copy);
 
 	/* position and velocity at periapsis given by Murray */
 	double	tilde_x[3], tilde_x_dot[3];
