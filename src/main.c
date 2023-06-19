@@ -419,8 +419,9 @@ main(int argc, char *argv[])
 			break;
 		}
 
-		/* update some variables for omega calculation */
+		/* update variables */
 		for (int i = 0; i < 3; i++) 				tilde_x[i] = y[0 + i];
+		for (int i = 0; i < 3; i++) 				tilde_x_dot[i] = y[3 + i];
 		for (int i = 0; i < 3; i++) 				l[i] = y[6 + i];
 		for (int i = 0; i < 5; i++) 				b0_me[i] = y[9 + i];
 		for (int i = 0; i < 5; i++) 				u_me[i] = y[14 + i];
@@ -433,10 +434,17 @@ main(int argc, char *argv[])
 			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
 		for (int i = 0; i < 3; i++) params[i] = omega[i];
 
+		/* calculate total angular momentum */
+		double l_total[3];
+		total_angular_momentum(l_total, m1, m2, 
+			tilde_x, tilde_x_dot, l);
+
 		/* writes output */
 		if (counter % data_step == 0)
 		{
-			printf ("%.5e %.5e %.5e\n", t, y[0], y[1]);
+			printf ("%.5e %.5e %.5e %.5e %.5e %.5e\n", 
+				t, y[0], y[1],
+				l_total[0], l_total[1], l_total[2]);
 		}
 
 		/* for testing */

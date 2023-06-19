@@ -259,7 +259,6 @@ field_1EB1PM(double t, const double y[], double f[],
 			// print_square_matrix(component_bk);
 		}
 	}
-	// exit(43);
 
 	/* writing components */	
 
@@ -677,6 +676,22 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	// printf("\nomega = \n");
 	// print_vector(omega);
 	// exit(42);
+
+	return 0;
+}
+
+int
+total_angular_momentum(double l_total[3], const double m1,
+	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
+	const double l[3])
+{
+	double reduced_mass = (m1 * m2) / (m1 + m2);
+	double x_cross_x_dot[3];
+	cross_product(x_cross_x_dot, tilde_x, tilde_x_dot);
+	double l_center_of_mass[3];
+	scale_vector(l_center_of_mass, reduced_mass, x_cross_x_dot);
+
+	linear_combination_vector(l_total, 1.0, l_center_of_mass, 1.0, l);
 
 	return 0;
 }

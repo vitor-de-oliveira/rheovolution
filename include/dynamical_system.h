@@ -58,4 +58,9 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[]);
 
+int
+total_angular_momentum(double l_total[3], const double m1,
+	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
+	const double l[3]);
+
 #endif
