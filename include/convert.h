@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <sys/types.h> // ssize_t
 
+#include "algelin3d.h"
+
 typedef struct CelestialBody{
     char    name[100];  // name
 	double  mass;       // mass (sun mass)
