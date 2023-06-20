@@ -8,6 +8,7 @@
 #include <gsl/gsl_odeiv2.h>
 
 #include "dynamical_system.h"
+#include "convert.h"
 
 #define PI 3.14159265358979323846
 
@@ -26,6 +27,10 @@ main(int argc, char *argv[])
 	   	fprintf(stderr, "Too many arguments\n");
 	   	exit(4);
    	}
+
+	/* convert input */
+	convert_input(argv[1]);
+	exit(99);
 
 	/* auxiliary variables for fscanf */
 	char 	var_name[100];
@@ -52,6 +57,12 @@ main(int argc, char *argv[])
 
 	/* reading system specs from user */
 	FILE *in1 = fopen(argv[1], "r");
+	if	(in1 == NULL)
+	{
+		fprintf(stderr, "Warning: could not read system input file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
 	while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
 		if (strcmp(var_name, "e") == 0)
@@ -152,7 +163,8 @@ main(int argc, char *argv[])
 	{
 		if(input_system_received[i] == false)
 		{
-			fprintf(stderr, "Warning: there is at least one missing system input.\n");
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", argv[1]);
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
@@ -211,7 +223,7 @@ main(int argc, char *argv[])
 			}
 			if (alpha_elements[i] < 1e-13 || eta_elements[i] < 1e-13)
 			{
-				fprintf(stderr, "Error: nor alpha nor eta should be zero.\n");
+				fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
 				exit(13);
 			}
 		}
@@ -232,6 +244,12 @@ main(int argc, char *argv[])
 
 	/* reading integrator specs from user */
 	FILE *in2 = fopen(argv[2], "r");
+	if	(in2 == NULL)
+	{
+		fprintf(stderr, "Warning: could not read integrator input file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
 	while(fscanf(in2, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
 		if (strcmp(var_name, "h") == 0)
@@ -272,7 +290,8 @@ main(int argc, char *argv[])
 	{
 		if(input_integrator_received[i] == false)
 		{
-			fprintf(stderr, "Error: there is at least one missing integrator input.\n");
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", argv[2]);
 			exit(13);
 		}
 	}
