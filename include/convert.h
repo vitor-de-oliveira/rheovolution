@@ -27,21 +27,21 @@ typedef struct CelestialBody{
 	double  mass;       // mass (sun mass)
 	double	lod;	    // length of day (day)
 	double 	obl;	    // obliquity (deg)
-	double	psi;	    // ? (deg)
+	double	psi;	    // (deg)
 	double	R;		    // radius (km)
-	double	rg;		    // ?
-	double	J2;		    //
-	double	C22;        //
-	double	lib;	    // ? (deg)
+	double	rg;		    // 
+	double	J2;		    // gravity field coefficient
+	double	C22;        // gravity field coefficient
+	double	lib;	    // (deg)
 	double	k2;		    // Love number
-	double	Dt;		    // ? (s)
-	double	tau;	    // characteristic time (yr)
+	double	Dt;		    // tidal lag (s)
+	double	tau;	    // Maxwell relaxation time plus tidal lag (yr)
 	double	a;		    // semi-major axis (AU)
-	double	e;		    // orbital eccentricity
-	double	I;		    // ? (deg)
-	double	M;		    // ? (deg)
-	double	w;		    // ? (deg)
-	double	Omega;	    // ? (deg)
+	double	e;		    // orbit eccentricity
+	double	I;		    // inclination (deg)
+	double	M;		    // mean anomaly (deg)
+	double	w;		    // argument of periapsis (deg)
+	double	Omega;	    // longitude of the ascending node (deg)
 } cltbdy;
 
 int
