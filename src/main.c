@@ -15,22 +15,19 @@
 int
 main(int argc, char *argv[]) 
 {
-	/* check number of input files */
-	if( argc < 3 )
+	/* check number of command line arguments */
+	if( argc < 4 )
 	{
-	   	fprintf(stderr, "Please, provide both the system parameters");
+	   	fprintf(stderr, "Please, provide the type of system parameters file,");
+		fprintf(stderr, " and both the system parameters");
 		fprintf(stderr, " and the integrator parameters files\n");
 	   	exit(2);
    	}
-   	else if ( argc > 3 )
+   	else if ( argc > 4 )
    	{
 	   	fprintf(stderr, "Too many arguments\n");
 	   	exit(4);
    	}
-
-	/* convert input */
-	convert_input(argv[1]);
-	exit(99);
 
 	/* auxiliary variables for fscanf */
 	char 	var_name[100];
@@ -46,187 +43,199 @@ main(int argc, char *argv[])
 	int		elements = 0; //number of Voigt elements
 	double  G = 0.0, m1 = 0.0, m2 = 0.0, I0 = 0.0, R = 0.0;
 	double	alpha_0 = 0.0, alpha = 0.0, eta = 0.0;
+	/* Voigt elements for Maxwell generalized rheology */
+	double	*alpha_elements = *(&alpha_elements);
+	double	*eta_elements = *(&eta_elements);
 
-	/* verification variables for system input */
-	int 	number_system_inputs = 18;
-	bool	input_system_received[number_system_inputs];
-	for (int i = 0; i < number_system_inputs; i++)
+	if (atoi(argv[1]) == 1)
 	{
-		input_system_received[i] = false;
-	}
+		/* verification variables for system input */
+		int 	number_system_inputs = 18;
+		bool	input_system_received[number_system_inputs];
+		for (int i = 0; i < number_system_inputs; i++)
+		{
+			input_system_received[i] = false;
+		}
 
-	/* reading system specs from user */
-	FILE *in1 = fopen(argv[1], "r");
-	if	(in1 == NULL)
-	{
-		fprintf(stderr, "Warning: could not read system input file.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-	while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
-	{
-		if (strcmp(var_name, "e") == 0)
+		/* reading system specs from user */
+		FILE *in1 = fopen(argv[2], "r");
+		if	(in1 == NULL)
 		{
-			e = var_value;
-			input_system_received[0] = true;
-		}					
-		else if (strcmp(var_name, "a") == 0)
-		{
-			a = var_value;
-			input_system_received[1] = true;
-		}
-		else if (strcmp(var_name, "T") == 0)
-		{
-			T = var_value;
-			input_system_received[2] = true;
-		}
-		else if (strcmp(var_name, "G") == 0)
-		{
-			G = var_value;
-			input_system_received[3] = true;
-		}
-		else if (strcmp(var_name, "m1") == 0)
-		{
-			m1 = var_value;
-			input_system_received[4] = true;
-		}
-		else if (strcmp(var_name, "m2") == 0)
-		{
-			m2 = var_value;
-			input_system_received[5] = true;
-		}
-		else if (strcmp(var_name, "I0") == 0)
-		{
-			I0 = var_value;
-			input_system_received[6] = true;
-		}
-		else if (strcmp(var_name, "R") == 0)
-		{
-			R = var_value;
-			input_system_received[7] = true;
-		}
-		else if (strcmp(var_name, "b0_x") == 0)
-		{
-			b0_diag[0] = var_value;
-			input_system_received[8] = true;
-		}
-		else if (strcmp(var_name, "b0_y") == 0)
-		{
-			b0_diag[1] = var_value;
-			input_system_received[9] = true;
-		}
-		else if (strcmp(var_name, "b0_z") == 0)
-		{
-			b0_diag[2] = var_value;
-			input_system_received[10] = true;
-		}
-		else if (strcmp(var_name, "omega_x") == 0)
-		{
-			omega[0] = var_value;
-			input_system_received[11] = true;
-		}
-		else if (strcmp(var_name, "omega_y") == 0)
-		{
-			omega[1] = var_value;
-			input_system_received[12] = true;
-		}
-		else if (strcmp(var_name, "omega_z") == 0)
-		{
-			omega[2] = var_value;
-			input_system_received[13] = true;
-		}
-		else if (strcmp(var_name, "alpha_0") == 0)
-		{
-			alpha_0 = var_value;
-			input_system_received[14] = true;
-		}
-		else if (strcmp(var_name, "alpha") == 0)
-		{
-			alpha = var_value;
-			input_system_received[15] = true;
-		}
-		else if (strcmp(var_name, "eta") == 0)
-		{
-			eta = var_value;
-			input_system_received[16] = true;
-		}
-		else if (strcmp(var_name, "elements") == 0)
-		{
-			elements = (int) var_value;
-			input_system_received[17] = true;
-		}
-	}
-	fclose(in1);
-
-	/* system input verification */
-	for (int i = 0; i < number_system_inputs; i++)
-	{
-		if(input_system_received[i] == false)
-		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", argv[1]);
+			fprintf(stderr, "Warning: could not read system input file.\n");
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
-	}
-	if (fabs(alpha) < 1e-14 || fabs(eta) < 1e-14)
-	{
-		fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-
-	/* setting up Voigt elements */
-	double	*alpha_elements = *(&alpha_elements);
-	double	*eta_elements = *(&eta_elements);
-	if (elements > 0)
-	{
-		alpha_elements 	= (double *) malloc(elements * sizeof(double));
-		eta_elements 	= (double *) malloc(elements * sizeof(double));
-
-		char name_element_alpha[20], name_element_eta[20];
-		bool element_alpha_found[elements];
-		bool element_eta_found[elements];
-		for (int i = 0; i < elements; i++)
+		while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 		{
-			element_alpha_found[i] = false;
-			element_eta_found[i] = false;
-		}
-
-		FILE *in1_elements = fopen(argv[1], "r");
-		while(fscanf(in1_elements, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
-		{
-			for (int i = 0; i < elements; i++)
+			if (strcmp(var_name, "e") == 0)
 			{
-				sprintf(name_element_alpha, "alpha_%d", i+1);
-				sprintf(name_element_eta, "eta_%d", i+1);
-				if (strcmp(var_name, name_element_alpha) == 0)
-				{
-					alpha_elements[i] = var_value;
-					element_alpha_found[i] = true;
-				}
-				else if (strcmp(var_name, name_element_eta) == 0)
-				{
-					eta_elements[i] = var_value;
-					element_eta_found[i] = true;
-				}
+				e = var_value;
+				input_system_received[0] = true;
+			}					
+			else if (strcmp(var_name, "a") == 0)
+			{
+				a = var_value;
+				input_system_received[1] = true;
+			}
+			else if (strcmp(var_name, "T") == 0)
+			{
+				T = var_value;
+				input_system_received[2] = true;
+			}
+			else if (strcmp(var_name, "G") == 0)
+			{
+				G = var_value;
+				input_system_received[3] = true;
+			}
+			else if (strcmp(var_name, "m1") == 0)
+			{
+				m1 = var_value;
+				input_system_received[4] = true;
+			}
+			else if (strcmp(var_name, "m2") == 0)
+			{
+				m2 = var_value;
+				input_system_received[5] = true;
+			}
+			else if (strcmp(var_name, "I0") == 0)
+			{
+				I0 = var_value;
+				input_system_received[6] = true;
+			}
+			else if (strcmp(var_name, "R") == 0)
+			{
+				R = var_value;
+				input_system_received[7] = true;
+			}
+			else if (strcmp(var_name, "b0_x") == 0)
+			{
+				b0_diag[0] = var_value;
+				input_system_received[8] = true;
+			}
+			else if (strcmp(var_name, "b0_y") == 0)
+			{
+				b0_diag[1] = var_value;
+				input_system_received[9] = true;
+			}
+			else if (strcmp(var_name, "b0_z") == 0)
+			{
+				b0_diag[2] = var_value;
+				input_system_received[10] = true;
+			}
+			else if (strcmp(var_name, "omega_x") == 0)
+			{
+				omega[0] = var_value;
+				input_system_received[11] = true;
+			}
+			else if (strcmp(var_name, "omega_y") == 0)
+			{
+				omega[1] = var_value;
+				input_system_received[12] = true;
+			}
+			else if (strcmp(var_name, "omega_z") == 0)
+			{
+				omega[2] = var_value;
+				input_system_received[13] = true;
+			}
+			else if (strcmp(var_name, "alpha_0") == 0)
+			{
+				alpha_0 = var_value;
+				input_system_received[14] = true;
+			}
+			else if (strcmp(var_name, "alpha") == 0)
+			{
+				alpha = var_value;
+				input_system_received[15] = true;
+			}
+			else if (strcmp(var_name, "eta") == 0)
+			{
+				eta = var_value;
+				input_system_received[16] = true;
+			}
+			else if (strcmp(var_name, "elements") == 0)
+			{
+				elements = (int) var_value;
+				input_system_received[17] = true;
 			}
 		}
-		fclose(in1_elements);
-		for (int i = 0; i < elements; i++)
+		fclose(in1);
+
+		/* system input verification */
+		for (int i = 0; i < number_system_inputs; i++)
 		{
-			if (element_alpha_found[i] == false || 
-				element_eta_found[i] == false)
+			if(input_system_received[i] == false)
 			{
-				fprintf(stderr, "Error: parameters missing for Voigt elements.\n");
-				exit(10);
-			}
-			if (alpha_elements[i] < 1e-13 || eta_elements[i] < 1e-13)
-			{
-				fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
+				fprintf(stderr, "Error: there is at least one missing input ");
+				fprintf(stderr, "from %s.\n", argv[2]);
 				exit(13);
 			}
 		}
+		if (fabs(alpha) < 1e-14 || fabs(eta) < 1e-14)
+		{
+			fprintf(stderr, "Error: nor alpha nor eta should be zero.\n");
+			exit(13);
+		}
+
+		/* setting up Voigt elements */
+		if (elements > 0)
+		{
+			alpha_elements 	= (double *) malloc(elements * sizeof(double));
+			eta_elements 	= (double *) malloc(elements * sizeof(double));
+
+			char name_element_alpha[20], name_element_eta[20];
+			bool element_alpha_found[elements];
+			bool element_eta_found[elements];
+			for (int i = 0; i < elements; i++)
+			{
+				element_alpha_found[i] = false;
+				element_eta_found[i] = false;
+			}
+
+			FILE *in1_elements = fopen(argv[2], "r");
+			while(fscanf(in1_elements, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
+			{
+				for (int i = 0; i < elements; i++)
+				{
+					sprintf(name_element_alpha, "alpha_%d", i+1);
+					sprintf(name_element_eta, "eta_%d", i+1);
+					if (strcmp(var_name, name_element_alpha) == 0)
+					{
+						alpha_elements[i] = var_value;
+						element_alpha_found[i] = true;
+					}
+					else if (strcmp(var_name, name_element_eta) == 0)
+					{
+						eta_elements[i] = var_value;
+						element_eta_found[i] = true;
+					}
+				}
+			}
+			fclose(in1_elements);
+			for (int i = 0; i < elements; i++)
+			{
+				if (element_alpha_found[i] == false || 
+					element_eta_found[i] == false)
+				{
+					fprintf(stderr, "Error: parameters missing for Voigt elements.\n");
+					exit(10);
+				}
+				if (alpha_elements[i] < 1e-13 || eta_elements[i] < 1e-13)
+				{
+					fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
+					exit(13);
+				}
+			}
+		}
+	}
+	else if (atoi(argv[1]) == 2) /* convert input if necessary */
+	{
+		convert_input(argv[2]);
+		exit(99);
+	}
+	else
+	{
+	   	fprintf(stderr, "Type of system file must be 1 or 2.\n");
+	   	exit(5);
 	}
 
 	/* integrator parameters */
@@ -243,7 +252,7 @@ main(int argc, char *argv[])
 	}
 
 	/* reading integrator specs from user */
-	FILE *in2 = fopen(argv[2], "r");
+	FILE *in2 = fopen(argv[3], "r");
 	if	(in2 == NULL)
 	{
 		fprintf(stderr, "Warning: could not read integrator input file.\n");
@@ -291,7 +300,7 @@ main(int argc, char *argv[])
 		if(input_integrator_received[i] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", argv[2]);
+			fprintf(stderr, "from %s.\n", argv[3]);
 			exit(13);
 		}
 	}
@@ -301,7 +310,7 @@ main(int argc, char *argv[])
 	if (stat("output", &st) == -1) {
 		mkdir("output", 0700);
 	}
-	FILE *in1_to_copy = fopen(argv[1], "r");
+	FILE *in1_to_copy = fopen(argv[2], "r");
 	FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
 	char ch = fgetc(in1_to_copy);
     while(ch != EOF)
@@ -311,7 +320,7 @@ main(int argc, char *argv[])
     }
 	fclose(in1_to_copy);
 	fclose(in1_copy);
-	FILE *in2_to_copy = fopen(argv[2], "r");
+	FILE *in2_to_copy = fopen(argv[3], "r");
 	FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
 	char ch2 = fgetc(in2_to_copy);
     while(ch2 != EOF)
