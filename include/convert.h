@@ -27,12 +27,14 @@ typedef struct CelestialBody{
 	double  mass;       // mass (sun mass)
 	double	lod;	    // length of day (day)
 	double 	obl;	    // obliquity (deg)
-	double	psi;	    // (deg)
+	double	psi;	    // longitude of the ascending node 
+						// of the body equator (deg)
 	double	R;		    // radius (km)
-	double	rg;		    // 
+	double	rg;		    // moment of inertia factor
 	double	J2;		    // gravity field coefficient
 	double	C22;        // gravity field coefficient
-	double	lib;	    // (deg)
+	double	lib;	    // angle between the ascending node and the
+						// lowest principal moment of inertia (deg)
 	double	k2;		    // Love number
 	double	Dt;		    // tidal lag (s)
 	double	tau;	    // Maxwell relaxation time plus tidal lag (yr)
