@@ -239,12 +239,13 @@ main(int argc, char *argv[])
 	}
 
 	/* integrator parameters */
-	double 	h = 0.0, t0 = 0.0, t1 = 0.0;
+	double	t_init = 0.0, t_trans = 0.0, t_final = 0.0;
+	double 	t_step = 0.0;
 	double	eps_abs = 0.0, eps_rel = 0.0;
-	int		data_step = 0;
+	int		data_skip = 0;
 
 	/* verification variables for integrator input */
-	int 	number_integrator_inputs = 6;
+	int 	number_integrator_inputs = 7;
 	bool	input_integrator_received[number_integrator_inputs];
 	for (int i = 0; i < number_integrator_inputs; i++)
 	{
@@ -261,35 +262,40 @@ main(int argc, char *argv[])
 	}
 	while(fscanf(in2, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 	{
-		if (strcmp(var_name, "h") == 0)
+		if (strcmp(var_name, "t_init") == 0)
 		{
-			h = var_value;
+			t_init = var_value;
 			input_integrator_received[0] = true;
 		}
-		else if (strcmp(var_name, "t0") == 0)
+		else if (strcmp(var_name, "t_trans") == 0)
 		{
-			t0 = var_value;
+			t_trans = var_value;
 			input_integrator_received[1] = true;
 		}
-		else if (strcmp(var_name, "t1") == 0)
+		else if (strcmp(var_name, "t_final") == 0)
 		{
-			t1 = var_value;
+			t_final = var_value;
 			input_integrator_received[2] = true;
+		}
+		else if (strcmp(var_name, "t_step") == 0)
+		{
+			t_step = var_value;
+			input_integrator_received[3] = true;
 		}
 		else if (strcmp(var_name, "eps_abs") == 0)
 		{
 			eps_abs = var_value;
-			input_integrator_received[3] = true;
+			input_integrator_received[4] = true;
 		}
 		else if (strcmp(var_name, "eps_rel") == 0)
 		{
 			eps_rel = var_value;
-			input_integrator_received[4] = true;
-		}
-		else if (strcmp(var_name, "data_step") == 0)
-		{
-			data_step = (int) var_value;
 			input_integrator_received[5] = true;
+		}
+		else if (strcmp(var_name, "data_skip") == 0)
+		{
+			data_skip = (int) var_value;
+			input_integrator_received[6] = true;
 		}
 	}
 	fclose(in2);
@@ -405,7 +411,7 @@ main(int argc, char *argv[])
 
 	/* integration loop variables */
 	int		dim = 19 + (elements * 5);	// optmize this
-	double 	t = t0;
+	double 	t = t_init;
 	double 	y[dim];
 	for (int i = 0; i < 3; i++) 				y[0 + i] = tilde_x[i];
 	for (int i = 0; i < 3; i++) 				y[3 + i] = tilde_x_dot[i];
@@ -426,20 +432,23 @@ main(int argc, char *argv[])
 
 	/* integration loop */
 	int counter = 0;
-	while (t < t1)
+	while (t < t_final)
 	// while (counter < 1) // for testing
 	{
 		/* for testing */
 		// printf("omega 1 = \n");
 		// print_vector(omega);
 
-		if (fabs(t1-t) < h) h = t1-t;	//smaller last step
+		if (fabs(t_final-t) < t_step)
+		{
+			t_step = t_final - t; //smaller last step
+		}
 
 	  	gsl_odeiv2_system sys = {field_1EB1PM, NULL, dim, params};
 	
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
-				ode_control, ode_step, &sys, &t, h, y);
+				ode_control, ode_step, &sys, &t, t_step, y);
 
 		if (status != GSL_SUCCESS)
 		{
@@ -468,11 +477,14 @@ main(int argc, char *argv[])
 			tilde_x, tilde_x_dot, l);
 
 		/* writes output */
-		if (counter % data_step == 0)
+		if (t > t_trans)
 		{
-			printf ("%.5e %.5e %.5e %.5e %.5e %.5e\n", 
-				t, y[0], y[1],
-				l_total[0], l_total[1], l_total[2]);
+			if (counter % data_skip == 0)
+			{
+				printf ("%.5e %.5e %.5e %.5e %.5e %.5e\n", 
+					t, y[0], y[1],
+					l_total[0], l_total[1], l_total[2]);
+			}
 		}
 
 		/* for testing */
