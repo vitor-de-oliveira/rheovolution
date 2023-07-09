@@ -407,10 +407,10 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 }
 
 double
-parameter_gamma_homogeneous_body(const double G,
-	const double I0, const double R)
+parameter_gamma(const double G,	const double I0, 
+	const double R, const double kf)
 {
-	return 2.0 * I0 * G / pow(R, 5.0);
+	return 3.0 * I0 * G / (pow(R, 5.0) * kf);
 }
 
 double

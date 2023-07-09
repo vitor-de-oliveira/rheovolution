@@ -41,7 +41,8 @@ main(int argc, char *argv[])
 	double 	omega[] = {0.0, 0.0, 0.0};
 	/* system parameters given by user */
 	int		elements = 0; //number of Voigt elements
-	double  G = 0.0, m1 = 0.0, m2 = 0.0, I0 = 0.0, R = 0.0;
+	double  G = 0.0, m1 = 0.0, m2 = 0.0;
+	double	I0 = 0.0, R = 0.0, kf = 0.0;
 	double	alpha_0 = 0.0, alpha = 0.0, eta = 0.0;
 	/* Voigt elements for Maxwell generalized rheology */
 	double	*alpha_elements = *(&alpha_elements);
@@ -50,7 +51,7 @@ main(int argc, char *argv[])
 	if (atoi(argv[1]) == 1)
 	{
 		/* verification variables for system input */
-		int 	number_system_inputs = 18;
+		int 	number_system_inputs = 19;
 		bool	input_system_received[number_system_inputs];
 		for (int i = 0; i < number_system_inputs; i++)
 		{
@@ -107,55 +108,60 @@ main(int argc, char *argv[])
 				R = var_value;
 				input_system_received[7] = true;
 			}
+			else if (strcmp(var_name, "kf") == 0)
+			{
+				kf = var_value;
+				input_system_received[8] = true;
+			}
 			else if (strcmp(var_name, "b0_x") == 0)
 			{
 				b0_diag[0] = var_value;
-				input_system_received[8] = true;
+				input_system_received[9] = true;
 			}
 			else if (strcmp(var_name, "b0_y") == 0)
 			{
 				b0_diag[1] = var_value;
-				input_system_received[9] = true;
+				input_system_received[10] = true;
 			}
 			else if (strcmp(var_name, "b0_z") == 0)
 			{
 				b0_diag[2] = var_value;
-				input_system_received[10] = true;
+				input_system_received[11] = true;
 			}
 			else if (strcmp(var_name, "omega_x") == 0)
 			{
 				omega[0] = var_value;
-				input_system_received[11] = true;
+				input_system_received[12] = true;
 			}
 			else if (strcmp(var_name, "omega_y") == 0)
 			{
 				omega[1] = var_value;
-				input_system_received[12] = true;
+				input_system_received[13] = true;
 			}
 			else if (strcmp(var_name, "omega_z") == 0)
 			{
 				omega[2] = var_value;
-				input_system_received[13] = true;
+				input_system_received[14] = true;
 			}
 			else if (strcmp(var_name, "alpha_0") == 0)
 			{
 				alpha_0 = var_value;
-				input_system_received[14] = true;
+				input_system_received[15] = true;
 			}
 			else if (strcmp(var_name, "alpha") == 0)
 			{
 				alpha = var_value;
-				input_system_received[15] = true;
+				input_system_received[16] = true;
 			}
 			else if (strcmp(var_name, "eta") == 0)
 			{
 				eta = var_value;
-				input_system_received[16] = true;
+				input_system_received[17] = true;
 			}
 			else if (strcmp(var_name, "elements") == 0)
 			{
 				elements = (int) var_value;
-				input_system_received[17] = true;
+				input_system_received[18] = true;
 			}
 		}
 		fclose(in1);
@@ -356,7 +362,7 @@ main(int argc, char *argv[])
 	b0_me[4] = 0.0;
 
 	/* variables not given by user */
-	double gamma = parameter_gamma_homogeneous_body(G, I0, R);
+	double gamma = parameter_gamma(G, I0, R, kf);
 	double u_me[5], *bk_me = *(&bk_me);
 	for (int i = 0; i < 5; i++) u_me[i] = 0.0;
 	if (elements > 0)

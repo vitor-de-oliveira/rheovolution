@@ -25,8 +25,8 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 	const double M[9]);
 
 double
-parameter_gamma_homogeneous_body(const double G,
-	const double I0, const double R);
+parameter_gamma(const double G,	const double I0, 
+	const double R, const double kf);
 
 double
 calculate_c(const double gamma, const double alpha_0, const double alpha);
