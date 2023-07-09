@@ -477,6 +477,10 @@ main(int argc, char *argv[])
 			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
 		for (int i = 0; i < 3; i++) params[i] = omega[i];
 
+		/* calculate b */
+		calculate_b(b, G, m2, gamma, alpha_0, alpha,
+			tilde_x, omega, b0_me, u_me, elements, bk_me);
+
 		/* calculate total angular momentum */
 		double l_total[3];
 		total_angular_momentum(l_total, m1, m2, 
@@ -487,9 +491,20 @@ main(int argc, char *argv[])
 		{
 			if (counter % data_skip == 0)
 			{
-				printf ("%.5e %.5e %.5e %.5e %.5e %.5e\n", 
-					t, y[0], y[1],
+				/* time, position, and velocity */
+				printf ("%.5e %.5e %.5e %.5e %.5e %.5e %.5e", 
+					t, tilde_x[0], tilde_x[1], tilde_x[2],
+					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
+				/* angular momentum and total angular momentum */
+				printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
+					l[0], l[1], l[2],
 					l_total[0], l_total[1], l_total[2]);
+				/* deformation matrix */
+				printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+					b[0], b[1], b[2],
+					b[3], b[4], b[5],
+					b[6], b[7], b[8]);
+				printf("\n");
 			}
 		}
 
