@@ -3,14 +3,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
 #include "dynamical_system.h"
 #include "convert.h"
+#include "celmec.h"
 
 #define PI 3.14159265358979323846
+#define G 1.0
 
 int
 main(int argc, char *argv[]) 
@@ -34,24 +37,29 @@ main(int argc, char *argv[])
 	double 	var_value;
 	
 	/* orbital parameters given by user */
-	double 	e = 0.0, a = 0.0, T = 0.0;
+	double 	e = 0.0, a = 0.0;
 	/* state variables given by user*/
 	double 	b0_diag[] = {0.0, 0.0, 0.0};
 	/* non-state variables given by user */
 	double 	omega[] = {0.0, 0.0, 0.0};
 	/* system parameters given by user */
 	int		elements = 0; //number of Voigt elements
-	double  G = 0.0, m1 = 0.0, m2 = 0.0;
+	double  m1 = 0.0, m2 = 0.0;
 	double	I0 = 0.0, R = 0.0, kf = 0.0;
-	double	alpha_0 = 0.0, alpha = 0.0, eta = 0.0;
+	double	alpha = 0.0, eta = 0.0, alpha_0 = 0.0;
 	/* Voigt elements for Maxwell generalized rheology */
 	double	*alpha_elements = *(&alpha_elements);
 	double	*eta_elements = *(&eta_elements);
-
+	/* orbit period */
+	double	T = 0.0;
+	/* position and velocity */
+	double	tilde_x[] = {0.0, 0.0, 0.0};
+	double 	tilde_x_dot[] = {0.0, 0.0, 0.0};
+	
 	if (atoi(argv[1]) == 1)
 	{
 		/* verification variables for system input */
-		int 	number_system_inputs = 19;
+		int 	number_system_inputs = 17;
 		bool	input_system_received[number_system_inputs];
 		for (int i = 0; i < number_system_inputs; i++)
 		{
@@ -78,90 +86,80 @@ main(int argc, char *argv[])
 				a = var_value;
 				input_system_received[1] = true;
 			}
-			else if (strcmp(var_name, "T") == 0)
-			{
-				T = var_value;
-				input_system_received[2] = true;
-			}
-			else if (strcmp(var_name, "G") == 0)
-			{
-				G = var_value;
-				input_system_received[3] = true;
-			}
 			else if (strcmp(var_name, "m1") == 0)
 			{
 				m1 = var_value;
-				input_system_received[4] = true;
+				input_system_received[2] = true;
 			}
 			else if (strcmp(var_name, "m2") == 0)
 			{
 				m2 = var_value;
-				input_system_received[5] = true;
+				input_system_received[3] = true;
 			}
 			else if (strcmp(var_name, "I0") == 0)
 			{
 				I0 = var_value;
-				input_system_received[6] = true;
+				input_system_received[4] = true;
 			}
 			else if (strcmp(var_name, "R") == 0)
 			{
 				R = var_value;
-				input_system_received[7] = true;
+				input_system_received[5] = true;
 			}
 			else if (strcmp(var_name, "kf") == 0)
 			{
 				kf = var_value;
-				input_system_received[8] = true;
+				input_system_received[6] = true;
 			}
 			else if (strcmp(var_name, "b0_x") == 0)
 			{
 				b0_diag[0] = var_value;
-				input_system_received[9] = true;
+				input_system_received[7] = true;
 			}
 			else if (strcmp(var_name, "b0_y") == 0)
 			{
 				b0_diag[1] = var_value;
-				input_system_received[10] = true;
+				input_system_received[8] = true;
 			}
 			else if (strcmp(var_name, "b0_z") == 0)
 			{
 				b0_diag[2] = var_value;
-				input_system_received[11] = true;
+				input_system_received[9] = true;
 			}
 			else if (strcmp(var_name, "omega_x") == 0)
 			{
 				omega[0] = var_value;
-				input_system_received[12] = true;
+				input_system_received[10] = true;
 			}
 			else if (strcmp(var_name, "omega_y") == 0)
 			{
 				omega[1] = var_value;
-				input_system_received[13] = true;
+				input_system_received[11] = true;
 			}
 			else if (strcmp(var_name, "omega_z") == 0)
 			{
 				omega[2] = var_value;
-				input_system_received[14] = true;
+				input_system_received[12] = true;
 			}
 			else if (strcmp(var_name, "alpha_0") == 0)
 			{
 				alpha_0 = var_value;
-				input_system_received[15] = true;
+				input_system_received[13] = true;
 			}
 			else if (strcmp(var_name, "alpha") == 0)
 			{
 				alpha = var_value;
-				input_system_received[16] = true;
+				input_system_received[14] = true;
 			}
 			else if (strcmp(var_name, "eta") == 0)
 			{
 				eta = var_value;
-				input_system_received[17] = true;
+				input_system_received[15] = true;
 			}
 			else if (strcmp(var_name, "elements") == 0)
 			{
 				elements = (int) var_value;
-				input_system_received[18] = true;
+				input_system_received[16] = true;
 			}
 		}
 		fclose(in1);
@@ -232,10 +230,26 @@ main(int argc, char *argv[])
 				}
 			}
 		}
+
+		/* orbit period */
+		T = kepler_period(m1, m2, G, a);
+
+		/* position and velocity at periapsis given by Murray */
+		tilde_x[0] 		= a * (1.0 - e);
+		tilde_x[1] 		= 0.0;
+		tilde_x[2] 		= 0.0;	
+		tilde_x_dot[0]	= 0.0;
+		tilde_x_dot[1] 	= ((2.0 * PI) / T) * a * sqrt((1.0 + e)/(1.0 - e));
+		tilde_x_dot[2] 	= 0.0;
+
 	}
 	else if (atoi(argv[1]) == 2) /* convert input if necessary */
 	{
-		convert_input(argv[2]);
+		convert_input(&m1, &m2, &I0, &R, &kf,
+			b0_diag, omega, &alpha, &eta,
+			tilde_x, tilde_x_dot,
+			G,
+			argv[2]);
 		exit(99);
 	}
 	else
@@ -342,16 +356,6 @@ main(int argc, char *argv[])
     }
 	fclose(in2_to_copy);
 	fclose(in2_copy);
-
-	/* position and velocity at periapsis given by Murray */
-	double	tilde_x[3], tilde_x_dot[3];
-	double	n = (2.0 * PI) / T;
-	tilde_x[0] 		= a * (1.0 - e);
-	tilde_x[1] 		= 0.0;
-	tilde_x[2] 		= 0.0;	
-	tilde_x_dot[0]	= 0.0;
-	tilde_x_dot[1] 	= n * a * sqrt((1.0 + e)/(1.0 - e));
-	tilde_x_dot[2] 	= 0.0;
 
 	/* complete b0_me */
 	double b0_me[5];

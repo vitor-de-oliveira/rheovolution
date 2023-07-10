@@ -21,6 +21,7 @@
 #include <sys/types.h> // ssize_t
 
 #include "algelin3d.h"
+#include "celmec.h"
 
 typedef struct CelestialBody{
     char    name[100];  // name
@@ -53,6 +54,11 @@ int
 read_input(cltbdy **body, int *number_of_bodies, const char file[]);
 
 int
-convert_input(const char file[]);
+convert_input	(double *m1, double *m2, double *I0, double *R,
+				 double *kf, double b0_diag[], double omega[],
+				 double *alpha, double *eta,
+				 double tilde_x[], double tilde_x_dot[],
+				 const double G,
+				 const char file[]);
 
 #endif

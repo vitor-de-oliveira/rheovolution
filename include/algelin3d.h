@@ -5,8 +5,7 @@
  * 
  * Author: Vitor M. de Oliveira
  * Date: 12 june 2023
-*/
-
+**/
 
 #ifndef ALGELIN3D_H
 #define ALGELIN3D_H

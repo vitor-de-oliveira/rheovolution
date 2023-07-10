@@ -273,7 +273,7 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 		mkdir("output", 0700);
 	}
 	FILE *in_to_copy = fopen(file, "r");
-	FILE *in_copy = fopen("output/copy_test.txt" , "w");
+	FILE *in_copy = fopen("output/input_sys_copy.txt" , "w");
 	char ch = fgetc(in_to_copy);
     while(ch != EOF)
     {
@@ -287,7 +287,12 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 }
 
 int
-convert_input(const char file[])
+convert_input	(double *m1, double *m2, double *I0, double *R,
+				 double *kf, double b0_diag[], double omega[],
+				 double *alpha, double *eta,
+				 double tilde_x[], double tilde_x_dot[],
+				 const double G,
+				 const char file[])
 {
 	/* array of members of structure CelestialBody */
 	int		number_of_bodies;
@@ -296,64 +301,77 @@ convert_input(const char file[])
 	/* get values from input file */
 	read_input(&body, &number_of_bodies, file);
 
+	/* implementing */
+	// *m1 = body[0].mass;
+	// *m2 = body[1].mass;
+	// *R	= body[0].R;
+	// double e = body[1].e;
+	// double a = body[1].a;
+	// double T = kepler_period(*m1, *m2, G, a);
+
+	// double E = kepler_equation(e, t);
+    // double r = a * (1.0 - e * cos(E));
+    // double f = 2.0 * atan(sqrt((1.0 + e)/(1.0 - e)) 
+	// 		* tan(0.5 * E));
+
 	/* for testing */
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%s ", body[i].name);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].mass);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].lod);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].obl);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].psi);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].R);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].rg);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].J2);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].C22);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].lib);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].k2);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].Dt);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].tau);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].a);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].e);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].I);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].M);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].w);
-	printf("\n");
-	for (int i = 0; i < number_of_bodies; i++)
-		printf("%1.5e ", body[i].Omega);
-	printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%s ", body[i].name);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].mass);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].lod);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].obl);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].psi);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].R);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].rg);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].J2);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].C22);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].lib);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].k2);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].Dt);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].tau);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].a);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].e);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].I);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].M);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].w);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%1.5e ", body[i].Omega);
+	// printf("\n");
 
 	free(body);
 
