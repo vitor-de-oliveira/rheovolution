@@ -1,6 +1,7 @@
-h           = 1e-3
-t0          = 0.0
-t1          = 100.0
+t_init      = 0.0
+t_trans     = 0.0
+t_final     = 100.0
+t_step      = 1e-3
 eps_abs     = 1e-6
 eps_rel     = 0.0
-data_step   = 10
+data_skip   = 10
