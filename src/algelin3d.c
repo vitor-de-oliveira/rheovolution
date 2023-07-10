@@ -153,6 +153,33 @@ identity_matrix(double I[])
 }
 
 int
+rotation_matrix_3d_x(double R[], const double phi)
+{
+	R[0] = 1.0; R[1] = 0.0; 	 R[2] = 0.0;
+	R[3] = 0.0; R[4] = cos(phi); R[5] = -1.0 * sin(phi);
+	R[6] = 0.0; R[7] = sin(phi); R[8] = cos(phi);
+	return 0;
+}
+
+int
+rotation_matrix_3d_y(double R[], const double phi)
+{
+	R[0] = cos(phi); 		R[1] = 0.0; R[2] = sin(phi);
+	R[3] = 0.0; 			R[4] = 1.0; R[5] = 0.0;
+	R[6] = -1.0 * sin(phi); R[7] = 0.0; R[8] = cos(phi);
+	return 0;
+}
+
+int
+rotation_matrix_3d_z(double R[], const double phi)
+{
+	R[0] = cos(phi); R[1] = -1.0 * sin(phi); R[2] = 0.0;
+	R[3] = sin(phi); R[4] = cos(phi); 		 R[5] = 0.0;
+	R[6] = 0.0; 	 R[7] = 0.0; 			 R[8] = 1.0;
+	return 0;
+}
+
+int
 print_square_matrix(const double M[])
 {
 	for (int i = 0; i < DIM_3 * DIM_3; i++)

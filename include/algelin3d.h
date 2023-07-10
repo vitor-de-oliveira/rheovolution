@@ -63,6 +63,15 @@ int
 identity_matrix(double I[]);
 
 int
+rotation_matrix_3d_x(double R[], const double phi);
+
+int
+rotation_matrix_3d_y(double R[], const double phi);
+
+int
+rotation_matrix_3d_z(double R[], const double phi);
+
+int
 print_square_matrix(const double M[]);
 
 int
