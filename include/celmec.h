@@ -20,25 +20,25 @@ kepler_period(double m1, double m2, double G, double a);
 /* functions for solving Kepler equation */
 struct root_params_kepler
 {
-	double e, t;
+	double e, M;
 };
 
 double
-root_function_kepler(double u,
+root_function_kepler(double E,
                      void *params);
 
 double
-root_derivative_kepler	(double u,
+root_derivative_kepler	(double E,
                          void *params);
 
 void
-root_fdf_kepler	(double u,
+root_fdf_kepler	(double E,
                  void *params,
                  double *y,
                  double *dy);
 
 double
 kepler_equation	(const double e,
-                 const double t);
+                 const double M);
 
 #endif

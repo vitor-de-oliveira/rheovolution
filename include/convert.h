@@ -36,7 +36,7 @@ typedef struct CelestialBody{
 	double	C22;        // gravity field coefficient
 	double	lib;	    // angle between the ascending node and the
 						// lowest principal moment of inertia (deg)
-	double	k2;		    // Love number
+	double	kf;		    // fluid Love number
 	double	Dt;		    // tidal lag (s)
 	double	tau;	    // Maxwell relaxation time plus tidal lag (yr)
 	double	a;		    // semi-major axis (AU)
@@ -55,7 +55,7 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[]);
 
 int
 convert_input	(double *m1, double *m2, double *I0, double *R,
-				 double *kf, double b0_diag[], double omega[],
+				 double *kf, double omega[],
 				 double *alpha, double *eta,
 				 double tilde_x[], double tilde_x_dot[],
 				 const double G,

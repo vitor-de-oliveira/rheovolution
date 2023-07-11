@@ -14,6 +14,7 @@
 
 #define PI 3.14159265358979323846
 #define G 1.0
+// #define G 6.6743e-11
 
 int
 main(int argc, char *argv[]) 
@@ -50,8 +51,6 @@ main(int argc, char *argv[])
 	/* Voigt elements for Maxwell generalized rheology */
 	double	*alpha_elements = *(&alpha_elements);
 	double	*eta_elements = *(&eta_elements);
-	/* orbit period */
-	double	T = 0.0;
 	/* position and velocity */
 	double	tilde_x[] = {0.0, 0.0, 0.0};
 	double 	tilde_x_dot[] = {0.0, 0.0, 0.0};
@@ -231,32 +230,49 @@ main(int argc, char *argv[])
 			}
 		}
 
-		/* orbit period */
-		T = kepler_period(m1, m2, G, a);
-
 		/* position and velocity at periapsis given by Murray */
 		tilde_x[0] 		= a * (1.0 - e);
 		tilde_x[1] 		= 0.0;
 		tilde_x[2] 		= 0.0;	
 		tilde_x_dot[0]	= 0.0;
-		tilde_x_dot[1] 	= ((2.0 * PI) / T) * a * sqrt((1.0 + e)/(1.0 - e));
+		tilde_x_dot[1] 	= ((2.0 * PI) / kepler_period(m1, m2, G, a)) 
+							* a * sqrt((1.0 + e)/(1.0 - e));
 		tilde_x_dot[2] 	= 0.0;
+
+		/* for testing */
+		// print_vector(tilde_x);
+		// print_vector(tilde_x_dot);
+		// exit(99);
 
 	}
 	else if (atoi(argv[1]) == 2) /* convert input if necessary */
 	{
 		convert_input(&m1, &m2, &I0, &R, &kf,
-			b0_diag, omega, &alpha, &eta,
+			omega, &alpha, &eta,
 			tilde_x, tilde_x_dot,
 			G,
 			argv[2]);
-		exit(99);
+		// exit(99);
 	}
 	else
 	{
 	   	fprintf(stderr, "Type of system file must be 1 or 2.\n");
 	   	exit(5);
 	}
+
+	/* for testing */
+	// print_vector(tilde_x);
+	// print_vector(tilde_x_dot);
+	// print_vector(omega);
+	// print_vector(b0_diag);
+	// printf("%1.5e\n", m1);
+	// printf("%1.5e\n", m2);
+	// printf("%1.5e\n", I0);
+	// printf("%1.5e\n", R);
+	// printf("%1.5e\n", kf);
+	// printf("%1.5e\n", alpha);
+	// printf("%1.5e\n", eta);
+	// exit(99);
 
 	/* integrator parameters */
 	double	t_init = 0.0, t_trans = 0.0, t_final = 0.0;
@@ -398,6 +414,32 @@ main(int argc, char *argv[])
 	// exit(42);
 	// null_matrix(b);
 
+	/* for testing */
+	// printf("tilde_x = \n");
+	// print_vector(tilde_x);
+	// printf("\ntilde_x_dot = \n");
+	// print_vector(tilde_x_dot);
+	// printf("\nl = \n");
+	// print_vector(l);
+	// printf("\nb0_diag = \n");
+	// print_vector(b0_diag);
+	// printf("\nomega = \n");
+	// print_vector(omega);
+	// printf("\nG = %e\n", G);
+	// printf("\nm1 = %e\n", m1);
+	// printf("\nm2 = %e\n", m2);
+	// printf("\nI0 = %e\n", I0);
+	// printf("\ngamma = %e\n", gamma);
+	// printf("\nalpha = %e\n", alpha);
+	// printf("\neta = %e\n", eta);
+	// printf("\nalpha_0 = %e\n", alpha_0);
+	// for (int i  = 0; i < elements; i++)
+	// {
+	// 	printf("\nalpha_%d = %f\n", i+1, alpha_elements[i]);
+	// 	printf("\neta%d = %f\n", i+1, eta_elements[i]);
+	// }
+	// exit(42);
+
 	/* variables and parameters passed as field parameters */
 	int		dim_params = 12 + (elements * 2); // optmize this
 	double	params[dim_params]; 
@@ -515,6 +557,40 @@ main(int argc, char *argv[])
 		/* for testing */
 		// printf("omega 2 = \n");
 		// print_vector(omega);
+
+		/* for testing */
+		// printf("tilde_x = \n");
+		// print_vector(tilde_x);
+		// printf("tilde_x_dot = \n");
+		// print_vector(tilde_x_dot);
+		// printf("l = \n");
+		// print_vector(l);
+		// printf("b0_me = \n");
+		// for (int i  = 0; i < 5; i++) printf("%e ", b0_me[i]);
+		// printf("\n");
+		// printf("u_me = \n");
+		// for (int i  = 0; i < 5; i++) printf("%e ", u_me[i]);
+		// printf("\n");
+		// printf("bk_me = \n");
+		// for (int i = 0; i < (elements * 5); i++) printf("%e ", bk_me[i]);
+		// printf("\n");
+		// printf("omega = \n");
+		// print_vector(omega);
+		// printf("G = %e\n", G);
+		// printf("m1 = %e\n", m1);
+		// printf("m2 = %e\n", m2);
+		// printf("I0 = %e\n", I0);
+		// printf("gamma = %e\n", gamma);
+		// printf("alpha = %e\n", alpha);
+		// printf("eta = %e\n", eta);
+		// printf("alpha_0 = %e\n", alpha_0);
+		// for (int i  = 0; i < elements; i++)
+		// {
+		// 	printf("alpha_%d = %f\n", i+1, alpha_elements[i]);
+		// 	printf("eta%d = %f\n", i+1, eta_elements[i]);
+		// }
+		// printf("b = \n");
+		// print_square_matrix(b);
 
 		counter++;
 	}
