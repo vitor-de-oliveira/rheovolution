@@ -414,6 +414,22 @@ main(int argc, char *argv[])
 	// exit(42);
 	// null_matrix(b);
 
+	/* calculate I, J2, and C22 */
+	// I do not use these as of yet
+	// double I[9];
+	// calculate_inertia_tensor(I, I0, b);
+	// double J2;
+	// J2 = calculate_J2(m1, R, I);
+	// double C22;
+	// C22 = calculate_C22(m1, R, I);
+
+	/* for testing */
+	// printf("I = \n");
+	// print_square_matrix(I);
+	// printf("J2 = %e\n", J2);
+	// printf("C22 = %e\n", C22);
+	// exit(43);
+
 	/* for testing */
 	// printf("tilde_x = \n");
 	// print_vector(tilde_x);

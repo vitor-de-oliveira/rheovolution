@@ -63,7 +63,13 @@ total_angular_momentum(double l_total[3], const double m1,
 	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
 	const double l[3]);
 
+int
+calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
+
 double
-kepler_period(double m1, double m2, double G, double a);
+calculate_J2(const double m, const double R, const double I[9]);
+
+double
+calculate_C22(const double m, const double R, const double I[9]);
 
 #endif

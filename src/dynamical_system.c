@@ -72,7 +72,7 @@ field_1EB1PM(double t, const double y[], double f[],
 	construct_traceless_symmetric_matrix(b0, b0_me);
 	construct_traceless_symmetric_matrix(u, u_me);
 
-	double **bk;
+	double **bk = *(&(*(&bk)));
 	if (elements > 0)
 	{
 		bk = (double **) malloc(elements * sizeof(double));
@@ -167,7 +167,7 @@ field_1EB1PM(double t, const double y[], double f[],
 	scale_vector (component_tilde_x_dot_3rd_term, 
 		(-3.0 * I0) / (m1 * tilde_x_norm_fifth), bx);
 
-	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0};
+	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0 };
 	linear_combination_three_vector(component_tilde_x_dot,
 		1.0, component_tilde_x_dot_1st_term, 
 		1.0, component_tilde_x_dot_2nd_term, 
@@ -214,7 +214,7 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	// bk components
 
-	double **component_bk_me;
+	double **component_bk_me = *(&(*(&component_bk_me)));
 	if (elements > 0)
 	{
 		component_bk_me = (double **) malloc(elements * sizeof(double));
@@ -284,6 +284,8 @@ field_1EB1PM(double t, const double y[], double f[],
 	// print_vector(l);
 	// printf("\nb0 = \n");
 	// print_square_matrix(b0);
+	// printf("\nb = \n");
+	// print_square_matrix(b);
 	// printf("\nu = \n");
 	// print_square_matrix(u);
 	// for (int i  = 0; i < elements; i++)
@@ -293,18 +295,18 @@ field_1EB1PM(double t, const double y[], double f[],
 	// }
 	// printf("\nomega = \n");
 	// print_vector(omega);
-	// printf("\nG = %f\n", G);
-	// printf("\nm1 = %f\n", m1);
-	// printf("\nm2 = %f\n", m2);
-	// printf("\nI0 = %f\n", I0);
-	// printf("\ngamma = %f\n", gamma);
-	// printf("\nalpha = %f\n", alpha);
-	// printf("\neta = %f\n", eta);
-	// printf("\nalpha_0 = %f\n", alpha_0);
+	// printf("\nG = %e\n", G);
+	// printf("\nm1 = %e\n", m1);
+	// printf("\nm2 = %e\n", m2);
+	// printf("\nI0 = %e\n", I0);
+	// printf("\ngamma = %e\n", gamma);
+	// printf("\nalpha = %e\n", alpha);
+	// printf("\neta = %e\n", eta);
+	// printf("\nalpha_0 = %e\n", alpha_0);
 	// for (int i  = 0; i < elements; i++)
 	// {
-	// 	printf("\nalpha_%d = %f\n", i+1, alpha_elements[i]);
-	// 	printf("\neta%d = %f\n", i+1, eta_elements[i]);
+	// 	printf("\nalpha_%d = %e\n", i+1, alpha_elements[i]);
+	// 	printf("\neta%d = %e\n", i+1, eta_elements[i]);
 	// }
 	// printf("\ncomponent_tilde_x = \n");
 	// print_vector(component_tilde_x);
@@ -694,4 +696,40 @@ total_angular_momentum(double l_total[3], const double m1,
 	linear_combination_vector(l_total, 1.0, l_center_of_mass, 1.0, l);
 
 	return 0;
+}
+
+int
+calculate_inertia_tensor(double I[9], const double I0, const double b[9])
+{
+	double Id[9];
+	identity_matrix(Id);
+	linear_combination_square_matrix(I, I0, Id, -1.0 * I0, b);
+	return 0;
+}
+
+double
+calculate_J2(const double m, const double R, const double I[9])
+{
+	double J2;
+
+	double I_11 = I[0];
+	double I_22 = I[4];
+	double I_33 = I[8];
+
+	J2 = (2.0 * I_33 - I_11 - I_22) / (2.0 * m * R * R);
+
+	return J2;
+}
+
+double
+calculate_C22(const double m, const double R, const double I[9])
+{
+	double C22;
+
+	double I_11 = I[0];
+	double I_22 = I[4];
+
+	C22 = (I_22 - I_11) / (4.0 * m * R * R);
+
+	return C22;
 }
