@@ -29,7 +29,7 @@ typedef struct CelestialBody{
 	double	lod;	    // length of day (day)
 	double 	obl;	    // obliquity (deg)
 	double	psi;	    // longitude of the ascending node 
-						// of the body equator (deg)
+						// of the body equator or precession angle (deg)
 	double	R;		    // radius (km)
 	double	rg;		    // moment of inertia factor
 	double	J2;		    // gravity field coefficient

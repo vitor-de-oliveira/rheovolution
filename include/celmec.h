@@ -17,6 +17,9 @@
 double
 kepler_period(double m1, double m2, double G, double a);
 
+double
+kepler_period_only_m1(double m1, double G, double a);
+
 /* functions for solving Kepler equation */
 struct root_params_kepler
 {

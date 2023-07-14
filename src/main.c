@@ -13,8 +13,9 @@
 #include "celmec.h"
 
 #define PI 3.14159265358979323846
-#define G 1.0
-// #define G 6.6743e-11
+// #define G 1.0
+// #define G 6.6743e-11 // SI
+#define G 4.0*PI*PI // AU Msun year
 
 int
 main(int argc, char *argv[]) 
@@ -252,6 +253,7 @@ main(int argc, char *argv[])
 			tilde_x, tilde_x_dot,
 			G,
 			argv[2]);
+		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
 		// exit(99);
 	}
 	else

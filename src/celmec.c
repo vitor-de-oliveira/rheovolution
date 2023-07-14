@@ -7,6 +7,12 @@ kepler_period(double m1, double m2, double G, double a)
 }
 
 double
+kepler_period_only_m1(double m1, double G, double a)
+{
+	return sqrt(4.0 * M_PI * M_PI * a * a * a / (G * m1));
+}
+
+double
 root_function_kepler(double E, void *params)
 {
 	struct root_params_kepler *p = 
