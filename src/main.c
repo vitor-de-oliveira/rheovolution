@@ -559,6 +559,10 @@ main(int argc, char *argv[])
 				printf ("%.5e %.5e %.5e %.5e %.5e %.5e %.5e", 
 					t, tilde_x[0], tilde_x[1], tilde_x[2],
 					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
+				/* angular velocity */
+				printf (" %.5e %.5e %.5e %.5e", 
+					omega[0], omega[1], omega[2], 
+					norm_vector(omega));
 				/* angular momentum and total angular momentum */
 				printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
 					l[0], l[1], l[2],

@@ -381,6 +381,7 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	rotation_matrix_3d_x(R_1_I, I);
 	double R_3_Omega[9];
 	rotation_matrix_3d_z(R_3_Omega, Omega);
+
 	double full_rotation_orbit[9];
 	square_matrix_times_square_matrix(full_rotation_orbit,
 		R_3_Omega, R_1_I);
@@ -401,9 +402,14 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	rotation_matrix_3d_x(R_1_theta, theta);
 	double R_3_phi[9];
 	rotation_matrix_3d_z(R_3_phi, phi);
+
 	double full_rotation_body[9];
 	square_matrix_times_square_matrix(full_rotation_body,
-		R_3_psi, R_1_theta);
+		R_3_Omega, R_1_I);
+	square_matrix_times_square_matrix(full_rotation_body,
+		full_rotation_body, R_3_psi);
+	square_matrix_times_square_matrix(full_rotation_body,
+		full_rotation_body, R_1_theta);
 	square_matrix_times_square_matrix(full_rotation_body,
 		full_rotation_body, R_3_phi);
 	
@@ -413,7 +419,35 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	square_matrix_times_vector(omega, full_rotation_body, omega_on_body);
 
 	/* for testing */
+	// print_vector(omega_on_body);
+	// printf("%.5e\n", norm_vector(omega_on_body));
 	// print_vector(omega);
+	// printf("%.5e\n", norm_vector(omega));
+	// printf("Omega = %e I = %e psi = %e theta = %e phi = %e\n",
+	// 	Omega, I, psi, theta, phi);
+	// double omega_test[] = {0.0, 0.0, 1.0};
+	// copy_vector(omega_test, omega_on_body);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// square_matrix_times_vector(omega_test, R_3_phi, omega_test);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// print_square_matrix(R_1_theta);
+	// double omega_test_copy[] = {0.0, 0.0, 1.0};
+	// copy_vector(omega_test_copy, omega_test);
+	// square_matrix_times_vector(omega_test, R_1_theta, omega_test);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// square_matrix_times_vector(omega_test, R_3_psi, omega_test);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// square_matrix_times_vector(omega_test, R_1_I, omega_test);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// square_matrix_times_vector(omega_test, R_3_Omega, omega_test);
+	// print_vector(omega_test);
+	// printf("%.5e\n", norm_vector(omega_test));
+	// exit(14);
 
 	/* 3rd set of variables - I0 */
 	*I0 = rg * (*m1) * (*R) * (*R);

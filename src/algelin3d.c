@@ -53,10 +53,18 @@ norm_vector(const double x[])
 int
 scale_vector(double ax[], const double a, const double x[])
 {
+	double ax_local[DIM_3];
+
 	for (int i = 0; i < DIM_3; i++)
 	{
-		ax[i] = a * x[i];
+		ax_local[i] = a * x[i];
 	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		ax[i] = ax_local[i];
+	}
+
 	return 0;
 }
 
@@ -74,11 +82,13 @@ dot_product(const double x[], const double y[])
 int
 cross_product(double z[], const double x[], const double y[])
 {
+	double z_local[DIM_3];
+	
 	if (DIM_3 == 3)
 	{
-		z[0] = x[1] * y[2] - x[2] * y[1];
-		z[1] = x[2] * y[0] - x[0] * y[2];
-		z[2] = x[0] * y[1] - x[1] * y[0];
+		z_local[0] = x[1] * y[2] - x[2] * y[1];
+		z_local[1] = x[2] * y[0] - x[0] * y[2];
+		z_local[2] = x[0] * y[1] - x[1] * y[0];
 	}
 	else
 	{
@@ -86,6 +96,12 @@ cross_product(double z[], const double x[], const double y[])
 		printf(" not implemented yet.\n");
 		exit(4);
 	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		z[i] = z_local[i];
+	}
+
 	return 0;
 }
 
@@ -214,19 +230,28 @@ trace_square_matrix(const double M[])
 int
 scale_square_matrix(double aM[], const double a, const double M[])
 {
+	double aM_local[DIM_3*DIM_3];
+
 	for (int i = 0; i < DIM_3; i++)
 	{
 		for (int j = 0; j < DIM_3; j++)
 		{
-			aM[(DIM_3)*i + j] = a * M[(DIM_3)*i + j];
+			aM_local[(DIM_3)*i + j] = a * M[(DIM_3)*i + j];
 		}
 	}
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		aM[i] = aM_local[i];
+	}
+
 	return 0;
 }
 
 int
 square_matrix_times_vector(double y[], const double M[], const double x[])
 {
+	double y_local[DIM_3];
 	double result;
 
 	for (int i = 0; i < DIM_3; i++)
@@ -236,7 +261,12 @@ square_matrix_times_vector(double y[], const double M[], const double x[])
 		{
 			result += M[(DIM_3)*i + j] * x[j];
 		}
-		y[i] = result;
+		y_local[i] = result;
+	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		y[i] = y_local[i];
 	}
 
 	return 0;
@@ -265,6 +295,7 @@ int
 square_matrix_times_square_matrix(double MN[], 
     const double M[], const double N[])
 {
+	double MN_local[DIM_3*DIM_3];
 	double result;
 
 	for (int i = 0; i < DIM_3; i++)
@@ -276,8 +307,13 @@ square_matrix_times_square_matrix(double MN[],
 			{
 				result += M[(DIM_3)*i + k] * N[(DIM_3)*k + j];
 			}
-			MN[i*DIM_3 + j] = result;
+			MN_local[i*DIM_3 + j] = result;
 		}
+	}
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		MN[i] = MN_local[i];
 	}
 
 	return 0;
