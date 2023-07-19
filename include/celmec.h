@@ -9,6 +9,7 @@
 #define CEL_MEC_H
 
 #include <math.h>
+#include <algelin3d.h>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
@@ -43,5 +44,21 @@ root_fdf_kepler	(double E,
 double
 kepler_equation	(const double e,
                  const double M);
+
+/* orbital elements from state vectors */
+
+double
+calculate_eccentricity  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[]);
+
+double
+calculate_semi_major_axis   (const double G,
+                             const double m1,
+                             const double m2,
+                             const double x[],
+                             const double v[]);
 
 #endif

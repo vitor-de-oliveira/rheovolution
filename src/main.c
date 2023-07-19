@@ -13,9 +13,9 @@
 #include "celmec.h"
 
 #define PI 3.14159265358979323846
-// #define G 1.0
+#define G 1.0
 // #define G 6.6743e-11 // SI
-#define G 4.0*PI*PI // AU Msun year
+// #define G 4.0*PI*PI // AU Msun year
 
 int
 main(int argc, char *argv[]) 
@@ -243,6 +243,9 @@ main(int argc, char *argv[])
 		/* for testing */
 		// print_vector(tilde_x);
 		// print_vector(tilde_x_dot);
+		// e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+		// a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+		// printf("e = %e a = %e\n", e, a);
 		// exit(99);
 
 	}
@@ -253,7 +256,12 @@ main(int argc, char *argv[])
 			tilde_x, tilde_x_dot,
 			G,
 			argv[2]);
+
+		/* for testing */
 		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
+		// e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+		// a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+		// printf("e = %e a = %e\n", e, a);
 		// exit(99);
 	}
 	else
@@ -409,6 +417,15 @@ main(int argc, char *argv[])
 	calculate_l(l, I0, b, omega);
 
 	/* for testing */
+	// double omega_seed_test[3];
+	// copy_vector(omega_seed_test, omega);
+	// calculate_omega(omega, omega_seed_test, G, m2, I0, gamma, alpha_0, 
+	// 	alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
+	// print_vector(l);
+	// print_vector(omega);
+	// exit(99);
+
+	/* for testing */
 	// printf("b = \n");
 	// print_square_matrix(b);
 	// printf("\nomega = \n");
@@ -492,13 +509,21 @@ main(int argc, char *argv[])
 
 	/* GSL variables */
 	const gsl_odeiv2_step_type * ode_type
-		= gsl_odeiv2_step_rk4;
+		= gsl_odeiv2_step_rk8pd;
 	gsl_odeiv2_step * ode_step
     	= gsl_odeiv2_step_alloc (ode_type, dim);
   	gsl_odeiv2_control * ode_control
     	= gsl_odeiv2_control_y_new (eps_abs, eps_rel);
   	gsl_odeiv2_evolve * ode_evolve
     	= gsl_odeiv2_evolve_alloc (dim);
+
+	double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+	double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+	double norm_omega_init = norm_vector(omega);
+
+	// print_vector(omega);
+	// printf("%.5e\n", norm_vector(omega));
+	// exit(42);
 
 	/* integration loop */
 	int counter = 0;
@@ -534,12 +559,22 @@ main(int argc, char *argv[])
 		for (int i = 0; i < 5; i++) 				u_me[i] = y[14 + i];
 		for (int i = 0; i < (elements * 5); i++) 	bk_me[i] = y[19 + i];
 
+		/* for testing */
+		// print_vector(l);
+		// printf("%.5e\n", norm_vector(l));
+		// exit(42);
+
 		/* update omega */
 		double omega_seed[3];
 		copy_vector(omega_seed, omega);
 		calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
 			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
 		for (int i = 0; i < 3; i++) params[i] = omega[i];
+
+		/* for testing */
+		// print_vector(omega);
+		// printf("%.5e\n", norm_vector(omega));
+		// exit(42);
 
 		/* calculate b */
 		calculate_b(b, G, m2, gamma, alpha_0, alpha,
@@ -550,28 +585,43 @@ main(int argc, char *argv[])
 		total_angular_momentum(l_total, m1, m2, 
 			tilde_x, tilde_x_dot, l);
 
+		/* calculate e and a */
+		e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+		a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+		double e_dif = e - e_init;
+		double a_dif = a - a_init;
+		double omega_dif = norm_omega_init - norm_vector(omega);
+
 		/* writes output */
 		if (t > t_trans)
 		{
 			if (counter % data_skip == 0)
 			{
-				/* time, position, and velocity */
-				printf ("%.5e %.5e %.5e %.5e %.5e %.5e %.5e", 
-					t, tilde_x[0], tilde_x[1], tilde_x[2],
-					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
-				/* angular velocity */
-				printf (" %.5e %.5e %.5e %.5e", 
-					omega[0], omega[1], omega[2], 
-					norm_vector(omega));
-				/* angular momentum and total angular momentum */
+				/* time */
+				printf ("%.5e", t);
+				/* position, and velocity */
 				printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
-					l[0], l[1], l[2],
-					l_total[0], l_total[1], l_total[2]);
+					tilde_x[0], tilde_x[1], tilde_x[2],
+					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
+				/* orbital eccentricity and semimajor axis */
+				// printf (" %.5e %.5e", e, a);
+				printf (" %.5e %.5e", e_dif, a_dif);
+				/* angular velocity */
+				// printf (" %.5e", norm_vector(omega));
+				printf (" %.5e", omega_dif);
+				// printf (" %.5e %.5e %.5e", 
+				// 	omega[0], omega[1], omega[2]);
+				/* angular momentum and total angular momentum */
+				// printf (" %.5e", norm_vector(l_total));
+				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
+				// 	l[0], l[1], l[2],
+				// 	l_total[0], l_total[1], l_total[2]);
 				/* deformation matrix */
-				printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
-					b[0], b[1], b[2],
-					b[3], b[4], b[5],
-					b[6], b[7], b[8]);
+				// printf (" %.5e", norm_square_matrix(b));
+				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// 	b[0], b[1], b[2],
+				// 	b[3], b[4], b[5],
+				// 	b[6], b[7], b[8]);
 				printf("\n");
 			}
 		}

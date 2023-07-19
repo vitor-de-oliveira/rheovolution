@@ -446,6 +446,10 @@ calculate_g(double g[9], const double G, const double m2,
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[])
 {
+	/* for testing */
+	// null_matrix(g);
+	// return 0;
+
 	/* construct b0, and u matrices */
 	double b0[9], u[9];
 	construct_traceless_symmetric_matrix(b0, b0_me);
@@ -517,9 +521,9 @@ calculate_b(double b[9], const double G, const double m2,
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[])
 {
-	/* calculate f_tide */
-	double f_tide[9];
-	calculate_f_tide(f_tide, G, m2, tilde_x);
+	/* for testing */
+	// null_matrix(b);
+	// return 0;
 
 	/* calculate g */
 	double g[9];
@@ -584,6 +588,10 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[])
 {
+	/* for testing */
+	// scale_vector(omega, 1.0 / I0, l);
+	// return 0;
+
 	/* method parameters */
 	int 	number_of_iterates = 5;
 	double 	max_error = 1e-8;
@@ -593,6 +601,9 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 
 	for (int i = 0; i < number_of_iterates; i++)
 	{
+		/* for testing */
+		// print_vector(omega);
+
 		/* store omega previous value */
 		copy_vector(previous_omega, omega);
 
@@ -639,7 +650,7 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 		gsl_vector_view b
 			= gsl_vector_view_array (minus_h, 3);
 
-		double omega_minus_previous_omega[] = { 0.0, 0.0, 0.0};
+		double omega_minus_previous_omega[] = { 0.0, 0.0, 0.0 };
 		gsl_vector_view x
 			= gsl_vector_view_array (omega_minus_previous_omega, 3);
 

@@ -79,6 +79,12 @@ copy_square_matrix(double N[], const double M[]);
 double
 trace_square_matrix(const double M[]);
 
+double
+norm_squared_square_matrix(const double M[]);
+
+double
+norm_square_matrix(const double M[]);
+
 int
 scale_square_matrix(double aM[], const double a, const double M[]);
 

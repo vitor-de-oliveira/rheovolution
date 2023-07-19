@@ -227,6 +227,25 @@ trace_square_matrix(const double M[])
 	return trace;
 }
 
+double
+norm_squared_square_matrix(const double M[])
+{
+	double result;
+	double sum = 0.0;
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		sum += M[i] * M[i];
+	}
+	result = sum / 2.0;
+	return result;
+}
+
+double
+norm_square_matrix(const double M[])
+{
+	return sqrt(norm_squared_square_matrix(M));
+}
+
 int
 scale_square_matrix(double aM[], const double a, const double M[])
 {
