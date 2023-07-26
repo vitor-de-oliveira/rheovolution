@@ -157,7 +157,7 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	double component_tilde_x_dot_1st_term[] = { 0.0, 0.0, 0.0 };
 	scale_vector (component_tilde_x_dot_1st_term, 
-		minus_G_times_total_mass / tilde_x_norm_cube, tilde_x);
+		1.0 / tilde_x_norm_cube, tilde_x);
 
 	double component_tilde_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
 	scale_vector (component_tilde_x_dot_2nd_term, 
@@ -169,9 +169,9 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	double component_tilde_x_dot[] = { 0.0, 0.0, 0.0 };
 	linear_combination_three_vector(component_tilde_x_dot,
-		1.0, component_tilde_x_dot_1st_term, 
-		1.0, component_tilde_x_dot_2nd_term, 
-		1.0, component_tilde_x_dot_3rd_term);
+		minus_G_times_total_mass, component_tilde_x_dot_1st_term, 
+		minus_G_times_total_mass, component_tilde_x_dot_2nd_term, 
+		minus_G_times_total_mass, component_tilde_x_dot_3rd_term);
 
 	// l component
 
