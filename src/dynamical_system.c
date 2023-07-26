@@ -119,7 +119,6 @@ field_1EB1PM(double t, const double y[], double f[],
 	double tilde_x_norm 		= norm_vector(tilde_x);
 	double tilde_x_norm_cube 	= pow(tilde_x_norm, 3.0);
 	double tilde_x_norm_fifth 	= pow(tilde_x_norm, 5.0);
-	double tilde_x_norm_seventh = pow(tilde_x_norm, 7.0);
 
 	double tau = eta / alpha;
 	double *tau_elements;
@@ -134,8 +133,6 @@ field_1EB1PM(double t, const double y[], double f[],
 
 	double bx[3];
 	square_matrix_times_vector(bx, b, tilde_x);
-	double bx_dot_x;
-	bx_dot_x = dot_product(bx, tilde_x);
 	double x_cross_bx[3];
 	cross_product(x_cross_bx, tilde_x, bx);
 
@@ -160,6 +157,8 @@ field_1EB1PM(double t, const double y[], double f[],
 		1.0 / tilde_x_norm_cube, tilde_x);
 
 	double component_tilde_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
+	double tilde_x_norm_seventh = pow(tilde_x_norm, 7.0);
+	double bx_dot_x = dot_product(bx, tilde_x);
 	scale_vector (component_tilde_x_dot_2nd_term, 
 		(15. * I0 * bx_dot_x) / (2. * m1 * tilde_x_norm_seventh), tilde_x);
 

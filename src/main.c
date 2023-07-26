@@ -13,9 +13,9 @@
 #include "celmec.h"
 
 #define PI 3.14159265358979323846
-#define G 1.0
+// #define G 1.0
 // #define G 6.6743e-11 // SI
-// #define G 4.0*PI*PI // AU Msun year
+#define G 4.0*PI*PI // AU Msun year
 
 int
 main(int argc, char *argv[]) 
@@ -604,10 +604,10 @@ main(int argc, char *argv[])
 					tilde_x[0], tilde_x[1], tilde_x[2],
 					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
 				/* orbital eccentricity and semimajor axis */
-				// printf (" %.5e %.5e", e, a);
+				printf (" %.5e %.5e", e, a);
 				printf (" %.5e %.5e", e_dif, a_dif);
 				/* angular velocity */
-				// printf (" %.5e", norm_vector(omega));
+				printf (" %.5e", norm_vector(omega));
 				printf (" %.5e", omega_dif);
 				// printf (" %.5e %.5e %.5e", 
 				// 	omega[0], omega[1], omega[2]);
@@ -617,7 +617,7 @@ main(int argc, char *argv[])
 				// 	l[0], l[1], l[2],
 				// 	l_total[0], l_total[1], l_total[2]);
 				/* deformation matrix */
-				// printf (" %.5e", norm_square_matrix(b));
+				printf (" %.5e", norm_square_matrix(b));
 				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
 				// 	b[0], b[1], b[2],
 				// 	b[3], b[4], b[5],
