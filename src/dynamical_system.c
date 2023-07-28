@@ -225,10 +225,10 @@ field_1EB1PM(double t, const double y[], double f[],
 			commutator(omega_hat_comm_bk, omega_hat, bk[i]);
 			double minus_bk_over_tau_elements[9];
 			scale_square_matrix(minus_bk_over_tau_elements, 
-			-1.0 / tau_elements[i], bk[i]);
+				-1.0 / tau_elements[i], bk[i]);
 			double lambda_over_eta_elements[9];
 			scale_square_matrix(lambda_over_eta_elements,
-			1.0 / eta_elements[i], lambda);
+				1.0 / eta_elements[i], lambda);
 
 			/* for testing */
 			// printf("\ntau_%d = %f\n", i, tau_elements[i]);
@@ -569,13 +569,22 @@ calculate_b(double b[9], const double G, const double m2,
 }
 
 int
+calculate_inertia_tensor(double I[9], const double I0, const double b[9])
+{
+	double Id[9];
+	identity_matrix(Id);
+	linear_combination_square_matrix(I, I0, Id, -1.0 * I0, b);
+	return 0;
+}
+
+int
 calculate_l(double l[3], const double I0, 
 	const double b[9], const double omega[3])
 {
 	double Id[9];
 	identity_matrix(Id);
 	double I[9];
-	linear_combination_square_matrix(I, I0, Id, -1.0 * I0, b);
+	calculate_inertia_tensor(I, I0, b);
 	square_matrix_times_vector(l, I, omega);
 	return 0;
 }
@@ -705,15 +714,6 @@ total_angular_momentum(double l_total[3], const double m1,
 
 	linear_combination_vector(l_total, 1.0, l_center_of_mass, 1.0, l);
 
-	return 0;
-}
-
-int
-calculate_inertia_tensor(double I[9], const double I0, const double b[9])
-{
-	double Id[9];
-	identity_matrix(Id);
-	linear_combination_square_matrix(I, I0, Id, -1.0 * I0, b);
 	return 0;
 }
 

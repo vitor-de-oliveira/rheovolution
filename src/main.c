@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 	/* non-state variables given by user */
 	double 	omega[] = {0.0, 0.0, 0.0};
 	/* system parameters given by user */
-	int		elements = 0; //number of Voigt elements
+	int		elements = 0; // number of Voigt elements
 	double  m1 = 0.0, m2 = 0.0;
 	double	I0 = 0.0, R = 0.0, kf = 0.0;
 	double	alpha = 0.0, eta = 0.0, alpha_0 = 0.0;
@@ -517,9 +517,9 @@ main(int argc, char *argv[])
   	gsl_odeiv2_evolve * ode_evolve
     	= gsl_odeiv2_evolve_alloc (dim);
 
-	double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
-	double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
-	double norm_omega_init = norm_vector(omega);
+	// double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+	// double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+	// double norm_omega_init = norm_vector(omega);
 
 	// print_vector(omega);
 	// printf("%.5e\n", norm_vector(omega));
@@ -588,9 +588,9 @@ main(int argc, char *argv[])
 		/* calculate e and a */
 		e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
 		a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
-		double e_dif = e - e_init;
-		double a_dif = a - a_init;
-		double omega_dif = norm_omega_init - norm_vector(omega);
+		// double e_dif = e - e_init;
+		// double a_dif = a - a_init;
+		// double omega_dif = norm_vector(omega) - norm_omega_init;
 
 		/* writes output */
 		if (t > t_trans)
@@ -605,14 +605,15 @@ main(int argc, char *argv[])
 					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
 				/* orbital eccentricity and semimajor axis */
 				printf (" %.5e %.5e", e, a);
-				printf (" %.5e %.5e", e_dif, a_dif);
+				// printf (" %.5e %.5e", e_dif, a_dif);
 				/* angular velocity */
 				printf (" %.5e", norm_vector(omega));
-				printf (" %.5e", omega_dif);
+				// printf (" %.5e", omega_dif);
 				// printf (" %.5e %.5e %.5e", 
 				// 	omega[0], omega[1], omega[2]);
 				/* angular momentum and total angular momentum */
-				// printf (" %.5e", norm_vector(l_total));
+				printf (" %.5e", norm_vector(l));
+				printf (" %.5e", norm_vector(l_total));
 				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
 				// 	l[0], l[1], l[2],
 				// 	l_total[0], l_total[1], l_total[2]);

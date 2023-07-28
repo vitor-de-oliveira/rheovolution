@@ -305,56 +305,56 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	double deg = M_PI / 180.0; // rad
 
 	/* conversion units to SI */
-	double Msun = 1988500.0e24; // kg
-	double day = 24 * 60 * 60; // s
-	double km = 1e3; // m
-	double year = 365.25 * day; // s
-	double AU = 1.495978707e11; // m
+	// double Msun = 1988500.0e24; // kg
+	// double day = 24 * 60 * 60; // s
+	// double km = 1e3; // m
+	// double year = 365.25 * day; // s
+	// double AU = 1.495978707e11; // m
 
-	/* variables in SI*/
-	*m1 = body[0].mass * Msun;
-	*m2 = body[1].mass * Msun;
-	*R	= body[0].R * km;
-	*kf = body[0].kf;
-
-	double Td = body[0].lod * day;
-	double theta = body[0].obl * deg;
-	double psi = body[0].psi * deg;
-	double rg = body[0].rg;
-	double phi = body[0].lib * deg;
-	double Dt = body[0].Dt;
-	double tau = body[0].tau * year;
-	double a = body[1].a * AU;
-	double e = body[1].e;
-	double I = body[1].I * deg;
-	double M = body[1].M * deg;
-	double w = body[1].w * deg;
-	double Omega = body[1].Omega * deg;
-
-	/* conversion units to AU Msun year */
-	// double km_AU = 1.0 / 1.495978707e8; // AU
-	// double day_year = 1.0 / 365.25; // year
-	// double s_year = 1.0 / (365.25 * 24 * 60 * 60); // year
-
-	/* variables in AU Msun year*/
-	// *m1 = body[0].mass;
-	// *m2 = body[1].mass;
-	// *R	= body[0].R * km_AU;
+	// /* variables in SI*/
+	// *m1 = body[0].mass * Msun;
+	// *m2 = body[1].mass * Msun;
+	// *R	= body[0].R * km;
 	// *kf = body[0].kf;
 
-	// double Td = body[0].lod * day_year;
+	// double Td = body[0].lod * day;
 	// double theta = body[0].obl * deg;
 	// double psi = body[0].psi * deg;
 	// double rg = body[0].rg;
 	// double phi = body[0].lib * deg;
-	// double Dt = body[0].Dt * s_year;
-	// double tau = body[0].tau;
-	// double a = body[1].a;
+	// double Dt = body[0].Dt;
+	// double tau = body[0].tau * year;
+	// double a = body[1].a * AU;
 	// double e = body[1].e;
 	// double I = body[1].I * deg;
 	// double M = body[1].M * deg;
 	// double w = body[1].w * deg;
 	// double Omega = body[1].Omega * deg;
+
+	/* conversion units to AU Msun year */
+	double km_AU = 1.0 / 1.495978707e8; // AU
+	double day_year = 1.0 / 365.25; // year
+	double s_year = 1.0 / (365.25 * 24 * 60 * 60); // year
+
+	/* variables in AU Msun year*/
+	*m1 = body[0].mass;
+	*m2 = body[1].mass;
+	*R	= body[0].R * km_AU;
+	*kf = body[0].kf;
+
+	double Td = body[0].lod * day_year;
+	double theta = body[0].obl * deg;
+	double psi = body[0].psi * deg;
+	double rg = body[0].rg;
+	double phi = body[0].lib * deg;
+	double Dt = body[0].Dt * s_year;
+	double tau = body[0].tau;
+	double a = body[1].a;
+	double e = body[1].e;
+	double I = body[1].I * deg;
+	double M = body[1].M * deg;
+	double w = body[1].w * deg;
+	double Omega = body[1].Omega * deg;
 
 	/* auxiliary variables */
 	double T = kepler_period(*m1, *m2, G, a);
@@ -453,6 +453,11 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	*I0 = rg * (*m1) * (*R) * (*R);
 	// double J2 = body[0].J2;
 	// *I0 = (3.0 * rg - 2.0 * J2) * (*m1) * (*R) * (*R) / 3.0;
+
+	/* for testing */
+	// printf("%1.5e %1.5e %1.5e\n", rg, *m1, *R);
+	// printf("%1.5e\n", *I0);
+	// exit(99);
 
 	/* 4th set of variables - alpha and eta */
 	double gamma = 3.0 * (*I0) * G / (pow((*R), 5.0) * (*kf));

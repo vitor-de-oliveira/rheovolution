@@ -47,6 +47,10 @@ calculate_b(double b[9], const double G, const double m2,
 	const double tilde_x[3], const double omega[3], 
 	const double b0_me[5], const double u_me[5],
 	const int elements, const double bk_me[]);
+
+int
+calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
+
 int
 calculate_l(double l[3], const double I0, 
 	const double b[9], const double omega[3]);
@@ -62,9 +66,6 @@ int
 total_angular_momentum(double l_total[3], const double m1,
 	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
 	const double l[3]);
-
-int
-calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
 
 double
 calculate_J2(const double m, const double R, const double I[9]);

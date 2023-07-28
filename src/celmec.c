@@ -97,18 +97,33 @@ calculate_eccentricity  (const double G,
     // standard gravitational parameter
     double mu = G * (m1 + m2);
 
-    double x_norm = norm_vector(x);
-    double v_norm_squared = norm_squared_vector(v);
-    double x_dot_v = dot_product(x, v);
+    // double x_norm = norm_vector(x);
+    // double v_norm_squared = norm_squared_vector(v);
+    // double x_dot_v = dot_product(x, v);
 
+    // double term_1[] = {0.0, 0.0, 0.0};
+    // scale_vector(term_1, v_norm_squared - (mu / x_norm), x);
+    // double term_2[] = {0.0, 0.0, 0.0};
+    // scale_vector(term_2, x_dot_v, v);
+
+    // double e_vec[] = {0.0, 0.0, 0.0};
+    // linear_combination_vector(e_vec, 
+    //     1.0 / mu, term_1, -1.0 / mu, term_2);
+
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    double v_cross_h[3];
+    cross_product(v_cross_h, v, h);
     double term_1[] = {0.0, 0.0, 0.0};
-    scale_vector(term_1, v_norm_squared - (mu / x_norm), x);
+    scale_vector(term_1, 1.0 / mu, v_cross_h);
     double term_2[] = {0.0, 0.0, 0.0};
-    scale_vector(term_2, x_dot_v, v);
+    scale_vector(term_2, -1.0 / norm_vector(x), x);
 
     double e_vec[] = {0.0, 0.0, 0.0};
     linear_combination_vector(e_vec, 
-        1.0 / mu, term_1, -1.0 / mu, term_2);
+        1.0, term_1, 1.0, term_2);
 
     return norm_vector(e_vec);
 }
@@ -123,11 +138,13 @@ calculate_semi_major_axis   (const double G,
     // standard gravitational parameter
     double mu = G * (m1 + m2);
 
-    double x_norm = norm_vector(x);
-    double v_norm_squared = norm_squared_vector(v);
+    // double x_norm = norm_vector(x);
+    // double v_norm_squared = norm_squared_vector(v);
 
-    // specific mechanical energy
-    double E = v_norm_squared / 2.0 - mu / x_norm;
+    // // specific mechanical energy
+    // double E = v_norm_squared / 2.0 - mu / x_norm;
 
-    return -1.0 * mu / (2.0 * E);
+    // return -1.0 * mu / (2.0 * E);
+
+    return 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
 }
