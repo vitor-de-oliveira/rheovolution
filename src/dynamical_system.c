@@ -465,6 +465,9 @@ calculate_g(double g[9], const double G, const double m2,
 		 1.0, f_tide,
 		 1.0, alpha_0_b0,
 		-1.0, u);
+	// linear_combination_square_matrix(g,
+	// 	 1.0, alpha_0_b0,
+	// 	-1.0, u);
 
 	/* add Voigt elements to g */
 	double **bk_me_2d_array, **bk;

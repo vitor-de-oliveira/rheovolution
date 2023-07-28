@@ -517,8 +517,8 @@ main(int argc, char *argv[])
   	gsl_odeiv2_evolve * ode_evolve
     	= gsl_odeiv2_evolve_alloc (dim);
 
-	// double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
-	// double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+	double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
+	double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
 	// double norm_omega_init = norm_vector(omega);
 
 	// print_vector(omega);
@@ -588,9 +588,19 @@ main(int argc, char *argv[])
 		/* calculate e and a */
 		e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
 		a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
-		// double e_dif = e - e_init;
-		// double a_dif = a - a_init;
+		double e_dif = e - e_init;
+		double a_dif = a - a_init;
 		// double omega_dif = norm_vector(omega) - norm_omega_init;
+
+		/* construct b0 and u for printing */
+		double b0[9], u[9];
+		construct_traceless_symmetric_matrix(b0, b0_me);
+		construct_traceless_symmetric_matrix(u, u_me);
+
+		double h[3];
+    	cross_product(h, tilde_x, tilde_x_dot);
+		double v_cross_h[3];
+    	cross_product(v_cross_h, tilde_x_dot, h);
 
 		/* writes output */
 		if (t > t_trans)
@@ -598,31 +608,72 @@ main(int argc, char *argv[])
 			if (counter % data_skip == 0)
 			{
 				/* time */
+
 				printf ("%.5e", t);
+
 				/* position, and velocity */
+
 				printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
 					tilde_x[0], tilde_x[1], tilde_x[2],
 					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
+
 				/* orbital eccentricity and semimajor axis */
-				printf (" %.5e %.5e", e, a);
-				// printf (" %.5e %.5e", e_dif, a_dif);
+
+				printf (" %.5e %.5e", e, e_dif);
+				printf (" %.5e %.5e", a, a_dif);
+
 				/* angular velocity */
-				printf (" %.5e", norm_vector(omega));
+
+				// printf (" %.5e", norm_vector(omega));
 				// printf (" %.5e", omega_dif);
 				// printf (" %.5e %.5e %.5e", 
 				// 	omega[0], omega[1], omega[2]);
+
 				/* angular momentum and total angular momentum */
-				printf (" %.5e", norm_vector(l));
-				printf (" %.5e", norm_vector(l_total));
+
+				// printf (" %.5e", norm_vector(l));
+				// printf (" %.5e", norm_vector(l_total));
 				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
 				// 	l[0], l[1], l[2],
 				// 	l_total[0], l_total[1], l_total[2]);
+
 				/* deformation matrix */
+
 				printf (" %.5e", norm_square_matrix(b));
-				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+					b[0], b[1], b[2],
+					b[3], b[4], b[5],
+					b[6], b[7], b[8]);
+				// printf (" %.10e", norm_square_matrix(b));
+				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e",
 				// 	b[0], b[1], b[2],
 				// 	b[3], b[4], b[5],
 				// 	b[6], b[7], b[8]);
+
+				/* prestress */
+
+				// printf (" %.5e", norm_square_matrix(b0));
+				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// 	b0[0], b0[1], b0[2],
+				// 	b0[3], b0[4], b0[5],
+				// 	b0[6], b0[7], b0[8]);
+
+				/* rheology */
+
+				// printf (" %.5e", norm_square_matrix(u));
+				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// 	u[0], u[1], u[2],
+				// 	u[3], u[4], u[5],
+				// 	u[6], u[7], u[8]);
+
+				/* test */
+				// printf (" %.5e", norm_vector(h));
+				// printf (" %.5e %.5e %.5e", h[0], h[1], h[2]);
+				// printf (" %.10e", norm_vector(v_cross_h));
+				// printf (" %.5e %.5e %.5e", v_cross_h[0], v_cross_h[1], v_cross_h[2]);
+				// printf (" %.10e", norm_vector(tilde_x));
+				// printf (" %.5e %.5e %.5e", tilde_x[0], tilde_x[1], tilde_x[2]);
+
 				printf("\n");
 			}
 		}
