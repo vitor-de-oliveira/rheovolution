@@ -70,8 +70,9 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const bool centrifugal, const bool tidal);
 
 int
-total_angular_momentum(double l_total[3], const double m1,
-	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
+total_angular_momentum(double l_total[3],
+	const double m1, const double m2,
+	const double tilde_x[3], const double tilde_x_dot[3],
 	const double l[3]);
 
 double

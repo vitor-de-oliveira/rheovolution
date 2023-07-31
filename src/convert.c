@@ -402,7 +402,7 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	/* conversion units to AU Msun year */
 	double km_AU = 1.0 / 1.495978707e8; // AU
 	double day_year = 1.0 / 365.25; // year
-	double s_year = 1.0 / (365.25 * 24 * 60 * 60); // year
+	double s_year = 1.0 / (365.25 * 24.0 * 60.0 * 60.0); // year
 
 	/* variables in AU Msun year*/
 	*m1 = body[0].mass;

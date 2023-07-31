@@ -445,16 +445,16 @@ main(int argc, char *argv[])
 
 	/* calculate I, J2, and C22 */
 	// I do not use these as of yet
-	// double I[9];
-	// calculate_inertia_tensor(I, I0, b);
+	// double Inert[9];
+	// calculate_inertia_tensor(Inert, I0, b);
 	// double J2;
-	// J2 = calculate_J2(m1, R, I);
+	// J2 = calculate_J2(m1, R, Inert);
 	// double C22;
-	// C22 = calculate_C22(m1, R, I);
+	// C22 = calculate_C22(m1, R, Inert);
 
 	/* for testing */
 	// printf("I = \n");
-	// print_square_matrix(I);
+	// print_square_matrix(Inert);
 	// printf("J2 = %e\n", J2);
 	// printf("C22 = %e\n", C22);
 	// exit(43);
@@ -532,6 +532,14 @@ main(int argc, char *argv[])
 	double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
 	double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
 	double norm_omega_init = norm_vector(omega);
+	double norm_l_init = norm_vector(l);
+	double l_total_init[3];
+	total_angular_momentum(l_total_init, m1, m2, tilde_x, tilde_x_dot, l);
+	double norm_l_total_init = norm_vector(l_total_init);
+	// double I[9];
+	// calculate_inertia_tensor(I, I0, b);
+	// double J2_init = calculate_J2(m1, R, I);
+	// double C22_init = calculate_C22(m1, R, I);
 
 	// print_vector(omega);
 	// printf("%.5e\n", norm_vector(omega));
@@ -601,19 +609,25 @@ main(int argc, char *argv[])
 		/* calculate e and a */
 		e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
 		a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+
+		/* calculate differences */
 		double e_dif = e - e_init;
 		double a_dif = a - a_init;
 		double omega_dif = norm_vector(omega) - norm_omega_init;
+		double l_dif = norm_vector(l) - norm_l_init;
+		double l_total_dif = norm_vector(l_total) - norm_l_total_init;
 
 		/* construct b0 and u for printing */
 		double b0[9], u[9];
 		construct_traceless_symmetric_matrix(b0, b0_me);
 		construct_traceless_symmetric_matrix(u, u_me);
 
-		double h[3];
-    	cross_product(h, tilde_x, tilde_x_dot);
-		double v_cross_h[3];
-    	cross_product(v_cross_h, tilde_x_dot, h);
+		/* calculate J2 and C22 */
+		// calculate_inertia_tensor(I, I0, b);
+		// double J2 = calculate_J2(m1, R, I);
+		// double C22 = calculate_C22(m1, R, I);
+		// double J2_dif = J2 - J2_init;
+		// double C22_dif = C22 - C22_init; 
 
 		/* writes output */
 		if (t > t_trans)
@@ -644,19 +658,19 @@ main(int argc, char *argv[])
 
 				/* angular momentum and total angular momentum */
 
-				// printf (" %.5e", norm_vector(l));
-				// printf (" %.5e", norm_vector(l_total));
+				printf (" %.5e %.5e", norm_vector(l), l_dif);
+				printf (" %.5e %.5e", norm_vector(l_total), l_total_dif);
 				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
 				// 	l[0], l[1], l[2],
 				// 	l_total[0], l_total[1], l_total[2]);
 
 				/* deformation matrix */
 
-				printf (" %.5e", norm_square_matrix(b));
-				printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
-					b[0], b[1], b[2],
-					b[3], b[4], b[5],
-					b[6], b[7], b[8]);
+				// printf (" %.5e", norm_square_matrix(b));
+				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// 	b[0], b[1], b[2],
+				// 	b[3], b[4], b[5],
+				// 	b[6], b[7], b[8]);
 				// printf (" %.10e", norm_square_matrix(b));
 				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e",
 				// 	b[0], b[1], b[2],
@@ -679,13 +693,10 @@ main(int argc, char *argv[])
 				// 	u[3], u[4], u[5],
 				// 	u[6], u[7], u[8]);
 
-				/* test */
-				// printf (" %.5e", norm_vector(h));
-				// printf (" %.5e %.5e %.5e", h[0], h[1], h[2]);
-				// printf (" %.10e", norm_vector(v_cross_h));
-				// printf (" %.5e %.5e %.5e", v_cross_h[0], v_cross_h[1], v_cross_h[2]);
-				// printf (" %.10e", norm_vector(tilde_x));
-				// printf (" %.5e %.5e %.5e", tilde_x[0], tilde_x[1], tilde_x[2]);
+				/* classical gravitational potential terms */
+
+				// printf (" %.5e %.5e", J2, J2_dif);
+				// printf (" %.5e %.5e", C22, C22_dif);
 
 				printf("\n");
 			}
