@@ -2,6 +2,7 @@
 #define DYN_SYS_H
 
 #include <math.h>
+#include <stdbool.h>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_linalg.h>
@@ -39,14 +40,19 @@ int
 calculate_g(double g[9], const double G, const double m2, 
 	const double alpha_0, const double alpha, const double tilde_x[3], 
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool tidal);
+
+int
+calculate_f_cent(double f_cent[9], const double omega[3]);
 
 int
 calculate_b(double b[9], const double G, const double m2, 
 	const double gamma, const double alpha_0, const double alpha,
 	const double tilde_x[3], const double omega[3], 
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal);
 
 int
 calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
@@ -60,7 +66,8 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const double m2, const double I0, const double gamma, const double alpha_0, 
 	const double alpha, const double tilde_x[3], const double l[3],
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal);
 
 int
 total_angular_momentum(double l_total[3], const double m1,

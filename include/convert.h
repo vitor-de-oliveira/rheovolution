@@ -45,6 +45,9 @@ typedef struct CelestialBody{
 	double	M;		    // mean anomaly (deg)
 	double	w;		    // argument of periapsis (deg)
 	double	Omega;	    // longitude of the ascending node (deg)
+
+	bool	centrifugal; // centrifugal force
+	bool	tidal;		 // tidal force
 } cltbdy;
 
 int
@@ -58,6 +61,7 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 				 double *kf, double omega[],
 				 double *alpha, double *eta,
 				 double tilde_x[], double tilde_x_dot[],
+				 bool *centrifugal, bool *tidal,
 				 const double G,
 				 const char file[]);
 

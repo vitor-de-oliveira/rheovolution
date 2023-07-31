@@ -238,26 +238,78 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 		}
 	}
 
-	/* auxiliary variables for input names */
-	char	other_col_names[*number_of_bodies][100];
+	/* auxiliary variables for input names and deformable settings */
+	char	other_col_str[*number_of_bodies][100];
 
-	/* reading input names */
-	bool	input_name_received = false; // verification variable
+	/* verification variables for names and deformable settings */
+	bool	input_name_received = false;
+	int 	number_deformable_inputs = 2; 
+	bool	input_deformable_received[number_deformable_inputs];
+	for (int i = 0; i < number_deformable_inputs; i++)
+	{
+		input_deformable_received[i] = false;
+	}
+
+	/* reading input names and deformable settings */
 	FILE 	*in1_names = fopen(file, "r");
    	while ((read = getline(&line, &len, in1)) != -1)
 	{
 		sscanf(line, "%s %s %s %s",
-			first_col, other_col_names[0], 
-			other_col_names[1], other_col_names[2]);
+			first_col, other_col_str[0], 
+			other_col_str[1], other_col_str[2]);
 		if (strcmp(first_col, "Name") == 0)
 		{
 			for (int i = 0; i < *number_of_bodies; i++)
 			{
-				strcpy((*body)[i].name, other_col_names[i]);
+				strcpy((*body)[i].name, other_col_str[i]);
 			}
 			input_name_received = true;
 		}
+		else if (strcmp(first_col, "centrifugal") == 0)
+		{
+			for (int i = 0; i < *number_of_bodies; i++)
+			{
+				if (strcmp(other_col_str[i], "yes") == 0)
+				{
+					(*body)[i].centrifugal = true;
+				}
+				else if (strcmp(other_col_str[i], "no") == 0)
+				{
+					(*body)[i].centrifugal = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for centrifugal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[0] = true;
+		}
+		else if (strcmp(first_col, "tidal") == 0)
+		{
+			for (int i = 0; i < *number_of_bodies; i++)
+			{
+				if (strcmp(other_col_str[i], "yes") == 0)
+				{
+					(*body)[i].tidal = true;
+				}
+				else if (strcmp(other_col_str[i], "no") == 0)
+				{
+					(*body)[i].tidal = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for tidal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[1] = true;
+		}
 	}
+
+	/* name  input verification */
 	fclose(in1_names);
 	if (input_name_received == false)
 	{
@@ -265,6 +317,17 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 		fprintf(stderr, "from %s.\n", file);
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(14);
+	}
+	/* deformable variables input verification */
+	for (int i = 0; i < number_deformable_inputs; i++)
+	{
+		if(input_deformable_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", file);
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(14);
+		}
 	}
 
 	/* make a copy of the input file */
@@ -291,6 +354,7 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 				 double *kf, double omega[],
 				 double *alpha, double *eta,
 				 double tilde_x[], double tilde_x_dot[],
+				 bool *centrifugal, bool *tidal,
 				 const double G,
 				 const char file[])
 {
@@ -300,6 +364,10 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 
 	/* get values from input file */
 	read_input(&body, &number_of_bodies, file);
+
+	/* deformable setting variables */
+	*centrifugal = body[0].centrifugal;
+	*tidal = body[0].tidal;
 
 	/* conversion angles to rad */
 	double deg = M_PI / 180.0; // rad

@@ -55,9 +55,17 @@ main(int argc, char *argv[])
 	/* position and velocity */
 	double	tilde_x[] = {0.0, 0.0, 0.0};
 	double 	tilde_x_dot[] = {0.0, 0.0, 0.0};
+	/* deformation settings */
+	bool	centrifugal = false;
+	bool	tidal = false;
 	
 	if (atoi(argv[1]) == 1)
 	{
+		// Warning for dev
+		fprintf(stderr, "Deformable settings not implemented");
+		fprintf(stderr, " yet for this type of file!\n");
+		exit(29);
+
 		/* verification variables for system input */
 		int 	number_system_inputs = 17;
 		bool	input_system_received[number_system_inputs];
@@ -254,6 +262,7 @@ main(int argc, char *argv[])
 		convert_input(&m1, &m2, &I0, &R, &kf,
 			omega, &alpha, &eta,
 			tilde_x, tilde_x_dot,
+			&centrifugal, &tidal,
 			G,
 			argv[2]);
 
@@ -413,7 +422,8 @@ main(int argc, char *argv[])
 	/* calculate first l */
 	double 	b[9], l[3];
 	calculate_b(b, G, m2, gamma, alpha_0, alpha,
-		tilde_x, omega, b0_me, u_me, elements, bk_me);
+		tilde_x, omega, b0_me, u_me, elements, bk_me,
+		centrifugal, tidal);
 	calculate_l(l, I0, b, omega);
 
 	/* for testing */
@@ -476,7 +486,7 @@ main(int argc, char *argv[])
 	// exit(42);
 
 	/* variables and parameters passed as field parameters */
-	int		dim_params = 12 + (elements * 2); // optmize this
+	int		dim_params = 14 + (elements * 2); // optmize this
 	double	params[dim_params]; 
 	params[0] = omega[0];
 	params[1] = omega[1];
@@ -489,12 +499,14 @@ main(int argc, char *argv[])
 	params[8] = alpha;
 	params[9] = eta;
 	params[10] = alpha_0;
-	params[11] = elements;
+	params[11] = (double) elements;
 	for (int i = 0; i < elements; i++)
 	{
 		params[12 + (2*i)] = alpha_elements[i];
 		params[13 + (2*i)] = eta_elements[i];
 	}
+	params[12 + (elements * 2)] = (double) centrifugal;
+	params[13 + (elements * 2)] = (double) tidal;
 
 	/* integration loop variables */
 	int		dim = 19 + (elements * 5);	// optmize this
@@ -519,7 +531,7 @@ main(int argc, char *argv[])
 
 	double e_init = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
 	double a_init = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
-	// double norm_omega_init = norm_vector(omega);
+	double norm_omega_init = norm_vector(omega);
 
 	// print_vector(omega);
 	// printf("%.5e\n", norm_vector(omega));
@@ -568,7 +580,7 @@ main(int argc, char *argv[])
 		double omega_seed[3];
 		copy_vector(omega_seed, omega);
 		calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
-			alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
+			alpha, tilde_x, l, b0_me, u_me, elements, bk_me, centrifugal, tidal);
 		for (int i = 0; i < 3; i++) params[i] = omega[i];
 
 		/* for testing */
@@ -578,7 +590,8 @@ main(int argc, char *argv[])
 
 		/* calculate b */
 		calculate_b(b, G, m2, gamma, alpha_0, alpha,
-			tilde_x, omega, b0_me, u_me, elements, bk_me);
+			tilde_x, omega, b0_me, u_me, elements, bk_me,
+			centrifugal, tidal);
 
 		/* calculate total angular momentum */
 		double l_total[3];
@@ -590,7 +603,7 @@ main(int argc, char *argv[])
 		a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
 		double e_dif = e - e_init;
 		double a_dif = a - a_init;
-		// double omega_dif = norm_vector(omega) - norm_omega_init;
+		double omega_dif = norm_vector(omega) - norm_omega_init;
 
 		/* construct b0 and u for printing */
 		double b0[9], u[9];
@@ -624,8 +637,8 @@ main(int argc, char *argv[])
 
 				/* angular velocity */
 
-				// printf (" %.5e", norm_vector(omega));
-				// printf (" %.5e", omega_dif);
+				printf (" %.5e", norm_vector(omega));
+				printf (" %.5e", omega_dif);
 				// printf (" %.5e %.5e %.5e", 
 				// 	omega[0], omega[1], omega[2]);
 

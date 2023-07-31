@@ -19,7 +19,7 @@ field_1EB1PM(double t, const double y[], double f[],
 	double 	alpha 	 		= par[8];
 	double 	eta 	 		= par[9];
 	double	alpha_0	 		= par[10];
-	int 	elements 		= par[11];
+	int 	elements 		= (int) par[11];
 	double	*alpha_elements, *eta_elements;
 	if (elements > 0)
 	{
@@ -35,6 +35,8 @@ field_1EB1PM(double t, const double y[], double f[],
 			// printf("eta_%d = %f\n", i, eta_elements[i]);
 		}
 	}
+	bool	centrifugal		= (bool) par[12 + (elements * 2)];
+	bool	tidal			= (bool) par[13 + (elements * 2)];
 
 	/* preparing variables */
 
@@ -90,9 +92,10 @@ field_1EB1PM(double t, const double y[], double f[],
 	double omega[3], b[9];
 	// copy_vector(omega, omega_seed); // for testing
 	calculate_omega(omega, omega_seed, G, m2, I0, gamma, alpha_0, 
-		alpha, tilde_x, l, b0_me, u_me, elements, bk_me);
+		alpha, tilde_x, l, b0_me, u_me, elements, bk_me, centrifugal, tidal);
 	calculate_b(b, G, m2, gamma, alpha_0, alpha,
-		tilde_x, omega, b0_me, u_me, elements, bk_me);
+		tilde_x, omega, b0_me, u_me, elements, bk_me,
+		centrifugal, tidal);
 	
 	/* for testing */
 	// printf("omega inside = \n");
@@ -443,7 +446,8 @@ int
 calculate_g(double g[9], const double G, const double m2, 
 	const double alpha_0, const double alpha, const double tilde_x[3], 
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[])
+	const int elements, const double bk_me[],
+	const bool tidal)
 {
 	/* for testing */
 	// null_matrix(g);
@@ -454,20 +458,25 @@ calculate_g(double g[9], const double G, const double m2,
 	construct_traceless_symmetric_matrix(b0, b0_me);
 	construct_traceless_symmetric_matrix(u, u_me);
 
-	/* calculate f_tide */
-	double f_tide[9];
-	calculate_f_tide(f_tide, G, m2, tilde_x);
-
-	/* calculate g without Voigt elements */
+	/* prestress contribution */
 	double alpha_0_b0[9];
 	scale_square_matrix(alpha_0_b0, alpha_0, b0);
-	linear_combination_three_square_matrix(g,
-		 1.0, f_tide,
-		 1.0, alpha_0_b0,
+
+	/* calculate g without Voigt elements */
+	linear_combination_square_matrix(g,
+		1.0, alpha_0_b0,
 		-1.0, u);
-	// linear_combination_square_matrix(g,
-	// 	 1.0, alpha_0_b0,
-	// 	-1.0, u);
+
+	/* add tidal force if chosen */
+	if (tidal == true)
+	{
+		/* calculate f_tide */
+		double f_tide[9];
+		calculate_f_tide(f_tide, G, m2, tilde_x);
+		linear_combination_square_matrix(g,
+			1.0, g,
+			1.0, f_tide);
+	}
 
 	/* add Voigt elements to g */
 	double **bk_me_2d_array, **bk;
@@ -517,40 +526,65 @@ calculate_g(double g[9], const double G, const double m2,
 }
 
 int
-calculate_b(double b[9], const double G, const double m2, 
-	const double gamma, const double alpha_0, const double alpha,
-	const double tilde_x[3], const double omega[3], 
-	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[])
+calculate_f_cent(double f_cent[9], const double omega[3])
 {
-	/* for testing */
-	// null_matrix(b);
-	// return 0;
-
-	/* calculate g */
-	double g[9];
-	calculate_g(g, G, m2, alpha_0, alpha, tilde_x, b0_me, u_me, elements, bk_me);
-
-	/* calculate c */
-	double c = calculate_c(gamma, alpha_0, alpha);
-
-	/* calculate b  */
 	double omega_hat[9];
 	hat_map(omega_hat, omega);
 	double omega_hat_squared[9];
 	square_matrix_times_square_matrix(omega_hat_squared,
 		omega_hat, omega_hat);
-	double trace_omega_hat_squared;
-	trace_omega_hat_squared = trace_square_matrix(omega_hat_squared);
+	double trace_omega_hat_squared 
+		= trace_square_matrix(omega_hat_squared);
 	double Id[9];
 	identity_matrix(Id);
-	double scaled_id_2[9];
-	scale_square_matrix(scaled_id_2, 
+	linear_combination_square_matrix(f_cent,
+		-1.0, omega_hat_squared,
 		trace_omega_hat_squared / 3.0, Id);
-	linear_combination_three_square_matrix(b,
-		-1.0 / c, omega_hat_squared,
-		 1.0 / c, scaled_id_2,
-		 1.0 / c, g);
+
+	return 0;
+}
+
+int
+calculate_b(double b[9], const double G, const double m2, 
+	const double gamma, const double alpha_0, const double alpha,
+	const double tilde_x[3], const double omega[3], 
+	const double b0_me[5], const double u_me[5],
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal)
+{
+	/* for testing */
+	// null_matrix(b);
+	// return 0;
+
+	/* if body is not deformable, b equals to b0 */
+	if (centrifugal == false && tidal == false)
+	{
+		construct_traceless_symmetric_matrix(b, b0_me);
+		return 0;
+	}
+
+	/* calculate g */
+	double g[9];
+	calculate_g(g, G, m2, alpha_0, alpha, tilde_x, 
+				b0_me, u_me, elements, bk_me,
+				tidal);
+
+	/* calculate c */
+	double c = calculate_c(gamma, alpha_0, alpha);
+
+	/* calculate b */
+	scale_square_matrix(b, 1.0 / c, g);
+
+	/* add centrifugal force if chosen */
+	if (centrifugal == true)
+	{
+		/* calculate centrifugal force */
+		double f_cent[9];
+		calculate_f_cent(f_cent, omega);
+		linear_combination_square_matrix(b,
+			1.0, b,
+			1.0 / c, f_cent);
+	}
 
 	/* for testing */
 	// printf("\nb = \n");
@@ -597,7 +631,8 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const double m2, const double I0, const double gamma, const double alpha_0, 
 	const double alpha, const double tilde_x[3], const double l[3],
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[])
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal)
 {
 	/* for testing */
 	// scale_vector(omega, 1.0 / I0, l);
@@ -620,57 +655,67 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 
 		/* calculate g */
 		double g[9];
-		calculate_g(g, G, m2, alpha_0, alpha, tilde_x, b0_me, u_me, elements, bk_me);
+		calculate_g(g, G, m2, alpha_0, alpha, tilde_x, 
+					b0_me, u_me, elements, bk_me,
+					tidal);
 
 		/* calculate c */
 		double c = calculate_c(gamma, alpha_0, alpha);
 
+		/* calculate H = 0 */
 		double Id[9];
 		identity_matrix(Id);
-		double Aux[9];
-		linear_combination_three_square_matrix(Aux,
+		double aux_H_first_term[9];
+		linear_combination_square_matrix(aux_H_first_term,
 			1.0, Id,
-			-1.0 / c, g,
-			2.0 * norm_squared_vector(omega) / (3.0 * c), Id);
-		double Aux_times_omega[3];
-		square_matrix_times_vector(Aux_times_omega, Aux, omega);
-		double h[3];
-		linear_combination_vector(h, 
-			1.0, Aux_times_omega,
+			-1.0 / c, g);
+		/* add centrifugal term if chosen */
+		if (centrifugal == true)
+		{
+			linear_combination_square_matrix(aux_H_first_term,
+				1.0, aux_H_first_term,
+				2.0 * norm_squared_vector(omega) / (3.0 * c), Id);
+		}
+		double H_first_term[3];
+		square_matrix_times_vector(H_first_term, aux_H_first_term, omega);
+		double H[3];
+		linear_combination_vector(H, 
+			1.0, H_first_term,
 			-1.0 / I0, l);
-		double minus_h[3];
-		scale_vector(minus_h, -1.0, h);
+		double minus_H[3];
+		scale_vector(minus_H, -1.0, H);
 
-		double omega_tensor_omega[9];
-		tensor_product(omega_tensor_omega, omega, omega);
-		double DH_third_term[9];
-		linear_combination_square_matrix(DH_third_term,
-			2.0 * norm_squared_vector(omega) / (3.0 * c), Id,
-			4.0 / (3.0 * c), omega_tensor_omega);
+		/* calculate DH */
 		double DH[9];
-		linear_combination_three_square_matrix(DH,
+		linear_combination_square_matrix(DH,
 			1.0, Id,
-			-1.0 / c, g,
-			1.0, DH_third_term);
+			-1.0 / c, g);
+		/* add centrifugal term if chosen */
+		if (centrifugal == true)
+		{
+			double omega_tensor_omega[9];
+			tensor_product(omega_tensor_omega, omega, omega);
+			double DH_third_term[9];
+			linear_combination_square_matrix(DH_third_term,
+				2.0 * norm_squared_vector(omega) / (3.0 * c), Id,
+				4.0 / (3.0 * c), omega_tensor_omega);
+			linear_combination_square_matrix(DH,
+				1.0, DH,
+				1.0, DH_third_term);
+		}
 
 		/* solving linear equation m*x=b using LU decomposition */
-
 		gsl_matrix_view m
 			= gsl_matrix_view_array (DH, 3, 3);
-
 		gsl_vector_view b
-			= gsl_vector_view_array (minus_h, 3);
-
+			= gsl_vector_view_array (minus_H, 3);
 		double omega_minus_previous_omega[] = { 0.0, 0.0, 0.0 };
 		gsl_vector_view x
 			= gsl_vector_view_array (omega_minus_previous_omega, 3);
 
 		int s;
-
 		gsl_permutation * p = gsl_permutation_alloc (3);
-
 		gsl_linalg_LU_decomp (&m.matrix, p, &s);
-
 		gsl_linalg_LU_solve (&m.matrix, p, &b.vector, &x.vector);
 
 		linear_combination_vector(omega, 
