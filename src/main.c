@@ -545,6 +545,19 @@ main(int argc, char *argv[])
 	// printf("%.5e\n", norm_vector(omega));
 	// exit(42);
 
+	/* writes output header */
+	printf ("time(yr)");
+	printf (" x(AU) y(AU) z(AU) vx vy vz");
+	printf (" e e-e0");
+	printf (" a(AU) a-a0(AU)");
+	printf (" |omega|");
+	printf (" |omega|-|omega0|");
+	printf (" |l|");
+	printf (" |l|-|l0|");
+	printf (" |ltotal|");
+	printf (" |ltotal|-|ltotal0|");
+	printf("\n");
+
 	/* integration loop */
 	int counter = 0;
 	while (t < t_final)
