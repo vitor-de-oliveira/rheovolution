@@ -556,6 +556,7 @@ main(int argc, char *argv[])
 	printf (" |l|-|l0|");
 	printf (" |ltotal|");
 	printf (" |ltotal|-|ltotal0|");
+	printf (" |b|");
 	printf("\n");
 
 	/* integration loop */
@@ -679,7 +680,7 @@ main(int argc, char *argv[])
 
 				/* deformation matrix */
 
-				// printf (" %.5e", norm_square_matrix(b));
+				printf (" %.5e", norm_square_matrix(b));
 				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
 				// 	b[0], b[1], b[2],
 				// 	b[3], b[4], b[5],

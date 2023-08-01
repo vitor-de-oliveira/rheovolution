@@ -518,9 +518,9 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	// exit(14);
 
 	/* 3rd set of variables - I0 */
-	*I0 = rg * (*m1) * (*R) * (*R);
-	// double J2 = body[0].J2;
-	// *I0 = (3.0 * rg - 2.0 * J2) * (*m1) * (*R) * (*R) / 3.0;
+	// *I0 = rg * (*m1) * (*R) * (*R);
+	double J2 = body[0].J2;
+	*I0 = (3.0 * rg - 2.0 * J2) * (*m1) * (*R) * (*R) / 3.0;
 
 	/* for testing */
 	// printf("%1.5e %1.5e %1.5e\n", rg, *m1, *R);
