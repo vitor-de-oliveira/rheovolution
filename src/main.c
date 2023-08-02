@@ -650,42 +650,37 @@ main(int argc, char *argv[])
 			{
 				/* time */
 
-				printf ("%.5e", t);
+				printf ("%.10e", t);
 
 				/* position, and velocity */
 
-				printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
+				printf (" %.10e %.10e %.10e %.10e %.10e %.10e", 
 					tilde_x[0], tilde_x[1], tilde_x[2],
 					tilde_x_dot[0], tilde_x_dot[1], tilde_x_dot[2]);
 
 				/* orbital eccentricity and semimajor axis */
 
-				printf (" %.5e %.5e", e, e_dif);
-				printf (" %.5e %.5e", a, a_dif);
+				printf (" %.10e %.10e", e, e_dif);
+				printf (" %.10e %.10e", a, a_dif);
 
 				/* angular velocity */
 
-				printf (" %.5e", norm_vector(omega));
-				printf (" %.5e", omega_dif);
-				// printf (" %.5e %.5e %.5e", 
+				printf (" %.10e", norm_vector(omega));
+				printf (" %.10e", omega_dif);
+				// printf (" %.10e %.10e %.10e", 
 				// 	omega[0], omega[1], omega[2]);
 
 				/* angular momentum and total angular momentum */
 
-				printf (" %.5e %.5e", norm_vector(l), l_dif);
-				printf (" %.5e %.5e", norm_vector(l_total), l_total_dif);
-				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e", 
+				printf (" %.10e %.10e", norm_vector(l), l_dif);
+				printf (" %.10e %.10e", norm_vector(l_total), l_total_dif);
+				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e", 
 				// 	l[0], l[1], l[2],
 				// 	l_total[0], l_total[1], l_total[2]);
 
 				/* deformation matrix */
 
-				printf (" %.5e", norm_square_matrix(b));
-				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
-				// 	b[0], b[1], b[2],
-				// 	b[3], b[4], b[5],
-				// 	b[6], b[7], b[8]);
-				// printf (" %.10e", norm_square_matrix(b));
+				printf (" %.10e", norm_square_matrix(b));
 				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e",
 				// 	b[0], b[1], b[2],
 				// 	b[3], b[4], b[5],
@@ -693,16 +688,16 @@ main(int argc, char *argv[])
 
 				/* prestress */
 
-				// printf (" %.5e", norm_square_matrix(b0));
-				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// printf (" %.10e", norm_square_matrix(b0));
+				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e",
 				// 	b0[0], b0[1], b0[2],
 				// 	b0[3], b0[4], b0[5],
 				// 	b0[6], b0[7], b0[8]);
 
 				/* rheology */
 
-				// printf (" %.5e", norm_square_matrix(u));
-				// printf (" %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e %.5e",
+				// printf (" %.10e", norm_square_matrix(u));
+				// printf (" %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e %.10e",
 				// 	u[0], u[1], u[2],
 				// 	u[3], u[4], u[5],
 				// 	u[6], u[7], u[8]);
