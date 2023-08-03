@@ -1,8 +1,10 @@
+#define _GNU_SOURCE // getline
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h> // ssize_t
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
@@ -11,11 +13,6 @@
 #include "dynamical_system.h"
 #include "convert.h"
 #include "celmec.h"
-
-#define PI 3.14159265358979323846
-// #define G 1.0
-// #define G 6.6743e-11 // SI
-#define G 4.0*PI*PI // AU Msun year
 
 int
 main(int argc, char *argv[]) 
@@ -28,16 +25,43 @@ main(int argc, char *argv[])
 		fprintf(stderr, " and the integrator parameters files\n");
 	   	exit(2);
    	}
-   	else if ( argc > 4 )
-   	{
-	   	fprintf(stderr, "Too many arguments\n");
-	   	exit(4);
-   	}
 
-	/* auxiliary variables for fscanf */
-	char 	var_name[100];
-	double 	var_value;
-	
+	/* gravitational constant */
+	double  G = 4.0 * M_PI * M_PI; // AU Msun year
+
+	/* dev variables */
+	char	units[100] = "AU_Msun_year";
+
+	/* read dev file */
+	FILE *in3 = fopen(argv[4], "r");
+	if	(in3 != NULL)
+	{
+		char 	*line = NULL;
+    	size_t 	len = 0;
+	    ssize_t read;
+		char 	first_col[100];
+		char 	second_col[100];
+		while ((read = getline(&line, &len, in3)) != -1)
+		{
+			sscanf(line, "%s %s",
+				first_col, second_col);
+			if (strcmp(first_col, "Units") == 0)
+			{
+				if (strcmp(second_col, "SI") == 0)
+				{
+					G = 6.6743e-11; // SI
+					strcpy(units, second_col);
+				}
+				else if (strcmp(second_col, "G_unity") == 0)
+				{
+					G = 1.0; // non-dimensional
+					strcpy(units, second_col);
+				}
+			}
+		}
+		fclose(in3);
+	}
+
 	/* orbital parameters given by user */
 	double 	e = 0.0, a = 0.0;
 	/* state variables given by user*/
@@ -58,7 +82,11 @@ main(int argc, char *argv[])
 	/* deformation settings */
 	bool	centrifugal = false;
 	bool	tidal = false;
-	
+
+	/* auxiliary variables for fscanf */
+	char 	var_name[100];
+	double 	var_value;
+
 	if (atoi(argv[1]) == 1)
 	{
 		// Warning for dev
@@ -244,7 +272,7 @@ main(int argc, char *argv[])
 		tilde_x[1] 		= 0.0;
 		tilde_x[2] 		= 0.0;	
 		tilde_x_dot[0]	= 0.0;
-		tilde_x_dot[1] 	= ((2.0 * PI) / kepler_period(m1, m2, G, a)) 
+		tilde_x_dot[1] 	= ((2.0 * M_PI) / kepler_period(m1, m2, G, a)) 
 							* a * sqrt((1.0 + e)/(1.0 - e));
 		tilde_x_dot[2] 	= 0.0;
 
@@ -264,7 +292,8 @@ main(int argc, char *argv[])
 			tilde_x, tilde_x_dot,
 			&centrifugal, &tidal,
 			G,
-			argv[2]);
+			argv[2],
+			units);
 
 		/* for testing */
 		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
@@ -367,30 +396,30 @@ main(int argc, char *argv[])
 	}
 
 	/* make a copy of the input files */
-	struct stat st = {0};
-	if (stat("output", &st) == -1) {
-		mkdir("output", 0700);
-	}
-	FILE *in1_to_copy = fopen(argv[2], "r");
-	FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
-	char ch = fgetc(in1_to_copy);
-    while(ch != EOF)
-    {
-        fputc(ch, in1_copy);
-        ch = fgetc(in1_to_copy);
-    }
-	fclose(in1_to_copy);
-	fclose(in1_copy);
-	FILE *in2_to_copy = fopen(argv[3], "r");
-	FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
-	char ch2 = fgetc(in2_to_copy);
-    while(ch2 != EOF)
-    {
-        fputc(ch2, in2_copy);
-        ch2 = fgetc(in2_to_copy);
-    }
-	fclose(in2_to_copy);
-	fclose(in2_copy);
+	// struct stat st = {0};
+	// if (stat("output", &st) == -1) {
+	// 	mkdir("output", 0700);
+	// }
+	// FILE *in1_to_copy = fopen(argv[2], "r");
+	// FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
+	// char ch = fgetc(in1_to_copy);
+    // while(ch != EOF)
+    // {
+    //     fputc(ch, in1_copy);
+    //     ch = fgetc(in1_to_copy);
+    // }
+	// fclose(in1_to_copy);
+	// fclose(in1_copy);
+	// FILE *in2_to_copy = fopen(argv[3], "r");
+	// FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
+	// char ch2 = fgetc(in2_to_copy);
+    // while(ch2 != EOF)
+    // {
+    //     fputc(ch2, in2_copy);
+    //     ch2 = fgetc(in2_to_copy);
+    // }
+	// fclose(in2_to_copy);
+	// fclose(in2_copy);
 
 	/* complete b0_me */
 	double b0_me[5];
@@ -708,8 +737,12 @@ main(int argc, char *argv[])
 				// printf (" %.5e %.5e", C22, C22_dif);
 
 				printf("\n");
-			}
-		}
+				
+			} // end if (counter % data_skip == 0)
+
+			counter++;
+
+		} // end if (t > t_trans)
 
 		/* for testing */
 		// printf("omega 2 = \n");
@@ -749,7 +782,6 @@ main(int argc, char *argv[])
 		// printf("b = \n");
 		// print_square_matrix(b);
 
-		counter++;
 	}
 
 	/* free Voigt elements */

@@ -7,3 +7,4 @@ out.out
 nohup.out
 .vscode/
 figures/
+tests/

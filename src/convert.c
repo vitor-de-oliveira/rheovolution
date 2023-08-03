@@ -330,22 +330,6 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 		}
 	}
 
-	/* make a copy of the input file */
-	struct stat st = {0};
-	if (stat("output", &st) == -1) {
-		mkdir("output", 0700);
-	}
-	FILE *in_to_copy = fopen(file, "r");
-	FILE *in_copy = fopen("output/input_sys_copy.txt" , "w");
-	char ch = fgetc(in_to_copy);
-    while(ch != EOF)
-    {
-        fputc(ch, in_copy);
-        ch = fgetc(in_to_copy);
-    }
-	fclose(in_to_copy);
-	fclose(in_copy);
-
 	return 0;
 }
 
@@ -356,7 +340,8 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 				 double tilde_x[], double tilde_x_dot[],
 				 bool *centrifugal, bool *tidal,
 				 const double G,
-				 const char file[])
+				 const char file[],
+				 const char units[])
 {
 	/* array of members of structure CelestialBody */
 	int		number_of_bodies;
@@ -365,65 +350,79 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	/* get values from input file */
 	read_input(&body, &number_of_bodies, file);
 
-	/* deformable setting variables */
-	*centrifugal = body[0].centrifugal;
-	*tidal = body[0].tidal;
+	/* body variables */
+	double Td = 0.0;
+	double theta = 0.0, psi = 0.0;
+	double rg = 0.0;
+	double phi = 0.0;
+	double Dt = 0.0, tau = 0.0;
+	double a = 0.0, e = 0.0;
+	double I = 0.0, M = 0.0;
+	double w = 0.0, Omega = 0.0;
 
-	/* conversion angles to rad */
-	double deg = M_PI / 180.0; // rad
+	if (strcmp(units, "SI") == 0)
+	{
+		/* conversion units to SI */
+		double deg_to_rad = M_PI / 180.0;
+		double Msun_to_kg = 1988500.0e24;
+		double day_to_s = 24.0 * 60.0 * 60.0;
+		double km_to_m = 1e3;
+		double year_to_s = 365.25 * day_to_s;
+		double AU_to_m = 1.495978707e11;
 
-	/* conversion units to SI */
-	// double Msun = 1988500.0e24; // kg
-	// double day = 24 * 60 * 60; // s
-	// double km = 1e3; // m
-	// double year = 365.25 * day; // s
-	// double AU = 1.495978707e11; // m
+		/* variables in SI*/
+		*m1 = body[0].mass * Msun_to_kg;
+		*m2 = body[1].mass * Msun_to_kg;
+		*R	= body[0].R * km_to_m;
+		*kf = body[0].kf;
+		*centrifugal = body[0].centrifugal;
+		*tidal = body[0].tidal;
 
-	// /* variables in SI*/
-	// *m1 = body[0].mass * Msun;
-	// *m2 = body[1].mass * Msun;
-	// *R	= body[0].R * km;
-	// *kf = body[0].kf;
+		Td = body[0].lod * day_to_s;
+		theta = body[0].obl * deg_to_rad;
+		psi = body[0].psi * deg_to_rad;
+		rg = body[0].rg;
+		phi = body[0].lib * deg_to_rad;
+		Dt = body[0].Dt;
+		tau = body[0].tau * year_to_s;
+		a = body[1].a * AU_to_m;
+		e = body[1].e;
+		I = body[1].I * deg_to_rad;
+		M = body[1].M * deg_to_rad;
+		w = body[1].w * deg_to_rad;
+		Omega = body[1].Omega * deg_to_rad;
+	}
+	else
+	{
+		/* conversion units to AU Msun year */
+		double deg_to_rad = M_PI / 180.0;
+		double km_to_AU = 1.0 / 1.495978707e8;
+		double day_to_year = 1.0 / 365.25;
+		double s_to_year = day_to_year / (24.0 * 60.0 * 60.0);
 
-	// double Td = body[0].lod * day;
-	// double theta = body[0].obl * deg;
-	// double psi = body[0].psi * deg;
-	// double rg = body[0].rg;
-	// double phi = body[0].lib * deg;
-	// double Dt = body[0].Dt;
-	// double tau = body[0].tau * year;
-	// double a = body[1].a * AU;
-	// double e = body[1].e;
-	// double I = body[1].I * deg;
-	// double M = body[1].M * deg;
-	// double w = body[1].w * deg;
-	// double Omega = body[1].Omega * deg;
+		/* variables in AU Msun year*/
+		*m1 = body[0].mass;
+		*m2 = body[1].mass;
+		*R	= body[0].R * km_to_AU;
+		*kf = body[0].kf;
+		*centrifugal = body[0].centrifugal;
+		*tidal = body[0].tidal;
 
-	/* conversion units to AU Msun year */
-	double km_AU = 1.0 / 1.495978707e8; // AU
-	double day_year = 1.0 / 365.25; // year
-	double s_year = 1.0 / (365.25 * 24.0 * 60.0 * 60.0); // year
-
-	/* variables in AU Msun year*/
-	*m1 = body[0].mass;
-	*m2 = body[1].mass;
-	*R	= body[0].R * km_AU;
-	*kf = body[0].kf;
-
-	double Td = body[0].lod * day_year;
-	double theta = body[0].obl * deg;
-	double psi = body[0].psi * deg;
-	double rg = body[0].rg;
-	double phi = body[0].lib * deg;
-	double Dt = body[0].Dt * s_year;
-	double tau = body[0].tau;
-	double a = body[1].a;
-	double e = body[1].e;
-	double I = body[1].I * deg;
-	double M = body[1].M * deg;
-	double w = body[1].w * deg;
-	double Omega = body[1].Omega * deg;
-
+		Td = body[0].lod * day_to_year;
+		theta = body[0].obl * deg_to_rad;
+		psi = body[0].psi * deg_to_rad;
+		rg = body[0].rg;
+		phi = body[0].lib * deg_to_rad;
+		Dt = body[0].Dt * s_to_year;
+		tau = body[0].tau;
+		a = body[1].a;
+		e = body[1].e;
+		I = body[1].I * deg_to_rad;
+		M = body[1].M * deg_to_rad;
+		w = body[1].w * deg_to_rad;
+		Omega = body[1].Omega * deg_to_rad;
+	}
+	
 	/* auxiliary variables */
 	double T = kepler_period(*m1, *m2, G, a);
 	// double T = kepler_period_only_m1(*m1, G, a);

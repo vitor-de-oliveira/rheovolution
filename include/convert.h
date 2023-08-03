@@ -63,6 +63,7 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 				 double tilde_x[], double tilde_x_dot[],
 				 bool *centrifugal, bool *tidal,
 				 const double G,
-				 const char file[]);
+				 const char file[],
+				 const char units[]);
 
 #endif
