@@ -198,7 +198,8 @@ field_1EB1PM(double t, const double y[], double f[],
 	double component_u[] = { 0.0, 0.0, 0.0,
 							 0.0, 0.0, 0.0,
 							 0.0, 0.0, 0.0 };
-	linear_combination_square_matrix(component_u, 1.0, omega_hat_comm_u, -1.0 / tau, lambda);
+	linear_combination_square_matrix(component_u, 
+		1.0, omega_hat_comm_u, -1.0 / tau, lambda);
 	double component_u_me[] = { 0.0, 0.0, 0.0,
 							         0.0, 0.0 };
 	get_main_elements_traceless_symmetric_matrix(component_u_me, component_u);
@@ -212,6 +213,13 @@ field_1EB1PM(double t, const double y[], double f[],
 	// print_square_matrix(lambda);
 	// printf("\ncomponent_u = \n");
 	// print_square_matrix(component_u);	
+	// printf("\ncomponent_u_me = \n");
+	// printf("%1.10e %1.10e %1.10e %1.10e %1.10e\n",
+	// 	component_u_me[0], component_u_me[1], component_u_me[2],
+	// 	component_u_me[3], component_u_me[4]);	
+	// printf("\nu_me = \n");
+	// printf("%1.10e %1.10e %1.10e %1.10e %1.10e\n",
+	// 	u_me[0], u_me[1], u_me[2], u_me[3], u_me[4]);	
 	// exit(42);
 
 	// bk components
@@ -791,4 +799,110 @@ calculate_C22(const double m, const double R, const double I[9])
 	C22 = (I_22 - I_11) / (4.0 * m * R * R);
 
 	return C22;
+}
+
+double
+calibrate_Imk2(const double rate, const double dist, 
+	const double m1, const double m2, const double I0, 
+	const double R,	const double omega_z, const double G)
+{
+	double Imk2;
+
+	double alpha = rate;
+	double r = dist;
+	double a = R;
+	double Omega = omega_z;
+
+	double M = m1 + m2;
+	double m = (m1 * m2) / M;
+
+	double r2 = pow(r, 2.0);
+	double r3 = pow(r, 3.0);
+	double r5 = pow(r, 5.0);
+
+	double n = sqrt((G * M) / r3);
+
+	double n2 = pow(n, 2.0);
+
+	double n_p = -(3.0 / 2.0) * sqrt((G * M) / r5);
+	double Omega_p = -(m / (2.0 * I0)) * sqrt((G * M) / r);
+
+	double h_1 = m * n * n_p * r2;
+	double h_2 = m * n2 * r;
+	double h_3 = I0 * Omega * Omega_p;
+	double h_4 = (G * m1 * m2) / r2;
+
+	double h = h_1 + h_2 + h_3 + h_4;
+
+	double N_2 = sqrt(5.0 / (4.0 * M_PI * 24.0));
+
+	double a_hat = (G * m2) / (2.0 * N_2 * r3);
+
+	double a5 = pow(a, 5.0);
+	double a_hat2 = pow(a_hat, 2.0);
+
+	double omega_SD = 2.0 * (Omega - n); // Semi-diurnal
+
+	double beta = -(5.0 * a5 * a_hat2 * omega_SD) / (32.0 * M_PI * G);
+
+	Imk2 = -(alpha * h) / beta;
+
+	return Imk2;
+}
+
+int
+calculate_tau_v_and_tau(double tau_v_pair[2], double tau_pair[2],
+	const double nu, const double Imk2, const double dist,
+	const double m1, const double m2, const double kf, 
+	const double omega_z, const double G)
+{
+	double tau_local_minus;
+	double tau_local_plus;
+	double tau_v_local_minus;
+	double tau_v_local_plus;
+
+	double r = dist;
+	double b = Imk2;
+	double Omega = omega_z;
+
+	double M = m1 + m2;
+
+	double r3 = pow(r, 3.0);
+
+	double n = sqrt((G * M) / r3);
+
+	double omega_tilde = 2.0 * (Omega - n); // Semi-diurnal
+
+	double kf2 = pow(kf, 2.0);
+	double nu2 = pow(nu, 2.0);
+	double b2 = pow(b, 2.0);
+
+	tau_local_minus = (-kf * nu) / (2.0 * b * omega_tilde) 
+		- (1.0 / (2.0 * omega_tilde)) * sqrt(((kf2 * nu2) / b2) - 4.0);
+	tau_local_plus = (-kf * nu) / (2.0 * b * omega_tilde) 
+		+ (1.0 / (2.0 * omega_tilde)) * sqrt(((kf2 * nu2) / b2) - 4.0);
+
+	tau_v_local_minus = nu * tau_local_minus; 
+	tau_v_local_plus = nu * tau_local_plus; 
+
+	tau_v_pair[0] = tau_v_local_minus;
+	tau_v_pair[1] = tau_v_local_plus;
+	tau_pair[0] = tau_local_minus;
+	tau_pair[1] = tau_local_plus;
+
+	return 0;
+}
+
+int
+calculate_k2(double *re, double *im, const double sigma, 
+	const double kf, const double tau_v, const double tau)
+{
+	double tau_e = tau - tau_v;
+	double sigma2 = sigma * sigma;
+	double tau2 = tau * tau;
+
+	*re =  kf * ((1.0 + sigma2 * tau_e * tau) / (1.0 + sigma2 * tau2));
+	*im = -kf * ((sigma * tau_v) / (1.0 + sigma2 * tau2));
+
+	return 0;
 }

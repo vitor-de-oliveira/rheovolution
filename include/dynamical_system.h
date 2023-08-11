@@ -81,4 +81,19 @@ calculate_J2(const double m, const double R, const double I[9]);
 double
 calculate_C22(const double m, const double R, const double I[9]);
 
+double
+calibrate_Imk2(const double rate, const double dist, 
+	const double m1, const double m2, const double I0, 
+	const double R,	const double omega_z, const double G);
+
+int
+calculate_tau_v_and_tau(double tau_v_pair[2], double tau_pair[2],
+	const double nu, const double Imk2, const double dist,
+	const double m1, const double m2, const double kf, 
+	const double omega_z, const double G);
+
+int
+calculate_k2(double *re, double *im, const double sigma, 
+	const double kf, const double tau_v, const double tau);
+
 #endif

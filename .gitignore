@@ -6,5 +6,4 @@ err.err
 out.out
 nohup.out
 .vscode/
-figures/
 tests/

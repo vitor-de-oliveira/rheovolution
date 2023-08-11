@@ -14,6 +14,8 @@
 #include "convert.h"
 #include "celmec.h"
 
+#define t(n) printf("Here %d\n", n)
+
 int
 main(int argc, char *argv[]) 
 {
@@ -307,6 +309,57 @@ main(int argc, char *argv[])
 	   	fprintf(stderr, "Type of system file must be 1 or 2.\n");
 	   	exit(5);
 	}
+
+	// /* Calibration and plots of k2 */
+	// double rate = 2.54014310646e-13; // 3.8 cm/yr in AU/yr
+	// double a0 = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
+	// double Imk2;
+	// Imk2 = calibrate_Imk2(rate, a0, m1, m2, I0, R, omega[2], G);
+	// printf("b = %1.5e\n", Imk2);
+	// double nu = 0.680; // tau_v = nu * tau
+	// double tau_v_pair[2];
+	// double tau_pair[2];
+	// calculate_tau_v_and_tau(tau_v_pair, tau_pair, 
+	// 	nu, Imk2, a0, m1, m2, kf, omega[2], G);
+	// printf("tau_v_minus = %1.5e = %1.5e s tau_minus = %1.5e\n", tau_v_pair[0],
+	// 	tau_v_pair[0] * (365.25 * 24.0 * 60.0 * 60.0), tau_pair[0]);
+	// printf("tau_v_plus = %1.5e = %1.5e s tau_plus = %1.5e\n", tau_v_pair[1],
+	// 	tau_v_pair[0] * (365.25 * 24.0 * 60.0 * 60.0), tau_pair[1]);
+	// /* Love number as a function of frequency */
+	// for (double sigma_loop = 1e-10; sigma_loop < 1e20; sigma_loop *= 1.01)
+	// {
+	// 	double real_loop, imag_loop;
+	// 	/* measure k2 for lower tau */
+	// 	calculate_k2(&real_loop, &imag_loop, sigma_loop, kf, 
+	// 		tau_v_pair[0], tau_pair[0]);
+	// 	printf("%1.15e %1.15e %1.15e %1.15e ", 
+	// 		sigma_loop, real_loop, -1.0 * imag_loop,
+	// 		sqrt(real_loop * real_loop + imag_loop * imag_loop));
+	// 	/* measure k2 for higher tau */
+	// 	calculate_k2(&real_loop, &imag_loop, sigma_loop, kf, 
+	// 		tau_v_pair[1], tau_pair[1]);
+	// 	printf("%1.15e %1.15e %1.15e\n", 
+	// 		real_loop, -1.0 * imag_loop,
+	// 		sqrt(real_loop * real_loop + imag_loop * imag_loop));
+	// }
+	// /* Chandler wobble */
+	// double sigma_chandler = (2.0 * M_PI) / (433.0 / 365.25); // rad/yr
+	// double chandler_pertubation = omega[2]-sigma_chandler;
+	// printf("Chandler wobble:\n");
+	// printf("Chandler wobble frequency Cwf = %1.5e\n", sigma_chandler);
+	// printf("Omega-Cwf = %1.5e\n", chandler_pertubation);
+	// double real, imag;
+	// calculate_k2(&real, &imag, chandler_pertubation, kf, 
+	// 	tau_v_pair[0], tau_pair[0]);
+	// printf("tau = %1.5e\n", tau_pair[0]);
+	// printf("Re(k2) = %1.5e Im(k2) = %1.5e |k_2| = %1.5e\n", 
+	// 	real, imag, sqrt(real*real+imag*imag));
+	// calculate_k2(&real, &imag, chandler_pertubation, kf, 
+	// 	tau_v_pair[1], tau_pair[1]);
+	// printf("tau = %1.5e\n", tau_pair[1]);
+	// printf("Re(k2) = %1.5e Im(k2) = %1.5e |k_2| = %1.5e\n", 
+	// 	real, imag, sqrt(real*real+imag*imag));
+	// exit(182);
 
 	/* for testing */
 	// print_vector(tilde_x);
