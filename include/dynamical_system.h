@@ -2,6 +2,7 @@
 #define DYN_SYS_H
 
 #include <math.h>
+#include <stdbool.h>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_linalg.h>
@@ -25,8 +26,8 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 	const double M[9]);
 
 double
-parameter_gamma_homogeneous_body(const double G,
-	const double I0, const double R);
+parameter_gamma(const double G,	const double I0, 
+	const double R, const double kf);
 
 double
 calculate_c(const double gamma, const double alpha_0, const double alpha);
@@ -39,14 +40,23 @@ int
 calculate_g(double g[9], const double G, const double m2, 
 	const double alpha_0, const double alpha, const double tilde_x[3], 
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool tidal);
+
+int
+calculate_f_cent(double f_cent[9], const double omega[3]);
 
 int
 calculate_b(double b[9], const double G, const double m2, 
 	const double gamma, const double alpha_0, const double alpha,
 	const double tilde_x[3], const double omega[3], 
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal);
+
+int
+calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
+
 int
 calculate_l(double l[3], const double I0, 
 	const double b[9], const double omega[3]);
@@ -56,11 +66,34 @@ calculate_omega(double omega[3], const double omega_seed[3], const double G,
 	const double m2, const double I0, const double gamma, const double alpha_0, 
 	const double alpha, const double tilde_x[3], const double l[3],
 	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[]);
+	const int elements, const double bk_me[],
+	const bool centrifugal, const bool tidal);
 
 int
-total_angular_momentum(double l_total[3], const double m1,
-	const double m2, const double tilde_x[3], const double tilde_x_dot[3],
+total_angular_momentum(double l_total[3],
+	const double m1, const double m2,
+	const double tilde_x[3], const double tilde_x_dot[3],
 	const double l[3]);
+
+double
+calculate_J2(const double m, const double R, const double I[9]);
+
+double
+calculate_C22(const double m, const double R, const double I[9]);
+
+double
+calibrate_Imk2(const double rate, const double dist, 
+	const double m1, const double m2, const double I0, 
+	const double R,	const double omega_z, const double G);
+
+int
+calculate_tau_v_and_tau(double tau_v_pair[2], double tau_pair[2],
+	const double nu, const double Imk2, const double dist,
+	const double m1, const double m2, const double kf, 
+	const double omega_z, const double G);
+
+int
+calculate_k2(double *re, double *im, const double sigma, 
+	const double kf, const double tau_v, const double tau);
 
 #endif

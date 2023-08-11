@@ -53,10 +53,18 @@ norm_vector(const double x[])
 int
 scale_vector(double ax[], const double a, const double x[])
 {
+	double ax_local[DIM_3];
+
 	for (int i = 0; i < DIM_3; i++)
 	{
-		ax[i] = a * x[i];
+		ax_local[i] = a * x[i];
 	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		ax[i] = ax_local[i];
+	}
+
 	return 0;
 }
 
@@ -74,11 +82,13 @@ dot_product(const double x[], const double y[])
 int
 cross_product(double z[], const double x[], const double y[])
 {
+	double z_local[DIM_3];
+	
 	if (DIM_3 == 3)
 	{
-		z[0] = x[1] * y[2] - x[2] * y[1];
-		z[1] = x[2] * y[0] - x[0] * y[2];
-		z[2] = x[0] * y[1] - x[1] * y[0];
+		z_local[0] = x[1] * y[2] - x[2] * y[1];
+		z_local[1] = x[2] * y[0] - x[0] * y[2];
+		z_local[2] = x[0] * y[1] - x[1] * y[0];
 	}
 	else
 	{
@@ -86,6 +96,12 @@ cross_product(double z[], const double x[], const double y[])
 		printf(" not implemented yet.\n");
 		exit(4);
 	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		z[i] = z_local[i];
+	}
+
 	return 0;
 }
 
@@ -153,6 +169,33 @@ identity_matrix(double I[])
 }
 
 int
+rotation_matrix_3d_x(double R[], const double phi)
+{
+	R[0] = 1.0; R[1] = 0.0; 	 R[2] = 0.0;
+	R[3] = 0.0; R[4] = cos(phi); R[5] = -1.0 * sin(phi);
+	R[6] = 0.0; R[7] = sin(phi); R[8] = cos(phi);
+	return 0;
+}
+
+int
+rotation_matrix_3d_y(double R[], const double phi)
+{
+	R[0] = cos(phi); 		R[1] = 0.0; R[2] = sin(phi);
+	R[3] = 0.0; 			R[4] = 1.0; R[5] = 0.0;
+	R[6] = -1.0 * sin(phi); R[7] = 0.0; R[8] = cos(phi);
+	return 0;
+}
+
+int
+rotation_matrix_3d_z(double R[], const double phi)
+{
+	R[0] = cos(phi); R[1] = -1.0 * sin(phi); R[2] = 0.0;
+	R[3] = sin(phi); R[4] = cos(phi); 		 R[5] = 0.0;
+	R[6] = 0.0; 	 R[7] = 0.0; 			 R[8] = 1.0;
+	return 0;
+}
+
+int
 print_square_matrix(const double M[])
 {
 	for (int i = 0; i < DIM_3 * DIM_3; i++)
@@ -184,22 +227,50 @@ trace_square_matrix(const double M[])
 	return trace;
 }
 
+double
+norm_squared_square_matrix(const double M[])
+{
+	double result;
+	double sum = 0.0;
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		sum += M[i] * M[i];
+	}
+	result = sum / 2.0;
+	return result;
+}
+
+double
+norm_square_matrix(const double M[])
+{
+	return sqrt(norm_squared_square_matrix(M));
+}
+
 int
 scale_square_matrix(double aM[], const double a, const double M[])
 {
+	double aM_local[DIM_3*DIM_3];
+
 	for (int i = 0; i < DIM_3; i++)
 	{
 		for (int j = 0; j < DIM_3; j++)
 		{
-			aM[(DIM_3)*i + j] = a * M[(DIM_3)*i + j];
+			aM_local[(DIM_3)*i + j] = a * M[(DIM_3)*i + j];
 		}
 	}
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		aM[i] = aM_local[i];
+	}
+
 	return 0;
 }
 
 int
 square_matrix_times_vector(double y[], const double M[], const double x[])
 {
+	double y_local[DIM_3];
 	double result;
 
 	for (int i = 0; i < DIM_3; i++)
@@ -209,7 +280,12 @@ square_matrix_times_vector(double y[], const double M[], const double x[])
 		{
 			result += M[(DIM_3)*i + j] * x[j];
 		}
-		y[i] = result;
+		y_local[i] = result;
+	}
+
+	for (int i = 0; i < DIM_3; i++)
+	{
+		y[i] = y_local[i];
 	}
 
 	return 0;
@@ -238,6 +314,7 @@ int
 square_matrix_times_square_matrix(double MN[], 
     const double M[], const double N[])
 {
+	double MN_local[DIM_3*DIM_3];
 	double result;
 
 	for (int i = 0; i < DIM_3; i++)
@@ -249,8 +326,13 @@ square_matrix_times_square_matrix(double MN[],
 			{
 				result += M[(DIM_3)*i + k] * N[(DIM_3)*k + j];
 			}
-			MN[i*DIM_3 + j] = result;
+			MN_local[i*DIM_3 + j] = result;
 		}
+	}
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		MN[i] = MN_local[i];
 	}
 
 	return 0;

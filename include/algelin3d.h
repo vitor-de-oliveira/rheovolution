@@ -5,8 +5,7 @@
  * 
  * Author: Vitor M. de Oliveira
  * Date: 12 june 2023
-*/
-
+**/
 
 #ifndef ALGELIN3D_H
 #define ALGELIN3D_H
@@ -63,6 +62,15 @@ int
 identity_matrix(double I[]);
 
 int
+rotation_matrix_3d_x(double R[], const double phi);
+
+int
+rotation_matrix_3d_y(double R[], const double phi);
+
+int
+rotation_matrix_3d_z(double R[], const double phi);
+
+int
 print_square_matrix(const double M[]);
 
 int
@@ -70,6 +78,12 @@ copy_square_matrix(double N[], const double M[]);
 
 double
 trace_square_matrix(const double M[]);
+
+double
+norm_squared_square_matrix(const double M[]);
+
+double
+norm_square_matrix(const double M[]);
 
 int
 scale_square_matrix(double aM[], const double a, const double M[]);

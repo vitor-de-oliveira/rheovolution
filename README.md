@@ -19,8 +19,10 @@ make local
 ## How to run
 
 ```sh
-./TIDES system_pararameters_file.txt integrator_pararameters_file.txt
+./TIDES n system_pararameters_file.txt integrator_pararameters_file.txt
 ```
+
+Where ``n`` is the type of system_parameters_file used. ``n=1`` stands for variables directly used in the theory, while ``n=2`` stands for values given in eliptical elements.
 
 A directory named ``output`` will be created at root and a copy of the input files will be written there.
 
