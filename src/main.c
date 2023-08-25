@@ -344,17 +344,15 @@ main(int argc, char *argv[])
 	// }
 	// /* Chandler wobble */
 	// double sigma_chandler = (2.0 * M_PI) / (433.0 / 365.25); // rad/yr
-	// double chandler_pertubation = omega[2]-sigma_chandler;
 	// printf("Chandler wobble:\n");
 	// printf("Chandler wobble frequency Cwf = %1.5e\n", sigma_chandler);
-	// printf("Omega-Cwf = %1.5e\n", chandler_pertubation);
 	// double real, imag;
-	// calculate_k2(&real, &imag, chandler_pertubation, kf, 
+	// calculate_k2(&real, &imag, sigma_chandler, kf, 
 	// 	tau_v_pair[0], tau_pair[0]);
 	// printf("tau = %1.5e\n", tau_pair[0]);
 	// printf("Re(k2) = %1.5e Im(k2) = %1.5e |k_2| = %1.5e\n", 
 	// 	real, imag, sqrt(real*real+imag*imag));
-	// calculate_k2(&real, &imag, chandler_pertubation, kf, 
+	// calculate_k2(&real, &imag, sigma_chandler, kf, 
 	// 	tau_v_pair[1], tau_pair[1]);
 	// printf("tau = %1.5e\n", tau_pair[1]);
 	// printf("Re(k2) = %1.5e Im(k2) = %1.5e |k_2| = %1.5e\n", 
