@@ -10,16 +10,16 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
-#include "dynamical_system.h"
-#include "convert.h"
 #include "celmec.h"
+#include "dynamical_system.h"
+#include "parsing.h"
 
 #define t(n) printf("Here %d\n", n)
 
 int
 main(int argc, char *argv[]) 
 {
-	/* parse input file */
+	/* variables for parsing input file */
     char 	*line = NULL;
     size_t 	len = 0;
     ssize_t	read;
@@ -30,9 +30,12 @@ main(int argc, char *argv[])
 	char	integrator_specs[100];
 	char	*dev_specs = NULL;
 	int		system_file_type = 1;
-	// int		number_of_bodies = 1;
-
+	int		number_of_bodies = 0;
+	bool	system_file_type_check = false;
+	bool	number_of_bodies_check = false;
 	FILE	*in = fopen(argv[1], "r");
+
+	/* parse input file */
    	while ((read = getline(&line, &len, in)) != -1)
 	{
 		sscanf(line, "%s %s", first_col, second_col);
@@ -55,11 +58,39 @@ main(int argc, char *argv[])
 		else if (strcmp(first_col, "system_file_type") == 0)
 		{
 			system_file_type = atoi(second_col);
+			system_file_type_check = true;
 		}
-		// else if (strcmp(first_col, "number_of_bodies") == 0)
-		// {
-		// 	number_of_bodies = atoi(second_col);
-		// }
+		else if (strcmp(first_col, "number_of_bodies") == 0)
+		{
+			number_of_bodies = atoi(second_col);
+			number_of_bodies_check = true;
+		}
+	}
+
+	/* checking if file type and number of bodies were received */
+	if (system_file_type_check == false)
+	{
+		fprintf(stderr, "Error: Please provide type of system file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(15);
+	}
+	else if (system_file_type != 1 && system_file_type != 2)
+	{
+		fprintf(stderr, "Error: Type of system file should be 1 or 2.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(15);
+	}
+	if (number_of_bodies_check == false)
+	{
+		fprintf(stderr, "Error: Please provide number of bodies.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(15);
+	}
+	else if (number_of_bodies < 1)
+	{
+		fprintf(stderr, "Error: Number of bodies should be greater than 0.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(15);
 	}
 
 	/* gravitational constant */
@@ -142,7 +173,7 @@ main(int argc, char *argv[])
 		FILE *in1 = fopen(system_specs, "r");
 		if	(in1 == NULL)
 		{
-			fprintf(stderr, "Warning: could not read system input file.\n");
+			fprintf(stderr, "Warning: could not read system specs file.\n");
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
@@ -329,7 +360,8 @@ main(int argc, char *argv[])
 			&centrifugal, &tidal,
 			G,
 			system_specs,
-			units);
+			units,
+			number_of_bodies);
 
 		/* for testing */
 		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
@@ -425,12 +457,13 @@ main(int argc, char *argv[])
 	FILE *in2 = fopen(integrator_specs, "r");
 	if	(in2 == NULL)
 	{
-		fprintf(stderr, "Warning: could not read integrator input file.\n");
+		fprintf(stderr, "Warning: could not read integrator specs file.\n");
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(13);
 	}
-	while(fscanf(in2, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
+   	while ((read = getline(&line, &len, in2)) != -1)
 	{
+		sscanf(line, "%s %lf", var_name, &var_value);
 		if (strcmp(var_name, "t_init") == 0)
 		{
 			t_init = var_value;

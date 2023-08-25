@@ -1,4 +1,4 @@
-#include "convert.h"
+#include "parsing.h"
 
 int
 count_columns(const char *s)
@@ -26,23 +26,18 @@ count_columns(const char *s)
 }
 
 int
-read_input(cltbdy **body, int *number_of_bodies, const char file[])
+read_system_type_2	(cltbdy **body,
+					 int number_of_bodies,
+					 const char file[])
 {
-	*number_of_bodies = 3; 	// only works for 3 for now
-							// because of sscanf
-							// if this changes the test
-							// area has to change as well
-
 	/* allocate memory for body */
-	*body = malloc(*number_of_bodies * sizeof(cltbdy));
+	*body = malloc(number_of_bodies * sizeof(cltbdy));
 
 	/* auxiliary variables for reading input */
     char 	*line = NULL;
     size_t 	len = 0;
     ssize_t read;
 	int 	col_num;
-	char 	first_col[100];
-	double 	other_col[*number_of_bodies];
 
 	/* verification variables for input */
 	int 	number_par_inputs = 18;
@@ -50,6 +45,14 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 	for (int i = 0; i < number_par_inputs; i++)
 	{
 		input_par_received[i] = false;
+	}
+	/* verification variables for names and deformable settings */
+	bool	input_name_received = false;
+	int 	number_deformable_inputs = 2; 
+	bool	input_deformable_received[number_deformable_inputs];
+	for (int i = 0; i < number_deformable_inputs; i++)
+	{
+		input_deformable_received[i] = false;
 	}
 
 	/* reading input parameters */
@@ -63,165 +66,236 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
    	while ((read = getline(&line, &len, in1)) != -1)
 	{
 		col_num = count_columns(line);
-		if (col_num == 4)
+		if (col_num < number_of_bodies)
 		{
-			sscanf(line, "%s %lf %lf %lf",
-				first_col, &other_col[0], &other_col[1], &other_col[2]);
-			if (strcmp(first_col, "mass(Msun)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].mass = other_col[i];
-				}
-				input_par_received[0] = true;
-			}
-			else if (strcmp(first_col, "lod(day)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].lod = other_col[i];
-				}
-				input_par_received[1] = true;
-			}
-			else if (strcmp(first_col, "obl(deg)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].obl = other_col[i];
-				}
-				input_par_received[2] = true;
-			}
-			else if (strcmp(first_col, "psi(deg)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].psi = other_col[i];
-				}
-				input_par_received[3] = true;
-			}
-			else if (strcmp(first_col, "R(km)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].R = other_col[i];
-				}
-				input_par_received[4] = true;
-			}
-			else if (strcmp(first_col, "rg") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].rg = other_col[i];
-				}
-				input_par_received[5] = true;
-			}
-			else if (strcmp(first_col, "J2") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].J2 = other_col[i];
-				}
-				input_par_received[6] = true;
-			}
-			else if (strcmp(first_col, "C22") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].C22 = other_col[i];
-				}
-				input_par_received[7] = true;
-			}
-			else if (strcmp(first_col, "lib(deg)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].lib = other_col[i];
-				}
-				input_par_received[8] = true;
-			}
-			else if (strcmp(first_col, "kf") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].kf = other_col[i];
-				}
-				input_par_received[9] = true;
-			}
-			else if (strcmp(first_col, "Dt(s)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].Dt = other_col[i];
-				}
-				input_par_received[10] = true;
-			}
-			else if (strcmp(first_col, "tau(yr)") == 0)
-			{
-				for (int i = 0; i < *number_of_bodies; i++)
-				{
-					(*body)[i].tau = other_col[i];
-				}
-				input_par_received[11] = true;
-			}
+			fprintf(stderr, "Warning: number of bodies cannot\n");
+			fprintf(stderr, "exceed number of columns in system file.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(13);
 		}
-		if (col_num == 3)
+		const char tok_del[3] = " \t\n";		// token delimiter
+		char *token = strtok(line, tok_del);
+		if (strcmp(token, "Name") == 0)
 		{
-			sscanf(line, "%s %lf %lff",
-				first_col, &other_col[0], &other_col[1]);
-			if (strcmp(first_col, "a(AU)") == 0)
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].a = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].a = other_col[i-1];
-				}
-				input_par_received[12] = true;
+				token = strtok(NULL, tok_del);
+				strcpy((*body)[i].name, token);
 			}
-			else if (strcmp(first_col, "e") == 0)
+			input_name_received = true;
+		}
+		else if (strcmp(token, "mass(Msun)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].e = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].e = other_col[i-1];
-				}
-				input_par_received[13] = true;
+				token = strtok(NULL, tok_del);
+				(*body)[i].mass = atof(token);
 			}
-			else if (strcmp(first_col, "I(deg)") == 0)
+			input_par_received[0] = true;
+		}
+		else if (strcmp(token, "lod(day)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].I = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].I = other_col[i-1];
-				}
-				input_par_received[14] = true;
+				token = strtok(NULL, tok_del);
+				(*body)[i].lod = atof(token);
 			}
-			else if (strcmp(first_col, "M(deg)") == 0)
+			input_par_received[1] = true;
+		}
+		else if (strcmp(token, "obl(deg)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].M = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].M = other_col[i-1];
-				}
-				input_par_received[15] = true;
+				token = strtok(NULL, tok_del);
+				(*body)[i].obl = atof(token);
 			}
-			else if (strcmp(first_col, "w(deg)") == 0)
+			input_par_received[2] = true;
+		}
+		else if (strcmp(token, "psi(deg)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].w = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].w = other_col[i-1];
-				}
-				input_par_received[16] = true;
+				token = strtok(NULL, tok_del);
+				(*body)[i].psi = atof(token);
 			}
-			else if (strcmp(first_col, "OMEGA(deg)") == 0)
+			input_par_received[3] = true;
+		}
+		else if (strcmp(token, "R(km)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
 			{
-				(*body)[0].Omega = NAN;
-				for (int i = 1; i < *number_of_bodies; i++)
-				{
-					(*body)[i].Omega = other_col[i-1];
-				}
-				input_par_received[17] = true;
+				token = strtok(NULL, tok_del);
+				(*body)[i].R = atof(token);
 			}
+			input_par_received[4] = true;
+		}
+		else if (strcmp(token, "rg") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].rg = atof(token);
+			}
+			input_par_received[5] = true;
+		}
+		else if (strcmp(token, "J2") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].J2 = atof(token);
+			}
+			input_par_received[6] = true;
+		}
+		else if (strcmp(token, "C22") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].C22 = atof(token);
+			}
+			input_par_received[7] = true;
+		}
+		else if (strcmp(token, "lib(deg)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].lib = atof(token);
+			}
+			input_par_received[8] = true;
+		}
+		else if (strcmp(token, "kf") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].kf = atof(token);
+			}
+			input_par_received[9] = true;
+		}
+		else if (strcmp(token, "Dt(s)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].Dt = atof(token);
+			}
+			input_par_received[10] = true;
+		}
+		else if (strcmp(token, "tau(yr)") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].tau = atof(token);
+			}
+			input_par_received[11] = true;
+		}
+		else if (strcmp(token, "a(AU)") == 0)
+		{
+			(*body)[0].a = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].a = atof(token);
+			}
+			input_par_received[12] = true;
+		}
+		else if (strcmp(token, "e") == 0)
+		{
+			(*body)[0].e = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].e = atof(token);
+			}
+			input_par_received[13] = true;
+		}
+		else if (strcmp(token, "I(deg)") == 0)
+		{
+			(*body)[0].I = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].I = atof(token);
+			}
+			input_par_received[14] = true;
+		}
+		else if (strcmp(token, "M(deg)") == 0)
+		{
+			(*body)[0].M = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].M = atof(token);
+			}
+			input_par_received[15] = true;
+		}
+		else if (strcmp(token, "w(deg)") == 0)
+		{
+			(*body)[0].w = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].w = atof(token);
+			}
+			input_par_received[16] = true;
+		}
+		else if (strcmp(token, "OMEGA(deg)") == 0)
+		{
+			(*body)[0].Omega = NAN;
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*body)[i].Omega = atof(token);
+			}
+			input_par_received[17] = true;
+		}
+		else if (strcmp(token, "centrifugal") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*body)[i].centrifugal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*body)[i].centrifugal = false;
+				}
+				else
+				{
+					printf("%s\n", token);
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for centrifugal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[0] = true;
+		}
+		else if (strcmp(token, "tidal") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*body)[i].tidal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*body)[i].tidal = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for tidal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[1] = true;
 		}
 	}
 	fclose(in1);
@@ -237,80 +311,7 @@ read_input(cltbdy **body, int *number_of_bodies, const char file[])
 			exit(14);
 		}
 	}
-
-	/* auxiliary variables for input names and deformable settings */
-	char	other_col_str[*number_of_bodies][100];
-
-	/* verification variables for names and deformable settings */
-	bool	input_name_received = false;
-	int 	number_deformable_inputs = 2; 
-	bool	input_deformable_received[number_deformable_inputs];
-	for (int i = 0; i < number_deformable_inputs; i++)
-	{
-		input_deformable_received[i] = false;
-	}
-
-	/* reading input names and deformable settings */
-	FILE 	*in1_names = fopen(file, "r");
-   	while ((read = getline(&line, &len, in1)) != -1)
-	{
-		sscanf(line, "%s %s %s %s",
-			first_col, other_col_str[0], 
-			other_col_str[1], other_col_str[2]);
-		if (strcmp(first_col, "Name") == 0)
-		{
-			for (int i = 0; i < *number_of_bodies; i++)
-			{
-				strcpy((*body)[i].name, other_col_str[i]);
-			}
-			input_name_received = true;
-		}
-		else if (strcmp(first_col, "centrifugal") == 0)
-		{
-			for (int i = 0; i < *number_of_bodies; i++)
-			{
-				if (strcmp(other_col_str[i], "yes") == 0)
-				{
-					(*body)[i].centrifugal = true;
-				}
-				else if (strcmp(other_col_str[i], "no") == 0)
-				{
-					(*body)[i].centrifugal = false;
-				}
-				else
-				{
-					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for centrifugal variable\n");
-					exit(14);
-				}
-			}
-			input_deformable_received[0] = true;
-		}
-		else if (strcmp(first_col, "tidal") == 0)
-		{
-			for (int i = 0; i < *number_of_bodies; i++)
-			{
-				if (strcmp(other_col_str[i], "yes") == 0)
-				{
-					(*body)[i].tidal = true;
-				}
-				else if (strcmp(other_col_str[i], "no") == 0)
-				{
-					(*body)[i].tidal = false;
-				}
-				else
-				{
-					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for tidal variable\n");
-					exit(14);
-				}
-			}
-			input_deformable_received[1] = true;
-		}
-	}
-
 	/* name  input verification */
-	fclose(in1_names);
 	if (input_name_received == false)
 	{
 		fprintf(stderr, "Error: could not read body name ");
@@ -341,14 +342,14 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 				 bool *centrifugal, bool *tidal,
 				 const double G,
 				 const char file[],
-				 const char units[])
+				 const char units[],
+				 const int number_of_bodies)
 {
 	/* array of members of structure CelestialBody */
-	int		number_of_bodies;
 	cltbdy	*body;
 
 	/* get values from input file */
-	read_input(&body, &number_of_bodies, file);
+	read_system_type_2(&body, number_of_bodies, file);
 
 	/* body variables */
 	double Td = 0.0;
@@ -593,6 +594,13 @@ convert_input	(double *m1, double *m2, double *I0, double *R,
 	// for (int i = 0; i < number_of_bodies; i++)
 	// 	printf("%1.5e ", body[i].Omega);
 	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%d ", body[i].tidal);
+	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	printf("%d ", body[i].centrifugal);
+	// printf("\n");
+	// exit(99);
 
 	free(body);
 

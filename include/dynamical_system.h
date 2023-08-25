@@ -9,6 +9,34 @@
 
 #include "algelin3d.h"
 
+/* Struct for celestial bodies */
+typedef struct CelestialBody{
+    char    name[100];  // name
+	double  mass;       // mass (sun mass)
+	double	lod;	    // length of day (day)
+	double 	obl;	    // obliquity (deg)
+	double	psi;	    // longitude of the ascending node 
+						// of the body equator or precession angle (deg)
+	double	R;		    // radius (km)
+	double	rg;		    // moment of inertia factor
+	double	J2;		    // gravity field coefficient
+	double	C22;        // gravity field coefficient
+	double	lib;	    // angle between the ascending node and the
+						// lowest principal moment of inertia (deg)
+	double	kf;		    // fluid Love number
+	double	Dt;		    // tidal lag (s)
+	double	tau;	    // Maxwell relaxation time plus tidal lag (yr)
+	double	a;		    // semi-major axis (AU)
+	double	e;		    // orbit eccentricity
+	double	I;		    // inclination (deg)
+	double	M;		    // mean anomaly (deg)
+	double	w;		    // argument of periapsis (deg)
+	double	Omega;	    // longitude of the ascending node (deg)
+
+	bool	centrifugal; // centrifugal force
+	bool	tidal;		 // tidal force
+} cltbdy;
+
 /* field for 1 extended body and 1 point mass */
 int
 field_1EB1PM(double t, const double y[], double f[],

@@ -10,7 +10,7 @@ CC = icc
 CFLAGSL = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
 CCL = gcc
 
-DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/convert.c $(SRC_DIR)/dynamical_system.c
+DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/dynamical_system.c $(SRC_DIR)/parsing.c
 
 .PHONY: cluster local clean
 .SILENT: cluster local clean
