@@ -19,14 +19,48 @@
 int
 main(int argc, char *argv[]) 
 {
-	/* check number of command line arguments */
-	if( argc < 4 )
+	/* parse input file */
+    char 	*line = NULL;
+    size_t 	len = 0;
+    ssize_t	read;
+	char 	first_col[100];
+	char 	second_col[100];
+	char	sim_name[100];			// simulation name
+	char	system_specs[100];
+	char	integrator_specs[100];
+	char	*dev_specs = NULL;
+	int		system_file_type = 1;
+	// int		number_of_bodies = 1;
+
+	FILE	*in = fopen(argv[1], "r");
+   	while ((read = getline(&line, &len, in)) != -1)
 	{
-	   	fprintf(stderr, "Please, provide the type of system parameters file,");
-		fprintf(stderr, " and both the system parameters");
-		fprintf(stderr, " and the integrator parameters files\n");
-	   	exit(2);
-   	}
+		sscanf(line, "%s %s", first_col, second_col);
+		if (strcmp(first_col, "name") == 0)
+		{
+			strcpy(sim_name, second_col);
+		}
+		else if (strcmp(first_col, "system_specs") == 0)
+		{
+			strcpy(system_specs, second_col);
+		}
+		else if (strcmp(first_col, "integrator_specs") == 0)
+		{
+			strcpy(integrator_specs, second_col);
+		}
+		else if (strcmp(first_col, "dev_specs") == 0)
+		{
+			strcpy(dev_specs, second_col);
+		}
+		else if (strcmp(first_col, "system_file_type") == 0)
+		{
+			system_file_type = atoi(second_col);
+		}
+		// else if (strcmp(first_col, "number_of_bodies") == 0)
+		// {
+		// 	number_of_bodies = atoi(second_col);
+		// }
+	}
 
 	/* gravitational constant */
 	double  G = 4.0 * M_PI * M_PI; // AU Msun year
@@ -35,7 +69,7 @@ main(int argc, char *argv[])
 	char	units[100] = "AU_Msun_year";
 
 	/* read dev file */
-	FILE *in3 = fopen(argv[4], "r");
+	FILE *in3 = fopen(dev_specs, "r");
 	if	(in3 != NULL)
 	{
 		char 	*line = NULL;
@@ -89,7 +123,7 @@ main(int argc, char *argv[])
 	char 	var_name[100];
 	double 	var_value;
 
-	if (atoi(argv[1]) == 1)
+	if (system_file_type == 1)
 	{
 		// Warning for dev
 		fprintf(stderr, "Deformable settings not implemented");
@@ -105,7 +139,7 @@ main(int argc, char *argv[])
 		}
 
 		/* reading system specs from user */
-		FILE *in1 = fopen(argv[2], "r");
+		FILE *in1 = fopen(system_specs, "r");
 		if	(in1 == NULL)
 		{
 			fprintf(stderr, "Warning: could not read system input file.\n");
@@ -208,7 +242,7 @@ main(int argc, char *argv[])
 			if(input_system_received[i] == false)
 			{
 				fprintf(stderr, "Error: there is at least one missing input ");
-				fprintf(stderr, "from %s.\n", argv[2]);
+				fprintf(stderr, "from %s.\n", system_specs);
 				exit(13);
 			}
 		}
@@ -233,7 +267,7 @@ main(int argc, char *argv[])
 				element_eta_found[i] = false;
 			}
 
-			FILE *in1_elements = fopen(argv[2], "r");
+			FILE *in1_elements = fopen(system_specs, "r");
 			while(fscanf(in1_elements, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
 			{
 				for (int i = 0; i < elements; i++)
@@ -287,14 +321,14 @@ main(int argc, char *argv[])
 		// exit(99);
 
 	}
-	else if (atoi(argv[1]) == 2) /* convert input if necessary */
+	else if (system_file_type == 2) /* convert input if necessary */
 	{
 		convert_input(&m1, &m2, &I0, &R, &kf,
 			omega, &alpha, &eta,
 			tilde_x, tilde_x_dot,
 			&centrifugal, &tidal,
 			G,
-			argv[2],
+			system_specs,
 			units);
 
 		/* for testing */
@@ -388,7 +422,7 @@ main(int argc, char *argv[])
 	}
 
 	/* reading integrator specs from user */
-	FILE *in2 = fopen(argv[3], "r");
+	FILE *in2 = fopen(integrator_specs, "r");
 	if	(in2 == NULL)
 	{
 		fprintf(stderr, "Warning: could not read integrator input file.\n");
@@ -441,7 +475,7 @@ main(int argc, char *argv[])
 		if(input_integrator_received[i] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", argv[3]);
+			fprintf(stderr, "from %s.\n", integrator_specs);
 			exit(13);
 		}
 	}
@@ -451,7 +485,7 @@ main(int argc, char *argv[])
 	// if (stat("output", &st) == -1) {
 	// 	mkdir("output", 0700);
 	// }
-	// FILE *in1_to_copy = fopen(argv[2], "r");
+	// FILE *in1_to_copy = fopen(system_specs, "r");
 	// FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
 	// char ch = fgetc(in1_to_copy);
     // while(ch != EOF)
@@ -461,7 +495,7 @@ main(int argc, char *argv[])
     // }
 	// fclose(in1_to_copy);
 	// fclose(in1_copy);
-	// FILE *in2_to_copy = fopen(argv[3], "r");
+	// FILE *in2_to_copy = fopen(integrator_specs, "r");
 	// FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
 	// char ch2 = fgetc(in2_to_copy);
     // while(ch2 != EOF)
