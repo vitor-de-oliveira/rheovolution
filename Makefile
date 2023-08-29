@@ -10,10 +10,13 @@ CC = icc
 CFLAGSL = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
 CCL = gcc
 
+CFLAGSL = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
+CCC = clang
+
 DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/dynamical_system.c $(SRC_DIR)/parsing.c
 
-.PHONY: cluster local clean
-.SILENT: cluster local clean
+.PHONY: cluster local clang clean
+.SILENT: cluster local clang clean
 
 cluster:
 	source $$MODULESHOME/init/bash; \
@@ -23,6 +26,9 @@ cluster:
 
 local:
 	$(CCL) $(CFLAGSL) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+
+clang:
+	$(CCC) $(CFLAGSL) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
 clean:
 	-rm -f $(TARGET)
