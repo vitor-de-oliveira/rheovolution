@@ -9,38 +9,78 @@
 
 #include "algelin3d.h"
 
-/* Struct for celestial bodies */
+/* Struct for celestial bodies (Generalized-Maxwell) */
 typedef struct CelestialBody{
-    char    name[100];  // name
-	double  mass;       // mass (sun mass)
-	double	lod;	    // length of day (day)
-	double 	obl;	    // obliquity (deg)
-	double	psi;	    // longitude of the ascending node 
-						// of the body equator or precession angle (deg)
-	double	R;		    // radius (km)
-	double	rg;		    // moment of inertia factor
-	double	J2;		    // gravity field coefficient
-	double	C22;        // gravity field coefficient
-	double	lib;	    // angle between the ascending node and the
-						// lowest principal moment of inertia (deg)
-	double	kf;		    // fluid Love number
-	double	Dt;		    // tidal lag (s)
-	double	tau;	    // Maxwell relaxation time plus tidal lag (yr)
-	double	a;		    // semi-major axis (AU)
-	double	e;		    // orbit eccentricity
-	double	I;		    // inclination (deg)
-	double	M;		    // mean anomaly (deg)
-	double	w;		    // argument of periapsis (deg)
-	double	Omega;	    // longitude of the ascending node (deg)
 
-	bool	centrifugal; // centrifugal force
-	bool	tidal;		 // tidal force
+	/* body identification */
+    char    name[100];  		// name
+
+	/* bulk, orbital and rheology parameters */
+	double  mass;       		// mass (sun mass)
+	double	R;		    		// radius (km)
+	double	lod;	    		// length of day (day)
+
+	double	rg;		    		// moment of inertia factor
+	double	J2;		    		// gravity field coefficient
+	double	C22;        		// gravity field coefficient
+	double	I0;					// mean moment of inertia
+	
+	double 	obl;	    		// obliquity (deg)
+	double	psi;	    		// longitude of the ascending node 
+								// of the body equator or precession angle (deg)	
+	double	lib;	    		// angle between the ascending node and the
+								// lowest principal moment of inertia (deg)
+	
+	double	a;		    		// semi-major axis (AU)
+	double	e;		    		// orbit eccentricity
+	double	I;		    		// inclination (deg)
+	double	M;		    		// mean anomaly (deg)
+	double	w;		    		// argument of periapsis (deg)
+	double	Omega;	    		// longitude of the ascending node (deg)
+
+	double	kf;		    		// fluid Love number
+	double	Dt;		    		// tidal lag (s)
+	double	tau;	    		// Maxwell relaxation time plus tidal lag (yr)
+
+	double	gamma;				// gravitational modulus
+	double	alpha;				// elastic modulus
+	double	eta;				// viscosity
+	double	alpha_0;			// prestress elastic modulus
+	double	*alpha_elements;	// elastic modulus for Voigt elements
+	double	*eta_elements;		// viscosity for Voigt elements
+
+	/* deformation options */
+	bool	point_mass;			// point mass
+	bool	centrifugal;		// centrifugal force
+	bool	tidal;				// tidal force
+
+	/* state variables */
+	double	x[3];				// position
+	double	x_dot[3];			// velocity
+	double	l[3];				// angular momentum
+	double	b0_me[5];			// main elements of prestress matrix
+	double	u_me[5];			// main elements of u matrix
+	int		elements;			// number of voigt elements
+	double	*bk_me;				// main elements of Voigt elements matrix
+
+	/* non-state variables */
+	double	omega[3];			// angular velocity
+	double	b[9];				// deformation matrix
+
 } cltbdy;
 
 /* field for 1 extended body and 1 point mass */
+/* uses Generalized-Voigt rheology */
 int
 field_1EB1PM(double t, const double y[], double f[],
        		 void *params);
+
+/* field for Generalized-Voigt rheology */
+int
+field_GV(double t, 
+		 const double y[],
+		 double f[],
+       	 void *params);
 
 int
 hat_map(double x_hat[9], const double x[3]);
@@ -54,54 +94,59 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 	const double M[9]);
 
 double
-parameter_gamma(const double G,	const double I0, 
-	const double R, const double kf);
+parameter_gamma(const double G,
+				const double I0, 
+				const double R,
+				const double kf);
 
 double
-calculate_c(const double gamma, const double alpha_0, const double alpha);
+calculate_c(const cltbdy body);
 
 int
-calculate_f_tide(double f_tide[9], const double G, const double m2,
-	const double tilde_x[3]);
+calculate_f_tide(double f_tide[9],
+				 const int id,
+			 	 const cltbdy *body,
+			 	 const int number_of_bodies,
+			 	 const double G);
 
 int
-calculate_g(double g[9], const double G, const double m2, 
-	const double alpha_0, const double alpha, const double tilde_x[3], 
-	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[],
-	const bool tidal);
+calculate_g	(double g[9], 
+			 const int id,
+			 const cltbdy *body,
+			 const int number_of_bodies,
+			 const double G);
 
 int
-calculate_f_cent(double f_cent[9], const double omega[3]);
+calculate_f_cent(double f_cent[9],
+				 const double omega[3]);
 
 int
-calculate_b(double b[9], const double G, const double m2, 
-	const double gamma, const double alpha_0, const double alpha,
-	const double tilde_x[3], const double omega[3], 
-	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[],
-	const bool centrifugal, const bool tidal);
+calculate_b	(const int id,
+			 cltbdy *body,
+			 const int number_of_bodies,
+			 const double G);
+int
+calculate_inertia_tensor(double I[9],
+						 const double I0,
+						 const double b[9]);
 
 int
-calculate_inertia_tensor(double I[9], const double I0, const double b[9]);
+calculate_l	(const int id,
+			 cltbdy *body,
+			 const int number_of_bodies,
+			 const double G);
 
 int
-calculate_l(double l[3], const double I0, 
-	const double b[9], const double omega[3]);
+calculate_omega	(const int id,
+				 cltbdy *body,
+			 	 const int number_of_bodies,
+			 	 const double G);
 
 int
-calculate_omega(double omega[3], const double omega_seed[3], const double G, 
-	const double m2, const double I0, const double gamma, const double alpha_0, 
-	const double alpha, const double tilde_x[3], const double l[3],
-	const double b0_me[5], const double u_me[5],
-	const int elements, const double bk_me[],
-	const bool centrifugal, const bool tidal);
-
-int
-total_angular_momentum(double l_total[3],
-	const double m1, const double m2,
-	const double tilde_x[3], const double tilde_x_dot[3],
-	const double l[3]);
+total_angular_momentum	(double l_total[3],
+				 		 const cltbdy *body,
+			 	 		 const int number_of_bodies,
+			 	 		 const double G);
 
 double
 calculate_J2(const double m, const double R, const double I[9]);

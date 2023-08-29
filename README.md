@@ -5,10 +5,12 @@ This work is part of a postdoctoral project from the São Paulo Research Foundat
 
 Author: V. M. de Oliveira
 
-Last update on this file: June 19th 2023
+Last update on this file: August 29th 2023
 
 ## Important notes
-Up to this point, the software simulates the tidal evolution of one extended body moving under the gravitational field of a point mass. The rheology model for the extended body implemented here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Runge-Kutta scheme of 4th order with fixed stepsize from the GNU Scientific Library.
+The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 8th and 9th order and fixed stepsize from the GNU Scientific Library.
+
+Up to this point, the simulation assumes that there is no prestress and that the angular velocity of each body is parallel to its biggest moment of inertia.
 
 ## How to compile
 
@@ -19,14 +21,14 @@ make local
 ## How to run
 
 ```sh
-./TIDES n system_pararameters_file.txt integrator_pararameters_file.txt
+./TIDES configuration_file.dat
 ```
 
-Where ``n`` is the type of system_parameters_file used. ``n=1`` stands for variables directly used in the theory, while ``n=2`` stands for values given in eliptical elements.
+The ``configuration_file.dat`` is composed by a few information, such as the name of the input and the output dir and the path to the ``system specs`` and also the ``integrator specs`` file.
 
-A directory named ``output`` will be created at root and a copy of the input files will be written there.
+It also contains the type of system specs file used. ``1`` stands for variables directly used in the theory, while ``2`` stands for values given in eliptical elements.
 
-An example of both input files can be found in ``example``.
+An example of all input files can be found in ``example``.
 
 ## Main references
 Ragazzo C., Ruiz L. S. Viscoelastic tides: models for use in Celestial Mechancis, _Celestial Mechanics and Dynamical Astronomy_, Springer, v. 128, n.1., p. 19--59, 2017.

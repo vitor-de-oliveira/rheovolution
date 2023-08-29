@@ -22,20 +22,11 @@
 int
 count_columns(const char *s);
 
-int
-read_system_type_2	(cltbdy **body,
-					 int number_of_bodies,
-					 const char file[]);
-
-int
-convert_input	(double *m1, double *m2, double *I0, double *R,
-				 double *kf, double omega[],
-				 double *alpha, double *eta,
-				 double tilde_x[], double tilde_x_dot[],
-				 bool *centrifugal, bool *tidal,
+int 
+convert_input	(cltbdy	**body,
+				 const int number_of_bodies,
 				 const double G,
 				 const char file[],
-				 const char units[],
-				 const int number_of_bodies);
+				 const char units[]);
 
 #endif
