@@ -1,0 +1,7 @@
+name                EMS_ss
+input_folder        input/specs/
+output_folder       output/
+system_specs        EMS_simplest_scenario_system.dat
+integrator_specs    EMS_simplest_scenario_integrator.dat
+system_file_type    2
+number_of_bodies    2
