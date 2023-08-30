@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 	char	output_folder[100];
 	char	system_specs[100];
 	char	integrator_specs[100];
-	char	*dev_specs = NULL;
+	char	dev_specs[100];
 	int		system_file_type = 1;
 	int		number_of_bodies = 0;
 	bool	system_file_type_check = false;
@@ -881,24 +881,11 @@ main(int argc, char *argv[])
 	// printf("%.5e\n", norm_vector(omega));
 	// exit(42);
 
-	/* writes output header */
-	// printf ("time(yr)");
-	// printf (" x(AU) y(AU) z(AU) vx vy vz");
-	// printf (" e e-e0");
-	// printf (" a(AU) a-a0(AU)");
-	// printf (" |omega|");
-	// printf (" |omega|-|omega0|");
-	// printf (" |l|");
-	// printf (" |l|-|l0|");
-	// printf (" |ltotal|");
-	// printf (" |ltotal|-|ltotal0|");
-	// printf (" |b|");
-	// printf("\n");
-
 	FILE *out[number_of_bodies + 1];
 	char filename[150];
 	for (int i = 0; i < number_of_bodies; i++)
 	{
+		/* names and opens output files for each body */
 		strcpy(filename, output_folder);
 		strcat(filename, "results_");
 		strcat(filename, sim_name);
@@ -906,7 +893,14 @@ main(int argc, char *argv[])
 		strcat(filename, body[i].name);
 		strcat(filename, ".dat");
 		out[i] = fopen(filename, "w");
+		/* writes output headers */
+		fprintf(out[i], "time(yr)");
+		fprintf(out[i], " x(AU) y(AU) z(AU) vx vy vz");
+		fprintf(out[i], " a(AU)");
+		fprintf(out[i], " |omega|");
+		fprintf(out[i], "\n");
 	}
+	/* names and opens general output file */
 	strcpy(filename, output_folder);
 	strcat(filename, "results_");
 	strcat(filename, sim_name);
@@ -914,6 +908,9 @@ main(int argc, char *argv[])
 	strcat(filename, "general");
 	strcat(filename, ".dat");
 	out[number_of_bodies] = fopen(filename, "w");
+	fprintf(out[number_of_bodies], "time(yr)");
+	fprintf(out[number_of_bodies], " |Total angular momentum|");
+	fprintf(out[number_of_bodies], "\n");
 
 	/* integration loop */
 	int		counter = 0;	
@@ -1184,7 +1181,7 @@ main(int argc, char *argv[])
 	gsl_odeiv2_control_free (ode_control);
 	gsl_odeiv2_step_free (ode_step);
 
-	for (int i = 0; i < number_of_bodies; i++)
+	for (int i = 0; i < number_of_bodies + 1; i++)
 	{
 		fclose(out[i]);
 	}

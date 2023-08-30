@@ -46,6 +46,7 @@ typedef struct CelestialBody{
 	double	alpha;				// elastic modulus
 	double	eta;				// viscosity
 	double	alpha_0;			// prestress elastic modulus
+	int		elements;			// number of voigt elements
 	double	*alpha_elements;	// elastic modulus for Voigt elements
 	double	*eta_elements;		// viscosity for Voigt elements
 
@@ -60,7 +61,6 @@ typedef struct CelestialBody{
 	double	l[3];				// angular momentum
 	double	b0_me[5];			// main elements of prestress matrix
 	double	u_me[5];			// main elements of u matrix
-	int		elements;			// number of voigt elements
 	double	*bk_me;				// main elements of Voigt elements matrix
 
 	/* non-state variables */
