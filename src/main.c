@@ -959,7 +959,7 @@ main(int argc, char *argv[])
 			}
 			if (body[i].elements > 0)
 			{
-				body[i].bk_me = malloc(5 * body[i].elements * sizeof(double));
+				body[i].bk_me = (double *) malloc(5 * body[i].elements * sizeof(double));
 				for (int j = 0; j < 5 * body[i].elements; j++)
 				{
 					body[i].bk_me[j] = y[19 + dim_state_skip + j];

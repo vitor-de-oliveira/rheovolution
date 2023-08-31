@@ -33,7 +33,7 @@ convert_input	(cltbdy	**body,
 				 const char units[])
 {
 	/* allocate memory for body */
-	*body = malloc(number_of_bodies * sizeof(cltbdy));
+	*body = (cltbdy *) malloc(number_of_bodies * sizeof(cltbdy));
 
 	/* auxiliary variables for reading input */
     char 	*line = NULL;
@@ -514,8 +514,8 @@ convert_input	(cltbdy	**body,
 
 		if ((*body)[i].elements > 0)
 		{
-			(*body)[i].alpha_elements = malloc((*body)[i].elements * sizeof(double));
-			(*body)[i].eta_elements = malloc((*body)[i].elements * sizeof(double));
+			(*body)[i].alpha_elements = (double *) malloc((*body)[i].elements * sizeof(double));
+			(*body)[i].eta_elements = (double *) malloc((*body)[i].elements * sizeof(double));
 			
 			for (int j = 0; j < (*body)[i].elements; j++)
 			{
