@@ -911,7 +911,7 @@ main(int argc, char *argv[])
 	strcat(filename, ".dat");
 	out[number_of_bodies] = fopen(filename, "w");
 	fprintf(out[number_of_bodies], "time(yr)");
-	fprintf(out[number_of_bodies], " |Total angular momentum|");
+	fprintf(out[number_of_bodies], " |Total_angular_momentum|");
 	fprintf(out[number_of_bodies], "\n");
 
 	/* integration loop */
