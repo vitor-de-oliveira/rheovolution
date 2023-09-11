@@ -216,6 +216,19 @@ copy_square_matrix(double N[], const double M[])
 	return 0;
 }
 
+int
+transpose_square_matrix(double Mt[], const double M[])
+{
+	for (int i = 0; i < DIM_3; i++)
+	{
+		for (int j = 0; j < DIM_3; j++)
+		{
+			Mt[i*DIM_3 + j] = M[i + j*DIM_3];
+		}
+	}
+	return 0;
+}
+
 double
 trace_square_matrix(const double M[])
 {
@@ -230,14 +243,7 @@ trace_square_matrix(const double M[])
 double
 norm_squared_square_matrix(const double M[])
 {
-	double result;
-	double sum = 0.0;
-	for (int i = 0; i < DIM_3 * DIM_3; i++)
-	{
-		sum += M[i] * M[i];
-	}
-	result = sum / 2.0;
-	return result;
+	return inner_product_square_matrix(M, M);
 }
 
 double
@@ -388,6 +394,18 @@ commutator(double O[], const double M[], const double N[])
 	}
 
 	return 0;
+}
+
+double
+inner_product_square_matrix(const double M[], const double N[])
+{
+	double N_transpose[9];
+	transpose_square_matrix(N_transpose, N);
+	double M_times_N_transpose[9];
+	square_matrix_times_square_matrix(M_times_N_transpose,
+		M, N_transpose);
+
+	return 0.5 * trace_square_matrix(M_times_N_transpose);
 }
 
 int

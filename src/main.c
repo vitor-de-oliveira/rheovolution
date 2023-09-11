@@ -898,6 +898,8 @@ main(int argc, char *argv[])
 		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
 		fprintf(out[i], " a(AU)");
 		fprintf(out[i], " |omega|");
+		fprintf(out[i], " b3");
+		fprintf(out[i], " |b|");
 		fprintf(out[i], "\n");
 	}
 	/* names and opens general output file */
@@ -1084,7 +1086,8 @@ main(int argc, char *argv[])
 
 					/* deformation matrix */
 
-					// printf (" %.15e", norm_square_matrix(b));
+					fprintf (out[i], " %.15e", body[i].b[8]);
+					fprintf (out[i], " %.15e", norm_square_matrix(body[i].b));
 					// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
 					// 	b[0], b[1], b[2],
 					// 	b[3], b[4], b[5],

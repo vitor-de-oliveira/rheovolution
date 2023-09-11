@@ -76,6 +76,9 @@ print_square_matrix(const double M[]);
 int
 copy_square_matrix(double N[], const double M[]);
 
+int
+transpose_square_matrix(double Mt[], const double M[]);
+
 double
 trace_square_matrix(const double M[]);
 
@@ -113,6 +116,9 @@ linear_combination_three_square_matrix(double P[], const double a, const double 
     
 int
 commutator(double O[], const double M[], const double N[]);
+
+double
+inner_product_square_matrix(const double M[], const double N[]);
 
 /* tensor */
 
