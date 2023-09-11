@@ -895,7 +895,7 @@ main(int argc, char *argv[])
 		out[i] = fopen(filename, "w");
 		/* writes output headers */
 		fprintf(out[i], "time(yr)");
-		fprintf(out[i], " x(AU) y(AU) z(AU) vx vy vz");
+		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
 		fprintf(out[i], " a(AU)");
 		fprintf(out[i], " |omega|");
 		fprintf(out[i], "\n");
