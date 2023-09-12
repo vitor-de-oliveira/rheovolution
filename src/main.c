@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h> // ssize_t
+#include <time.h>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
@@ -19,6 +20,9 @@
 int
 main(int argc, char *argv[]) 
 {
+	/* start clock */
+	clock_t begin_time = clock(), end_time;
+
 	/* variables for parsing input file */
     char 	*line = NULL;
     size_t 	len = 0;
@@ -907,11 +911,11 @@ main(int argc, char *argv[])
 	strcat(filename, "results_");
 	strcat(filename, sim_name);
 	strcat(filename, "_");
-	strcat(filename, "general");
+	strcat(filename, "full_system");
 	strcat(filename, ".dat");
 	out[number_of_bodies] = fopen(filename, "w");
 	fprintf(out[number_of_bodies], "time(yr)");
-	fprintf(out[number_of_bodies], " |Total_angular_momentum|");
+	fprintf(out[number_of_bodies], " |L|");
 	fprintf(out[number_of_bodies], "\n");
 
 	/* integration loop */
@@ -1202,6 +1206,31 @@ main(int argc, char *argv[])
 
 	/* free array of celestial bodies */
 	free(bodies);
+
+	/* Stop clock */
+	FILE *out_sim_info;
+	strcpy(filename, output_folder);
+	strcat(filename, "results_");
+	strcat(filename, sim_name);
+	strcat(filename, "_");
+	strcat(filename, "sim_info");
+	strcat(filename, ".dat");
+	out_sim_info = fopen(filename, "w");
+
+	end_time = clock();
+	int time_spent_in_seconds 
+		= (end_time - begin_time) / CLOCKS_PER_SEC;
+	int sec, min, hr, days;
+	days = time_spent_in_seconds/(24*3600);
+	hr	= (time_spent_in_seconds - 24*3600*days) / 3600;
+	min = (time_spent_in_seconds - 24*3600*days - 3600*hr) / 60;
+	sec = (time_spent_in_seconds - 24*3600*days - 3600*hr - 60*min) / 1;
+
+	fprintf(out_sim_info, "Time spent on simulation:");
+	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n",
+		days, hr, min, sec);
+
+	fclose(out_sim_info);
 
 	return 0;
 }
