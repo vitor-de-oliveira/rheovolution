@@ -35,13 +35,13 @@ main(int argc, char *argv[])
 	char	system_specs[100];
 	char	integrator_specs[100];
 	char	dev_specs[100];
-	int		system_file_type = 1;
+	int		system_file_type = 2;
 	int		number_of_bodies = 0;
 	bool	system_file_type_check = false;
 	bool	number_of_bodies_check = false;
-	FILE	*in = fopen(argv[1], "r");
 
 	/* parse input file */
+	FILE	*in = fopen(argv[1], "r");
    	while ((read = getline(&line, &len, in)) != -1)
 	{
 		sscanf(line, "%s %s", first_col, second_col);
@@ -74,7 +74,8 @@ main(int argc, char *argv[])
 		}
 		else if (strcmp(first_col, "dev_specs") == 0)
 		{
-			strcpy(dev_specs, second_col);
+			strcpy(dev_specs, input_folder);
+			strcat(dev_specs, second_col);
 		}
 		else if (strcmp(first_col, "system_file_type") == 0)
 		{
@@ -87,6 +88,7 @@ main(int argc, char *argv[])
 			number_of_bodies_check = true;
 		}
 	}
+	fclose(in);
 
 	/* checking if file type and number of bodies were received */
 	if (system_file_type_check == false)
@@ -621,32 +623,6 @@ main(int argc, char *argv[])
 			exit(13);
 		}
 	}
-
-	/* make a copy of the input files */
-	// struct stat st = {0};
-	// if (stat("output", &st) == -1) {
-	// 	mkdir("output", 0700);
-	// }
-	// FILE *in1_to_copy = fopen(system_specs, "r");
-	// FILE *in1_copy = fopen("output/input_pars_system_copy.txt" , "w");
-	// char ch = fgetc(in1_to_copy);
-    // while(ch != EOF)
-    // {
-    //     fputc(ch, in1_copy);
-    //     ch = fgetc(in1_to_copy);
-    // }
-	// fclose(in1_to_copy);
-	// fclose(in1_copy);
-	// FILE *in2_to_copy = fopen(integrator_specs, "r");
-	// FILE *in2_copy = fopen("output/input_pars_integrator_copy.txt" , "w");
-	// char ch2 = fgetc(in2_to_copy);
-    // while(ch2 != EOF)
-    // {
-    //     fputc(ch2, in2_copy);
-    //     ch2 = fgetc(in2_to_copy);
-    // }
-	// fclose(in2_to_copy);
-	// fclose(in2_copy);
 
 	/* complete b0_me */
 	// I am using same b0_diag and alpha_0 for every body for now!
@@ -1208,15 +1184,6 @@ main(int argc, char *argv[])
 	free(bodies);
 
 	/* Stop clock */
-	FILE *out_sim_info;
-	strcpy(filename, output_folder);
-	strcat(filename, "results_");
-	strcat(filename, sim_name);
-	strcat(filename, "_");
-	strcat(filename, "sim_info");
-	strcat(filename, ".dat");
-	out_sim_info = fopen(filename, "w");
-
 	end_time = clock();
 	int time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
@@ -1226,11 +1193,70 @@ main(int argc, char *argv[])
 	min = (time_spent_in_seconds - 24*3600*days - 3600*hr) / 60;
 	sec = (time_spent_in_seconds - 24*3600*days - 3600*hr - 60*min) / 1;
 
-	fprintf(out_sim_info, "Time spent on simulation:");
-	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n",
-		days, hr, min, sec);
+	/* write info file */
+	strcpy(filename, output_folder);
+	strcat(filename, "results_");
+	strcat(filename, sim_name);
+	strcat(filename, "_");
+	strcat(filename, "sim_info");
+	strcat(filename, ".dat");
 
+	// simulation time
+	FILE *out_sim_info;
+	out_sim_info = fopen(filename, "w");
+	fprintf(out_sim_info, "Time spent on simulation:");
+	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n\n",
+		days, hr, min, sec);
 	fclose(out_sim_info);
+
+	// copy input files info
+	FILE *in0_to_copy = fopen(argv[1], "r");
+	FILE *in0_copy = fopen(filename, "a");
+	char ch0 = fgetc(in0_to_copy);
+    while(ch0 != EOF)
+    {
+        fputc(ch0, in0_copy);
+        ch0 = fgetc(in0_to_copy);
+    }
+	fprintf(in0_copy, "\n\n");
+	fclose(in0_copy);
+	fclose(in0_to_copy);
+	FILE *in1_to_copy = fopen(system_specs, "r");
+	FILE *in1_copy = fopen(filename, "a");
+	char ch1 = fgetc(in1_to_copy);
+    while(ch1 != EOF)
+    {
+        fputc(ch1, in1_copy);
+        ch1 = fgetc(in1_to_copy);
+    }
+	fprintf(in1_copy, "\n\n");
+	fclose(in1_copy);
+	fclose(in1_to_copy);
+	FILE *in2_to_copy = fopen(integrator_specs, "r");
+	FILE *in2_copy = fopen(filename, "a");
+	char ch2 = fgetc(in2_to_copy);
+    while(ch2 != EOF)
+    {
+        fputc(ch2, in2_copy);
+        ch2 = fgetc(in2_to_copy);
+    }
+	fprintf(in2_copy, "\n\n");
+	fclose(in2_copy);
+	fclose(in2_to_copy);
+	FILE *in3_to_copy = fopen(dev_specs, "r");
+	if (in3_to_copy != NULL)
+	{
+		FILE *in3_copy = fopen(filename, "a");
+		char ch3 = fgetc(in3_to_copy);
+		while(ch3 != EOF)
+		{
+			fputc(ch3, in3_copy);
+			ch3 = fgetc(in3_to_copy);
+		}
+		fprintf(in3_copy, "\n\n");
+		fclose(in3_copy);
+		fclose(in3_to_copy);
+	}
 
 	return 0;
 }
