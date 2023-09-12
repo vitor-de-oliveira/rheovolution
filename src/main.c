@@ -147,7 +147,7 @@ main(int argc, char *argv[])
 	}
 
 	/* array of celestial bodies */
-	cltbdy	*body;
+	cltbdy	*bodies;
 
 	/* orbital parameters given by user */
 	double 	e = 0.0, a = 0.0;
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
 	}
 	else if (system_file_type == 2) /* convert input if necessary */
 	{
-		convert_input(&body,
+		convert_input(&bodies,
 			number_of_bodies, 
 			G,
 			system_specs,
@@ -395,17 +395,17 @@ main(int argc, char *argv[])
 		// {
 		// 	double relative_x[3];
 		// 	linear_combination_vector(relative_x,
-		// 		1.0, body[i].x,
-		// 		-1.0, body[0].x);
+		// 		1.0, bodies[i].x,
+		// 		-1.0, bodies[0].x);
 		// 	double relative_x_dot[3];
 		// 	linear_combination_vector(relative_x_dot,
-		// 		1.0, body[i].x_dot,
-		// 		-1.0, body[0].x_dot);
-		// 	e = calculate_eccentricity(G, body[0].mass, 
-		// 		body[i].mass, relative_x, relative_x_dot);
-		// 	a = calculate_semi_major_axis(G, body[0].mass, 
-		// 		body[i].mass, relative_x, relative_x_dot);
-		// 	printf("Body = %s e = %e a = %e\n", body[i].name, e, a);
+		// 		1.0, bodies[i].x_dot,
+		// 		-1.0, bodies[0].x_dot);
+		// 	e = calculate_eccentricity(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	a = calculate_semi_major_axis(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	printf("bodies = %s e = %e a = %e\n", bodies[i].name, e, a);
 		// }
 		// exit(99);
 	}
@@ -417,67 +417,67 @@ main(int argc, char *argv[])
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", body[i].name);
+	// 	printf("%s ", bodies[i].name);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].mass);
+	// 	printf("%1.5e ", bodies[i].mass);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].lod);
+	// 	printf("%1.5e ", bodies[i].lod);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].obl);
+	// 	printf("%1.5e ", bodies[i].obl);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].psi);
+	// 	printf("%1.5e ", bodies[i].psi);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].R);
+	// 	printf("%1.5e ", bodies[i].R);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].rg);
+	// 	printf("%1.5e ", bodies[i].rg);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].J2);
+	// 	printf("%1.5e ", bodies[i].J2);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].C22);
+	// 	printf("%1.5e ", bodies[i].C22);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].lib);
+	// 	printf("%1.5e ", bodies[i].lib);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].kf);
+	// 	printf("%1.5e ", bodies[i].kf);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].Dt);
+	// 	printf("%1.5e ", bodies[i].Dt);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].tau);
+	// 	printf("%1.5e ", bodies[i].tau);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].a);
+	// 	printf("%1.5e ", bodies[i].a);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].e);
+	// 	printf("%1.5e ", bodies[i].e);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].I);
+	// 	printf("%1.5e ", bodies[i].I);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].M);
+	// 	printf("%1.5e ", bodies[i].M);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].w);
+	// 	printf("%1.5e ", bodies[i].w);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", body[i].Omega);
+	// 	printf("%1.5e ", bodies[i].Omega);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", body[i].tidal);
+	// 	printf("%d ", bodies[i].tidal);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", body[i].centrifugal);
+	// 	printf("%d ", bodies[i].centrifugal);
 	// printf("\n");
 	// exit(99);
 
@@ -649,22 +649,22 @@ main(int argc, char *argv[])
 	// double b0_me[5];
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		body[i].b0_me[0] = b0_diag[0];
-		body[i].b0_me[1] = 0.0;
-		body[i].b0_me[2] = 0.0;
-		body[i].b0_me[3] = b0_diag[1];
-		body[i].b0_me[4] = 0.0;
-		body[i].alpha_0 = alpha_0;
+		bodies[i].b0_me[0] = b0_diag[0];
+		bodies[i].b0_me[1] = 0.0;
+		bodies[i].b0_me[2] = 0.0;
+		bodies[i].b0_me[3] = b0_diag[1];
+		bodies[i].b0_me[4] = 0.0;
+		bodies[i].alpha_0 = alpha_0;
 	}
 
 	/* variables not given by user */
 	// double u_me[5], *bk_me = *(&bk_me);
 	for (int i  = 0; i < number_of_bodies; i++)
 	{
-		for (int j = 0; j < 5; j++) body[i].u_me[i] = 0.0;
-		if (body[i].elements > 0)
+		for (int j = 0; j < 5; j++) bodies[i].u_me[i] = 0.0;
+		if (bodies[i].elements > 0)
 		{
-			body[i].bk_me = (double *) calloc(body[i].elements * 5, sizeof(double));
+			bodies[i].bk_me = (double *) calloc(bodies[i].elements * 5, sizeof(double));
 		}
 	}
 
@@ -682,13 +682,13 @@ main(int argc, char *argv[])
 	// double 	b[9], l[3];
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		calculate_b(i, body, number_of_bodies, G);
-		calculate_l(i, body, number_of_bodies, G);
+		calculate_b(i, bodies, number_of_bodies, G);
+		calculate_l(i, bodies, number_of_bodies, G);
 		// printf("omega of body %d before\n", i+1);
-		// print_vector(body[i].omega);
-		// calculate_omega(i, body, number_of_bodies, G);
+		// print_vector(bodies[i].omega);
+		// calculate_omega(i, bodies, number_of_bodies, G);
 		// printf("omega of body %d after\n", i+1);
-		// print_vector(body[i].omega);
+		// print_vector(bodies[i].omega);
 	}
 
 	// exit(98);
@@ -758,7 +758,7 @@ main(int argc, char *argv[])
 	int	elements_total = 0;
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		elements_total += body[i].elements;
+		elements_total += bodies[i].elements;
 	}
 	
 	/* state variables */
@@ -771,32 +771,32 @@ main(int argc, char *argv[])
 		int	dim_state_skip = i * dim_state_per_body_without_elements + 5 * elements_counter;
 		for (int j = 0; j < 3; j++)
 		{
-			y[0 + dim_state_skip + j] 	= body[i].x[j];
-			y[3 + dim_state_skip + j] 	= body[i].x_dot[j];
-			y[6 + dim_state_skip + j] 	= body[i].l[j];
+			y[0 + dim_state_skip + j] 	= bodies[i].x[j];
+			y[3 + dim_state_skip + j] 	= bodies[i].x_dot[j];
+			y[6 + dim_state_skip + j] 	= bodies[i].l[j];
 		}
 		for (int j = 0; j < 5; j++)
 		{
-			y[9 + dim_state_skip + j] 	= body[i].b0_me[j];
-			y[14 + dim_state_skip + j] 	= body[i].u_me[j];
+			y[9 + dim_state_skip + j] 	= bodies[i].b0_me[j];
+			y[14 + dim_state_skip + j] 	= bodies[i].u_me[j];
 		}
-		for (int j = 0; j < 5 * body[i].elements; j++)
+		for (int j = 0; j < 5 * bodies[i].elements; j++)
 		{
-			y[19 + dim_state_skip + j] 	= body[i].bk_me[j];
+			y[19 + dim_state_skip + j] 	= bodies[i].bk_me[j];
 		}
-		elements_counter += body[i].elements;
+		elements_counter += bodies[i].elements;
 
 		/* for testing */
 		// printf("Body %d\n", i+1);
 		// printf("x = \n");
-		// print_vector(body[i].x);
+		// print_vector(bodies[i].x);
 		// printf("x_dot = \n");
-		// print_vector(body[i].x_dot);
+		// print_vector(bodies[i].x_dot);
 		// printf("l = \n");
-		// print_vector(body[i].l);
+		// print_vector(bodies[i].l);
 		// double b0_print[9], u_print[9];
-		// construct_traceless_symmetric_matrix(b0_print, body[i].b0_me);
-		// construct_traceless_symmetric_matrix(u_print, body[i].u_me);
+		// construct_traceless_symmetric_matrix(b0_print, bodies[i].b0_me);
+		// construct_traceless_symmetric_matrix(u_print, bodies[i].u_me);
 		// printf("b0 = \n");
 		// print_square_matrix(b0_print);
 		// printf("u = \n");
@@ -821,28 +821,28 @@ main(int argc, char *argv[])
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
-		params[2 + 0 + dim_params_skip] = (double) body[i].centrifugal;
-		params[2 + 1 + dim_params_skip] = (double) body[i].tidal;
+		params[2 + 0 + dim_params_skip] = (double) bodies[i].centrifugal;
+		params[2 + 1 + dim_params_skip] = (double) bodies[i].tidal;
 		for (int j = 0; j < 3; j++)
 		{
-			params[2 + 2 + dim_params_skip + j] = body[i].omega[j];
+			params[2 + 2 + dim_params_skip + j] = bodies[i].omega[j];
 		}
-		params[2 + 5 + dim_params_skip] = body[i].mass;
-		params[2 + 6 + dim_params_skip] = body[i].I0;
-		params[2 + 7 + dim_params_skip] = body[i].gamma;
-		params[2 + 8 + dim_params_skip] = body[i].alpha;
-		params[2 + 9 + dim_params_skip] = body[i].eta;
-		params[2 + 10 + dim_params_skip] = body[i].alpha_0;
-		params[2 + 11 + dim_params_skip] = (double) body[i].elements;
-		for (int j = 0; j < body[i].elements; j++)
+		params[2 + 5 + dim_params_skip] = bodies[i].mass;
+		params[2 + 6 + dim_params_skip] = bodies[i].I0;
+		params[2 + 7 + dim_params_skip] = bodies[i].gamma;
+		params[2 + 8 + dim_params_skip] = bodies[i].alpha;
+		params[2 + 9 + dim_params_skip] = bodies[i].eta;
+		params[2 + 10 + dim_params_skip] = bodies[i].alpha_0;
+		params[2 + 11 + dim_params_skip] = (double) bodies[i].elements;
+		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 12 + dim_params_skip + j] = body[i].alpha_elements[j];
+			params[2 + 12 + dim_params_skip + j] = bodies[i].alpha_elements[j];
 		}
-		for (int j = 0; j < body[i].elements; j++)
+		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 13 + dim_params_skip + j + body[i].elements - 1] = body[i].eta_elements[j];
+			params[2 + 13 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
 		}
-		elements_counter += body[i].elements;		
+		elements_counter += bodies[i].elements;		
 	}
 
 	// for (int i = 0; i < dim_state; i++)
@@ -890,7 +890,7 @@ main(int argc, char *argv[])
 		strcat(filename, "results_");
 		strcat(filename, sim_name);
 		strcat(filename, "_");
-		strcat(filename, body[i].name);
+		strcat(filename, bodies[i].name);
 		strcat(filename, ".dat");
 		out[i] = fopen(filename, "w");
 		/* writes output headers */
@@ -950,25 +950,25 @@ main(int argc, char *argv[])
 			
 			for (int j = 0; j < 3; j++)
 			{
-				body[i].x[j] 		= y[0 + dim_state_skip + j];
-				body[i].x_dot[j] 	= y[3 + dim_state_skip + j];
-				body[i].l[j] 		= y[6 + dim_state_skip + j];
+				bodies[i].x[j] 		= y[0 + dim_state_skip + j];
+				bodies[i].x_dot[j] 	= y[3 + dim_state_skip + j];
+				bodies[i].l[j] 		= y[6 + dim_state_skip + j];
 			}
 			for (int j = 0; j < 5; j++)
 			{
-				body[i].b0_me[j] 	= y[9 + dim_state_skip + j];
-				body[i].u_me[j] 	= y[14 + dim_state_skip + j];
+				bodies[i].b0_me[j] 	= y[9 + dim_state_skip + j];
+				bodies[i].u_me[j] 	= y[14 + dim_state_skip + j];
 			}
-			if (body[i].elements > 0)
+			if (bodies[i].elements > 0)
 			{
-				body[i].bk_me = (double *) malloc(5 * body[i].elements * sizeof(double));
-				for (int j = 0; j < 5 * body[i].elements; j++)
+				bodies[i].bk_me = (double *) malloc(5 * bodies[i].elements * sizeof(double));
+				for (int j = 0; j < 5 * bodies[i].elements; j++)
 				{
-					body[i].bk_me[j] = y[19 + dim_state_skip + j];
+					bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
 				}
 			}
 
-			elements_counter += body[i].elements;
+			elements_counter += bodies[i].elements;
 		}
 
 		/* for testing */
@@ -982,14 +982,14 @@ main(int argc, char *argv[])
 		{
 			int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
 		
-			calculate_omega(i, body, number_of_bodies, G);
+			calculate_omega(i, bodies, number_of_bodies, G);
 		
 			for (int j = 0; j < 3; j++)
 			{
-				params[2 + 2 + dim_params_skip + j] = body[i].omega[j];
+				params[2 + 2 + dim_params_skip + j] = bodies[i].omega[j];
 			}
 
-			elements_counter += body[i].elements;
+			elements_counter += bodies[i].elements;
 		}
 
 
@@ -1001,7 +1001,7 @@ main(int argc, char *argv[])
 		/* calculate b */
 		for (int i = 0; i < number_of_bodies; i++)
 		{
-			calculate_b(i, body, number_of_bodies, G);
+			calculate_b(i, bodies, number_of_bodies, G);
 		}
 
 		/* calculate total angular momentum */
@@ -1048,12 +1048,12 @@ main(int argc, char *argv[])
 					// transform to body 1-centered system
 					double relative_x[3];
 					linear_combination_vector(relative_x,
-						1.0, body[i].x,
-						-1.0, body[0].x);
+						1.0, bodies[i].x,
+						-1.0, bodies[0].x);
 					double relative_x_dot[3];
 					linear_combination_vector(relative_x_dot,
-						1.0, body[i].x_dot,
-						-1.0, body[0].x_dot);
+						1.0, bodies[i].x_dot,
+						-1.0, bodies[0].x_dot);
 
 					fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
 						relative_x[0], relative_x[1], relative_x[2],
@@ -1065,13 +1065,13 @@ main(int argc, char *argv[])
 					// printf (" %.15e %.15e", a, a_dif);
 
 					double a_body =
-						calculate_semi_major_axis(G, body[0].mass, body[i].mass, 
+						calculate_semi_major_axis(G, bodies[0].mass, bodies[i].mass, 
 							relative_x, relative_x_dot);
 					fprintf (out[i], " %.15e", a_body);
 
 					/* angular velocity */
 
-					fprintf (out[i], " %.15e", norm_vector(body[i].omega));
+					fprintf (out[i], " %.15e", norm_vector(bodies[i].omega));
 					// fprintf (out[i], " %.15e", omega_dif);
 					// fprintf (out[i], " %.15e %.15e %.15e", 
 					// 	omega[0], omega[1], omega[2]);
@@ -1086,8 +1086,8 @@ main(int argc, char *argv[])
 
 					/* deformation matrix */
 
-					fprintf (out[i], " %.15e", body[i].b[8]);
-					fprintf (out[i], " %.15e", norm_square_matrix(body[i].b));
+					fprintf (out[i], " %.15e", bodies[i].b[8]);
+					fprintf (out[i], " %.15e", norm_square_matrix(bodies[i].b));
 					// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
 					// 	b[0], b[1], b[2],
 					// 	b[3], b[4], b[5],
@@ -1127,7 +1127,7 @@ main(int argc, char *argv[])
 				/* print total angular momentum on general file */
 
 				double l_total[3];
-				total_angular_momentum(l_total, body, number_of_bodies, G);
+				total_angular_momentum(l_total, bodies, number_of_bodies, G);
 				
 				fprintf (out[number_of_bodies], " %.15e", norm_vector(l_total));
 
@@ -1192,16 +1192,16 @@ main(int argc, char *argv[])
 	/* free Voigt elements */
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		if (body[i].elements > 0)
+		if (bodies[i].elements > 0)
 		{
-			free(body[i].alpha_elements);
-			free(body[i].eta_elements);	
-			free(body[i].bk_me);
+			free(bodies[i].alpha_elements);
+			free(bodies[i].eta_elements);	
+			free(bodies[i].bk_me);
 		}
 	}
 
 	/* free array of celestial bodies */
-	free(body);
+	free(bodies);
 
 	return 0;
 }

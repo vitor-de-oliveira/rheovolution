@@ -26,14 +26,14 @@ count_columns(const char *s)
 }
 
 int
-convert_input	(cltbdy	**body,
+convert_input	(cltbdy	**bodies,
 				 const int number_of_bodies,
 				 const double G,
 				 const char file[],
 				 const char units[])
 {
-	/* allocate memory for body */
-	*body = (cltbdy *) malloc(number_of_bodies * sizeof(cltbdy));
+	/* allocate memory for bodies */
+	*bodies = (cltbdy *) malloc(number_of_bodies * sizeof(cltbdy));
 
 	/* auxiliary variables for reading input */
     char 	*line = NULL;
@@ -82,7 +82,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				strcpy((*body)[i].name, token);
+				strcpy((*bodies)[i].name, token);
 			}
 			input_name_received = true;
 		}
@@ -91,7 +91,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].mass = atof(token);
+				(*bodies)[i].mass = atof(token);
 			}
 			input_par_received[0] = true;
 		}
@@ -100,7 +100,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].lod = atof(token);
+				(*bodies)[i].lod = atof(token);
 			}
 			input_par_received[1] = true;
 		}
@@ -109,7 +109,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].obl = atof(token);
+				(*bodies)[i].obl = atof(token);
 			}
 			input_par_received[2] = true;
 		}
@@ -118,7 +118,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].psi = atof(token);
+				(*bodies)[i].psi = atof(token);
 			}
 			input_par_received[3] = true;
 		}
@@ -127,7 +127,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].R = atof(token);
+				(*bodies)[i].R = atof(token);
 			}
 			input_par_received[4] = true;
 		}
@@ -136,7 +136,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].rg = atof(token);
+				(*bodies)[i].rg = atof(token);
 			}
 			input_par_received[5] = true;
 		}
@@ -145,7 +145,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].J2 = atof(token);
+				(*bodies)[i].J2 = atof(token);
 			}
 			input_par_received[6] = true;
 		}
@@ -154,7 +154,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].C22 = atof(token);
+				(*bodies)[i].C22 = atof(token);
 			}
 			input_par_received[7] = true;
 		}
@@ -163,7 +163,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].lib = atof(token);
+				(*bodies)[i].lib = atof(token);
 			}
 			input_par_received[8] = true;
 		}
@@ -172,7 +172,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].kf = atof(token);
+				(*bodies)[i].kf = atof(token);
 			}
 			input_par_received[9] = true;
 		}
@@ -181,7 +181,7 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].Dt = atof(token);
+				(*bodies)[i].Dt = atof(token);
 			}
 			input_par_received[10] = true;
 		}
@@ -190,67 +190,67 @@ convert_input	(cltbdy	**body,
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].tau = atof(token);
+				(*bodies)[i].tau = atof(token);
 			}
 			input_par_received[11] = true;
 		}
 		else if (strcmp(token, "a(AU)") == 0)
 		{
-			(*body)[0].a = NAN;
+			(*bodies)[0].a = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].a = atof(token);
+				(*bodies)[i].a = atof(token);
 			}
 			input_par_received[12] = true;
 		}
 		else if (strcmp(token, "e") == 0)
 		{
-			(*body)[0].e = NAN;
+			(*bodies)[0].e = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].e = atof(token);
+				(*bodies)[i].e = atof(token);
 			}
 			input_par_received[13] = true;
 		}
 		else if (strcmp(token, "I(deg)") == 0)
 		{
-			(*body)[0].I = NAN;
+			(*bodies)[0].I = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].I = atof(token);
+				(*bodies)[i].I = atof(token);
 			}
 			input_par_received[14] = true;
 		}
 		else if (strcmp(token, "M(deg)") == 0)
 		{
-			(*body)[0].M = NAN;
+			(*bodies)[0].M = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].M = atof(token);
+				(*bodies)[i].M = atof(token);
 			}
 			input_par_received[15] = true;
 		}
 		else if (strcmp(token, "w(deg)") == 0)
 		{
-			(*body)[0].w = NAN;
+			(*bodies)[0].w = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].w = atof(token);
+				(*bodies)[i].w = atof(token);
 			}
 			input_par_received[16] = true;
 		}
 		else if (strcmp(token, "OMEGA(deg)") == 0)
 		{
-			(*body)[0].Omega = NAN;
+			(*bodies)[0].Omega = NAN;
 			for (int i = 1; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*body)[i].Omega = atof(token);
+				(*bodies)[i].Omega = atof(token);
 			}
 			input_par_received[17] = true;
 		}
@@ -261,11 +261,11 @@ convert_input	(cltbdy	**body,
 				token = strtok(NULL, tok_del);
 				if (strcmp(token, "yes") == 0)
 				{
-					(*body)[i].centrifugal = true;
+					(*bodies)[i].centrifugal = true;
 				}
 				else if (strcmp(token, "no") == 0)
 				{
-					(*body)[i].centrifugal = false;
+					(*bodies)[i].centrifugal = false;
 				}
 				else
 				{
@@ -284,11 +284,11 @@ convert_input	(cltbdy	**body,
 				token = strtok(NULL, tok_del);
 				if (strcmp(token, "yes") == 0)
 				{
-					(*body)[i].tidal = true;
+					(*bodies)[i].tidal = true;
 				}
 				else if (strcmp(token, "no") == 0)
 				{
-					(*body)[i].tidal = false;
+					(*bodies)[i].tidal = false;
 				}
 				else
 				{
@@ -306,11 +306,11 @@ convert_input	(cltbdy	**body,
 				token = strtok(NULL, tok_del);
 				if (strcmp(token, "yes") == 0)
 				{
-					(*body)[i].point_mass = true;
+					(*bodies)[i].point_mass = true;
 				}
 				else if (strcmp(token, "no") == 0)
 				{
-					(*body)[i].point_mass = false;
+					(*bodies)[i].point_mass = false;
 				}
 				else
 				{
@@ -339,7 +339,7 @@ convert_input	(cltbdy	**body,
 	/* name  input verification */
 	if (input_name_received == false)
 	{
-		fprintf(stderr, "Error: could not read body name ");
+		fprintf(stderr, "Error: could not read body names ");
 		fprintf(stderr, "from %s.\n", file);
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(14);
@@ -361,13 +361,13 @@ convert_input	(cltbdy	**body,
 	double deg_to_rad = M_PI / 180.0;
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		(*body)[i].obl *= deg_to_rad;
-		(*body)[i].psi *= deg_to_rad;
-		(*body)[i].lib *= deg_to_rad;
-		(*body)[i].I *= deg_to_rad;
-		(*body)[i].M *= deg_to_rad;
-		(*body)[i].w *= deg_to_rad;
-		(*body)[i].Omega *= deg_to_rad;
+		(*bodies)[i].obl *= deg_to_rad;
+		(*bodies)[i].psi *= deg_to_rad;
+		(*bodies)[i].lib *= deg_to_rad;
+		(*bodies)[i].I *= deg_to_rad;
+		(*bodies)[i].M *= deg_to_rad;
+		(*bodies)[i].w *= deg_to_rad;
+		(*bodies)[i].Omega *= deg_to_rad;
 	}
 
 	if (strcmp(units, "SI") == 0)
@@ -382,11 +382,11 @@ convert_input	(cltbdy	**body,
 		/* variables in SI*/
 		for (int i = 0; i < number_of_bodies; i++)
 		{
-			(*body)[i].mass *= Msun_to_kg;
-			(*body)[i].R *= km_to_m;
-			(*body)[i].lod *= day_to_s;
-			(*body)[i].tau *= year_to_s;
-			(*body)[i].a *= AU_to_m;
+			(*bodies)[i].mass *= Msun_to_kg;
+			(*bodies)[i].R *= km_to_m;
+			(*bodies)[i].lod *= day_to_s;
+			(*bodies)[i].tau *= year_to_s;
+			(*bodies)[i].a *= AU_to_m;
 		}
 	}
 	else
@@ -399,9 +399,9 @@ convert_input	(cltbdy	**body,
 		/* variables in AU Msun year*/
 		for (int i = 0; i < number_of_bodies; i++)
 		{
-			(*body)[i].R *= km_to_AU;
-			(*body)[i].lod *= day_to_year;
-			(*body)[i].Dt *= s_to_year;
+			(*bodies)[i].R *= km_to_AU;
+			(*bodies)[i].lod *= day_to_year;
+			(*bodies)[i].Dt *= s_to_year;
 		}
 	}
 	
@@ -409,27 +409,27 @@ convert_input	(cltbdy	**body,
 	
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		double	m = (*body)[i].mass;
-		double	R = (*body)[i].R;
-		double  Td = (*body)[i].lod;
+		double	m = (*bodies)[i].mass;
+		double	R = (*bodies)[i].R;
+		double  Td = (*bodies)[i].lod;
 
-		double	rg = (*body)[i].rg;
-		double	J2 = (*body)[i].J2;
+		double	rg = (*bodies)[i].rg;
+		double	J2 = (*bodies)[i].J2;
 
-		double  theta = (*body)[i].obl;
-		double	psi = (*body)[i].psi;
-		double	phi = (*body)[i].lib;
+		double  theta = (*bodies)[i].obl;
+		double	psi = (*bodies)[i].psi;
+		double	phi = (*bodies)[i].lib;
 
-		double	a = (*body)[i].a;
-		double	e = (*body)[i].e;
-		double	I = (*body)[i].I;
-		double	M = (*body)[i].M;
-		double	w = (*body)[i].w;
-		double	Omega = (*body)[i].Omega;
+		double	a = (*bodies)[i].a;
+		double	e = (*bodies)[i].e;
+		double	I = (*bodies)[i].I;
+		double	M = (*bodies)[i].M;
+		double	w = (*bodies)[i].w;
+		double	Omega = (*bodies)[i].Omega;
 
-		double	kf = (*body)[i].kf;
-		double	Dt = (*body)[i].Dt;
-		double	tau = (*body)[i].tau;
+		double	kf = (*bodies)[i].kf;
+		double	Dt = (*bodies)[i].Dt;
+		double	tau = (*bodies)[i].tau;
 		
 		/* 1st set of variables - x and x_dot */
 		double R_1_I[9];
@@ -437,15 +437,15 @@ convert_input	(cltbdy	**body,
 
 		if (i == 0)
 		{
-			null_vector((*body)[i].x);
-			null_vector((*body)[i].x_dot);
+			null_vector((*bodies)[i].x);
+			null_vector((*bodies)[i].x_dot);
 			identity_matrix(R_1_I);			// for 2nd set of variables
 			identity_matrix(R_3_Omega);		// for 2nd set of variables
 		}
 		else
 		{
 			double T = 
-			kepler_period((*body)[0].mass, m, G, a);
+			kepler_period((*bodies)[0].mass, m, G, a);
 			double n = (2.0 * M_PI) / T;
 
 			double E = kepler_equation(e, M);
@@ -472,8 +472,8 @@ convert_input	(cltbdy	**body,
 			square_matrix_times_square_matrix(full_rotation_orbit,
 				full_rotation_orbit, R_3_w);
 
-			square_matrix_times_vector((*body)[i].x, full_rotation_orbit, position_in_plane);
-			square_matrix_times_vector((*body)[i].x_dot, full_rotation_orbit, velocity_in_plane);
+			square_matrix_times_vector((*bodies)[i].x, full_rotation_orbit, position_in_plane);
+			square_matrix_times_vector((*bodies)[i].x_dot, full_rotation_orbit, velocity_in_plane);
 		}
 
 		/* 2nd set of variables - omega and b0_diag */
@@ -499,28 +499,28 @@ convert_input	(cltbdy	**body,
 		double omega_on_body[] = {0.0, 0.0, 0.0};
 		double omega_direction_on_body[] = {0.0, 0.0, 1.0}; // strong assumption
 		scale_vector(omega_on_body, 2.0 * M_PI / Td, omega_direction_on_body);
-		square_matrix_times_vector((*body)[i].omega, full_rotation_body, omega_on_body);
+		square_matrix_times_vector((*bodies)[i].omega, full_rotation_body, omega_on_body);
 
 		/* 3rd set of variables - I0 */
-		(*body)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
 
 		/* 4th set of variables - alpha and eta */
-		(*body)[i].gamma = parameter_gamma(G, (*body)[i].I0, R, kf);
-		(*body)[i].alpha = (*body)[i].gamma * Dt / (tau - Dt);
-		(*body)[i].eta = (*body)[i].gamma * Dt;
+		(*bodies)[i].gamma = parameter_gamma(G, (*bodies)[i].I0, R, kf);
+		(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
+		(*bodies)[i].eta = (*bodies)[i].gamma * Dt;
 
 		/* Kelvin-Voigt elements */
-		(*body)[i].elements = 0;
+		(*bodies)[i].elements = 0;
 
-		if ((*body)[i].elements > 0)
+		if ((*bodies)[i].elements > 0)
 		{
-			(*body)[i].alpha_elements = (double *) malloc((*body)[i].elements * sizeof(double));
-			(*body)[i].eta_elements = (double *) malloc((*body)[i].elements * sizeof(double));
+			(*bodies)[i].alpha_elements = (double *) malloc((*bodies)[i].elements * sizeof(double));
+			(*bodies)[i].eta_elements = (double *) malloc((*bodies)[i].elements * sizeof(double));
 			
-			for (int j = 0; j < (*body)[i].elements; j++)
+			for (int j = 0; j < (*bodies)[i].elements; j++)
 			{
-				(*body)[i].alpha_elements[j] = 1.0;
-				(*body)[i].eta_elements[j] = 1.0;
+				(*bodies)[i].alpha_elements[j] = 1.0;
+				(*bodies)[i].eta_elements[j] = 1.0;
 			}
 		}
 
@@ -528,67 +528,67 @@ convert_input	(cltbdy	**body,
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", (*body)[i].name);
+	// 	printf("%s ", (*bodies)[i].name);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].mass);
+	// 	printf("%1.5e ", (*bodies)[i].mass);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].lod);
+	// 	printf("%1.5e ", (*bodies)[i].lod);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].obl);
+	// 	printf("%1.5e ", (*bodies)[i].obl);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].psi);
+	// 	printf("%1.5e ", (*bodies)[i].psi);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].R);
+	// 	printf("%1.5e ", (*bodies)[i].R);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].rg);
+	// 	printf("%1.5e ", (*bodies)[i].rg);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].J2);
+	// 	printf("%1.5e ", (*bodies)[i].J2);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].C22);
+	// 	printf("%1.5e ", (*bodies)[i].C22);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].lib);
+	// 	printf("%1.5e ", (*bodies)[i].lib);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].kf);
+	// 	printf("%1.5e ", (*bodies)[i].kf);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].Dt);
+	// 	printf("%1.5e ", (*bodies)[i].Dt);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].tau);
+	// 	printf("%1.5e ", (*bodies)[i].tau);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].a);
+	// 	printf("%1.5e ", (*bodies)[i].a);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].e);
+	// 	printf("%1.5e ", (*bodies)[i].e);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].I);
+	// 	printf("%1.5e ", (*bodies)[i].I);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].M);
+	// 	printf("%1.5e ", (*bodies)[i].M);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].w);
+	// 	printf("%1.5e ", (*bodies)[i].w);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*body)[i].Omega);
+	// 	printf("%1.5e ", (*bodies)[i].Omega);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*body)[i].tidal);
+	// 	printf("%d ", (*bodies)[i].tidal);
 	// printf("\n");
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*body)[i].centrifugal);
+	// 	printf("%d ", (*bodies)[i].centrifugal);
 	// printf("\n");
 	// exit(99);
 
