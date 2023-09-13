@@ -7,3 +7,4 @@ out.out
 nohup.out
 .vscode/
 tests/
+slurm-*.out
