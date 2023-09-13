@@ -850,7 +850,7 @@ main(int argc, char *argv[])
 	// double norm_omega_init = norm_vector(omega);
 	// double norm_l_init = norm_vector(l);
 	// double l_total_init[3];
-	// total_angular_momentum(l_total_init, m1, m2, tilde_x, tilde_x_dot, l);
+	// calculate_total_angular_momentum(l_total_init, m1, m2, tilde_x, tilde_x_dot, l);
 	// double norm_l_total_init = norm_vector(l_total_init);
 	// double I[9];
 	// calculate_inertia_tensor(I, I0, b);
@@ -891,6 +891,9 @@ main(int argc, char *argv[])
 	strcat(filename, ".dat");
 	out[number_of_bodies] = fopen(filename, "w");
 	fprintf(out[number_of_bodies], "time(yr)");
+	fprintf(out[number_of_bodies], " x_com(AU)");
+	fprintf(out[number_of_bodies], " y_com(AU)");
+	fprintf(out[number_of_bodies], " z_com(AU)");
 	fprintf(out[number_of_bodies], " |L|");
 	fprintf(out[number_of_bodies], "\n");
 
@@ -986,7 +989,7 @@ main(int argc, char *argv[])
 
 		/* calculate total angular momentum */
 		// double l_total[3];
-		// total_angular_momentum(l_total, m1, m2, 
+		// calculate_total_angular_momentum(l_total, m1, m2, 
 		// 	tilde_x, tilde_x_dot, l);
 
 		/* calculate e and a */
@@ -1104,11 +1107,22 @@ main(int argc, char *argv[])
 
 				fprintf (out[number_of_bodies], "%.15e", t);
 
-				/* print total angular momentum on general file */
+				/* print location of center of mass */
+
+				double center_of_mass[3];
+				calculate_center_of_mass(center_of_mass, bodies, number_of_bodies, G);
+				double relative_center_of_mass[3];
+				linear_combination_vector(relative_center_of_mass,
+					1.0, center_of_mass,
+					-1.0, bodies[0].x);
+				fprintf (out[number_of_bodies], " %.15e", relative_center_of_mass[0]);
+				fprintf (out[number_of_bodies], " %.15e", relative_center_of_mass[1]);
+				fprintf (out[number_of_bodies], " %.15e", relative_center_of_mass[2]);
+
+				/* print total angular momentum */
 
 				double l_total[3];
-				total_angular_momentum(l_total, bodies, number_of_bodies, G);
-				
+				calculate_total_angular_momentum(l_total, bodies, number_of_bodies, G);
 				fprintf (out[number_of_bodies], " %.15e", norm_vector(l_total));
 
 				fprintf(out[number_of_bodies], "\n");

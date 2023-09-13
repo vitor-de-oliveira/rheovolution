@@ -1005,10 +1005,10 @@ calculate_omega	(const int id,
 }
 
 int
-total_angular_momentum	(double l_total[3],
-				 		 const cltbdy *bodies,
-			 	 		 const int number_of_bodies,
-			 	 		 const double G)
+calculate_total_angular_momentum(double l_total[3],
+				 		 		 const cltbdy *bodies,
+			 	 		 		 const int number_of_bodies,
+			 	 		 		 const double G)
 {
 	null_vector(l_total);
 
@@ -1024,6 +1024,31 @@ total_angular_momentum	(double l_total[3],
 			1.0, l_total,
 			1.0, l_total_component);
 	}
+
+	return 0;
+}
+
+int
+calculate_center_of_mass(double center_of_mass[3],
+				 		 const cltbdy *bodies,
+			 	 		 const int number_of_bodies,
+			 	 		 const double G)
+{
+	double sum_of_masses = 0.0;
+	double sum_of_masses_times_positions[] = {0.0,0.0,0.0};
+
+	for (int i = 0; i < number_of_bodies; i++)
+	{
+		sum_of_masses += bodies[i].mass;
+		double mass_times_position[3];
+		scale_vector(mass_times_position, bodies[i].mass, bodies[i].x);
+		linear_combination_vector(sum_of_masses_times_positions,
+			1.0, sum_of_masses_times_positions,
+			1.0, mass_times_position);
+	}
+
+	scale_vector(center_of_mass, 
+		1.0 / sum_of_masses, sum_of_masses_times_positions);
 
 	return 0;
 }

@@ -143,8 +143,14 @@ calculate_omega	(const int id,
 			 	 const double G);
 
 int
-total_angular_momentum	(double l_total[3],
-				 		 const cltbdy *body,
+calculate_total_angular_momentum(double l_total[3],
+				 		 		 const cltbdy *bodies,
+			 	 		 		 const int number_of_bodies,
+			 	 		 		 const double G);
+
+int
+calculate_center_of_mass(double center_of_mass[3],
+				 		 const cltbdy *bodies,
 			 	 		 const int number_of_bodies,
 			 	 		 const double G);
 
