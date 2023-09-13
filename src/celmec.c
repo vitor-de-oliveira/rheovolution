@@ -88,47 +88,6 @@ kepler_equation(const double e, const double M)
 }
 
 double
-calculate_eccentricity  (const double G,
-                         const double m1,
-                         const double m2,
-                         const double x[],
-                         const double v[])
-{
-    // standard gravitational parameter
-    double mu = G * (m1 + m2);
-
-    // double x_norm = norm_vector(x);
-    // double v_norm_squared = norm_squared_vector(v);
-    // double x_dot_v = dot_product(x, v);
-
-    // double term_1[] = {0.0, 0.0, 0.0};
-    // scale_vector(term_1, v_norm_squared - (mu / x_norm), x);
-    // double term_2[] = {0.0, 0.0, 0.0};
-    // scale_vector(term_2, x_dot_v, v);
-
-    // double e_vec[] = {0.0, 0.0, 0.0};
-    // linear_combination_vector(e_vec, 
-    //     1.0 / mu, term_1, -1.0 / mu, term_2);
-
-    // orbital momentum vector
-    double h[3];
-    cross_product(h, x, v);
-
-    double v_cross_h[3];
-    cross_product(v_cross_h, v, h);
-    double term_1[] = {0.0, 0.0, 0.0};
-    scale_vector(term_1, 1.0 / mu, v_cross_h);
-    double term_2[] = {0.0, 0.0, 0.0};
-    scale_vector(term_2, -1.0 / norm_vector(x), x);
-
-    double e_vec[] = {0.0, 0.0, 0.0};
-    linear_combination_vector(e_vec, 
-        1.0, term_1, 1.0, term_2);
-
-    return norm_vector(e_vec);
-}
-
-double
 calculate_semi_major_axis   (const double G,
                              const double m1,
                              const double m2,
@@ -138,13 +97,240 @@ calculate_semi_major_axis   (const double G,
     // standard gravitational parameter
     double mu = G * (m1 + m2);
 
-    // double x_norm = norm_vector(x);
-    // double v_norm_squared = norm_squared_vector(v);
+    // semi-major axis
+    double a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
 
-    // // specific mechanical energy
-    // double E = v_norm_squared / 2.0 - mu / x_norm;
+    return a;
+}
 
-    // return -1.0 * mu / (2.0 * E);
+double
+calculate_eccentricity  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[])
+{
+    // standard gravitational parameter
+    double mu = G * (m1 + m2);
 
-    return 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    // eccentricity vector
+    double v_cross_h[3];
+    cross_product(v_cross_h, v, h);
+    double term_1[] = {0.0, 0.0, 0.0};
+    scale_vector(term_1, 1.0 / mu, v_cross_h);
+    double term_2[] = {0.0, 0.0, 0.0};
+    scale_vector(term_2, -1.0 / norm_vector(x), x);
+    double e_vec[] = {0.0, 0.0, 0.0};
+    linear_combination_vector(e_vec, 
+        1.0, term_1, 1.0, term_2);
+
+    // eccentricity
+    double e = norm_vector(e_vec);
+
+    return e;
+}
+
+double
+calculate_inclination   (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[])
+{
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    // inclination
+    double I = acos(h[2] / norm_vector(h));
+
+    return I;
+}
+
+double
+calculate_true_anomaly  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[])
+{
+    // standard gravitational parameter
+    double mu = G * (m1 + m2);
+
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    // eccentricity vector
+    double v_cross_h[3];
+    cross_product(v_cross_h, v, h);
+    double term_1[] = {0.0, 0.0, 0.0};
+    scale_vector(term_1, 1.0 / mu, v_cross_h);
+    double term_2[] = {0.0, 0.0, 0.0};
+    scale_vector(term_2, -1.0 / norm_vector(x), x);
+    double e_vec[] = {0.0, 0.0, 0.0};
+    linear_combination_vector(e_vec, 
+        1.0, term_1, 1.0, term_2);
+
+    // true anomaly
+    double e_vec_dot_x = dot_product(e_vec, x);
+    double e_vec_norm = norm_vector(e_vec);
+    double x_norm = norm_vector(x);
+    double nu = acos(e_vec_dot_x / (e_vec_norm * x_norm));
+    if (dot_product(x, v) < 0.0)
+    {
+        nu = 2.0 * M_PI - nu;
+    }
+
+    return nu;
+}
+
+double
+calculate_eccentric_anomaly (const double G,
+                             const double m1,
+                             const double m2,
+                             const double x[],
+                             const double v[])
+{
+    // true anomaly
+    double nu = calculate_true_anomaly(G, m1, m2, x, v);
+
+    // eccentricity
+    double e = calculate_eccentricity(G, m1, m2, x, v);
+
+    // eccentric anomaly
+    double E = 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
+
+    return E;
+}
+
+double
+calculate_mean_anomaly  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[])
+{
+    // true anomaly
+    double E = calculate_eccentric_anomaly(G, m1, m2, x, v);
+
+    // eccentricity
+    double e = calculate_eccentricity(G, m1, m2, x, v);
+
+    // mean anomaly
+    double M = E - e * sin(E);
+
+    return M;
+}
+
+
+double
+calculate_argument_of_periapsis (const double G,
+                                 const double m1,
+                                 const double m2,
+                                 const double x[],
+                                 const double v[])
+{
+    // standard gravitational parameter
+    double mu = G * (m1 + m2);
+    
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    // eccentricity vector
+    double v_cross_h[3];
+    cross_product(v_cross_h, v, h);
+    double term_1[] = {0.0, 0.0, 0.0};
+    scale_vector(term_1, 1.0 / mu, v_cross_h);
+    double term_2[] = {0.0, 0.0, 0.0};
+    scale_vector(term_2, -1.0 / norm_vector(x), x);
+    double e_vec[] = {0.0, 0.0, 0.0};
+    linear_combination_vector(e_vec, 
+        1.0, term_1, 1.0, term_2);
+
+    // inclination
+    double I = calculate_inclination(G, m1, m2, x, v);
+
+    // eccentricity
+    double e = calculate_eccentricity(G, m1, m2, x, v);
+
+    // longitude of the ascending node
+    double omega;
+
+    if (I < 1e-15)
+    {
+        if (e < 1e-15)
+        {
+            omega = 0.0;
+        }
+        else
+        {
+            omega = acos(e_vec[0] / e);
+            if (e_vec[2] < 0.0)
+            {
+                omega = 2.0 * M_PI - omega;
+            }
+        }
+    }
+    else
+    {
+        // vector pointing towards the ascending node
+        double z_vec[] = {0.0, 0.0, 1.0};
+        double n[3];
+        cross_product(n, z_vec, h);
+
+        double n_dot_e_vec = dot_product(n, e_vec);
+        double n_norm = norm_vector(n);
+        double e_vec_norm = norm_vector(e_vec);
+        omega = acos(n_dot_e_vec / (n_norm * e_vec_norm));
+        if (e_vec[2] < 0.0)
+        {
+            omega = 2.0 * M_PI - omega;
+        }
+    }
+
+    return omega;
+}
+
+double
+calculate_longitude_of_the_ascending_node   (const double G,
+                                             const double m1,
+                                             const double m2,
+                                             const double x[],
+                                             const double v[])
+{
+    // inclination
+    double I = calculate_inclination(G, m1, m2, x, v);
+
+    // longitude of the ascending node
+    double Omega;
+
+    if (I < 1e-15)
+    {
+        Omega = 0.0;
+    }
+    else
+    {
+        // orbital momentum vector
+        double h[3];
+        cross_product(h, x, v);
+
+        // vector pointing towards the ascending node
+        double z_vec[] = {0.0, 0.0, 1.0};
+        double n[3];
+        cross_product(n, z_vec, h);
+
+        Omega = acos(n[0] / norm_vector(n));
+        if (n[1] < 0.0)
+        {
+            Omega = 2.0 * M_PI - Omega;
+        }
+    }
+
+    return Omega;
 }

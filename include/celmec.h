@@ -46,13 +46,10 @@ kepler_equation	(const double e,
                  const double M);
 
 /* orbital elements from state vectors */
-
-double
-calculate_eccentricity  (const double G,
-                         const double m1,
-                         const double m2,
-                         const double x[],
-                         const double v[]);
+/* taken from text based on Vallado, 2007 */
+/* Fundamentals of Astrodynamics and Applications */
+/* Also based on transformations on lib orbital */
+/* by RazerM (github) */
 
 double
 calculate_semi_major_axis   (const double G,
@@ -60,5 +57,54 @@ calculate_semi_major_axis   (const double G,
                              const double m2,
                              const double x[],
                              const double v[]);
+
+double
+calculate_eccentricity  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[]);
+                     
+double
+calculate_inclination   (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[]);
+
+double
+calculate_true_anomaly  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[]);
+
+double
+calculate_eccentric_anomaly (const double G,
+                             const double m1,
+                             const double m2,
+                             const double x[],
+                             const double v[]);
+
+double
+calculate_mean_anomaly  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[]);
+
+double
+calculate_argument_of_periapsis (const double G,
+                                 const double m1,
+                                 const double m2,
+                                 const double x[],
+                                 const double v[]);
+
+double
+calculate_longitude_of_the_ascending_node   (const double G,
+                                             const double m1,
+                                             const double m2,
+                                             const double x[],
+                                             const double v[]);
 
 #endif

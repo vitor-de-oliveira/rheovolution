@@ -3,7 +3,7 @@ SRC_DIR = ./src
 SHELL := /bin/bash
 LIBS = -lgsl -lgslcblas -lm
 
-$(CC) = gcc
+CC = gcc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
 TARGET = TIDES
 
@@ -25,8 +25,15 @@ tidesr:
 	module load gsl/2.7.1; \
 	$(CCR) $(CFLAGSR) -o $(TARGETR) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
+run:
+	./$(TARGET) $(input)
+
+plot:
+	./$(TARGET) $(input) plot
+
 example: tides
 	./$(TARGET) example/EM_simplest_scenario.dat
+	./$(TARGET) example/EM_simplest_scenario.dat plot
 
 clean:
 	-rm -f $(TARGET)

@@ -487,6 +487,270 @@ main(int argc, char *argv[])
 	// printf("\n");
 	// exit(99);
 
+	if (argv[2] != NULL)
+	{
+		if (strcmp(argv[2], "plot") == 0)
+		{
+			char plot_folder[150];
+			strcpy(plot_folder, output_folder);
+			strcat(plot_folder, "/figures/");
+			struct stat st_plot = {0};
+			if (stat(plot_folder, &st_plot) == -1) {
+				mkdir(plot_folder, 0700);
+			}
+			char filename_read[150];
+			char filename_plot[150];
+			FILE *gnuplotPipe;
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				/* reads output files of each body */
+				strcpy(filename_read, output_folder);
+				strcat(filename_read, "results_");
+				strcat(filename_read, sim_name);
+				strcat(filename_read, "_");
+				strcat(filename_read, bodies[i].name);
+				strcat(filename_read, ".dat");
+				/* plot outputs */
+				/* orbit */
+				if (i > 0)
+				{
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_orbit");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"x\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"y\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 2:3 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+				}
+				/* angular velocity */
+				strcpy(filename_plot, plot_folder);
+				strcat(filename_plot, "figure_");
+				strcat(filename_plot, sim_name);
+				strcat(filename_plot, "_");
+				strcat(filename_plot, bodies[i].name);
+				strcat(filename_plot, "_angular_velocity");
+				strcat(filename_plot, ".png");
+				gnuplotPipe = popen("gnuplot -persistent", "w");
+				fprintf(gnuplotPipe, "reset\n");
+				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+				fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+				fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+				fprintf(gnuplotPipe, "set border lw 2 \n");
+				fprintf(gnuplotPipe, "unset key\n");
+				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+				fprintf(gnuplotPipe, "set ylabel \"|angular velocity|\"\n");
+				fprintf(gnuplotPipe, "set title \"%s's Angular Velocity\"\n", bodies[i].name);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:8 w l lw 3", filename_read);
+				pclose(gnuplotPipe);
+				/* reads output files of orbital elements of each body */
+				strcpy(filename_read, output_folder);
+				strcat(filename_read, "results_");
+				strcat(filename_read, sim_name);
+				strcat(filename_read, "_");
+				strcat(filename_read, bodies[i].name);
+				strcat(filename_read, "_orbital_elements");
+				strcat(filename_read, ".dat");
+				/* plot outputs */
+				if (i > 0)
+				{
+					/* semi-major axis */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_semi_major_axis");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"a\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's semi-major axis\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+					/* eccentricity */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_eccentricity");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"e\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's eccentricity\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:3 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+					/* inclination */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_inclination");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"I\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's inclination\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:4 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+					/* mean anomaly */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_mean_anomaly");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"M\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's mean anomaly\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+					/* argument of periapsis */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_argument_of_periapsis");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"w\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's argument of periapsis\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:6 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+					/* longitude of the asceding node */
+					strcpy(filename_plot, plot_folder);
+					strcat(filename_plot, "figure_");
+					strcat(filename_plot, sim_name);
+					strcat(filename_plot, "_");
+					strcat(filename_plot, bodies[i].name);
+					strcat(filename_plot, "_longitude_of_the_asceding_node");
+					strcat(filename_plot, ".png");
+					gnuplotPipe = popen("gnuplot -persistent", "w");
+					fprintf(gnuplotPipe, "reset\n");
+					fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+					fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+					fprintf(gnuplotPipe, "set border lw 2 \n");
+					fprintf(gnuplotPipe, "unset key\n");
+					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"Omega\"\n");
+					fprintf(gnuplotPipe, "set title \"%s's longitude of the ascending node\"\n", bodies[i].name);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_read);
+					pclose(gnuplotPipe);
+				}
+			}
+			return 0;
+		}
+	}
+
+	/* create output files */
+	char filename[150];
+	FILE *out[number_of_bodies + 1];
+	for (int i = 0; i < number_of_bodies; i++)
+	{
+		/* names and opens output files for each body */
+		strcpy(filename, output_folder);
+		strcat(filename, "results_");
+		strcat(filename, sim_name);
+		strcat(filename, "_");
+		strcat(filename, bodies[i].name);
+		strcat(filename, ".dat");
+		out[i] = fopen(filename, "w");
+		/* writes output headers */
+		fprintf(out[i], "time(yr)");
+		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
+		fprintf(out[i], " |omega|");
+		fprintf(out[i], " b3");
+		fprintf(out[i], " |b|");
+		fprintf(out[i], "\n");
+	}
+	/* names and opens general output file */
+	strcpy(filename, output_folder);
+	strcat(filename, "results_");
+	strcat(filename, sim_name);
+	strcat(filename, "_");
+	strcat(filename, "full_system");
+	strcat(filename, ".dat");
+	out[number_of_bodies] = fopen(filename, "w");
+	fprintf(out[number_of_bodies], "time(yr)");
+	fprintf(out[number_of_bodies], " x_com(AU)");
+	fprintf(out[number_of_bodies], " y_com(AU)");
+	fprintf(out[number_of_bodies], " z_com(AU)");
+	fprintf(out[number_of_bodies], " |L|");
+	fprintf(out[number_of_bodies], "\n");
+
+	/* output files for orbital elements */
+	FILE *out_orbital[number_of_bodies -1];
+	for (int i = 0; i < number_of_bodies -1; i++)
+	{
+		/* names and opens output files for each body */
+		strcpy(filename, output_folder);
+		strcat(filename, "results_");
+		strcat(filename, sim_name);
+		strcat(filename, "_");
+		strcat(filename, bodies[i+1].name);
+		strcat(filename, "_orbital_elements");
+		strcat(filename, ".dat");
+		out_orbital[i] = fopen(filename, "w");
+		/* writes output headers */
+		fprintf(out_orbital[i], "time(yr)");
+		fprintf(out_orbital[i], " a(AU)");
+		fprintf(out_orbital[i], " e");
+		fprintf(out_orbital[i], " nu");
+		fprintf(out_orbital[i], " I");
+		fprintf(out_orbital[i], " w");
+		fprintf(out_orbital[i], " Omega");
+		fprintf(out_orbital[i], "\n");
+	}
+
 	// /* Calibration and plots of k2 */
 	// double rate = 2.54014310646e-13; // 3.8 cm/yr in AU/yr
 	// double a0 = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
@@ -861,42 +1125,6 @@ main(int argc, char *argv[])
 	// printf("%.5e\n", norm_vector(omega));
 	// exit(42);
 
-	FILE *out[number_of_bodies + 1];
-	char filename[150];
-	for (int i = 0; i < number_of_bodies; i++)
-	{
-		/* names and opens output files for each body */
-		strcpy(filename, output_folder);
-		strcat(filename, "results_");
-		strcat(filename, sim_name);
-		strcat(filename, "_");
-		strcat(filename, bodies[i].name);
-		strcat(filename, ".dat");
-		out[i] = fopen(filename, "w");
-		/* writes output headers */
-		fprintf(out[i], "time(yr)");
-		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
-		fprintf(out[i], " a(AU)");
-		fprintf(out[i], " |omega|");
-		fprintf(out[i], " b3");
-		fprintf(out[i], " |b|");
-		fprintf(out[i], "\n");
-	}
-	/* names and opens general output file */
-	strcpy(filename, output_folder);
-	strcat(filename, "results_");
-	strcat(filename, sim_name);
-	strcat(filename, "_");
-	strcat(filename, "full_system");
-	strcat(filename, ".dat");
-	out[number_of_bodies] = fopen(filename, "w");
-	fprintf(out[number_of_bodies], "time(yr)");
-	fprintf(out[number_of_bodies], " x_com(AU)");
-	fprintf(out[number_of_bodies], " y_com(AU)");
-	fprintf(out[number_of_bodies], " z_com(AU)");
-	fprintf(out[number_of_bodies], " |L|");
-	fprintf(out[number_of_bodies], "\n");
-
 	/* integration loop */
 	int		counter = 0;	
 	double 	t = t_init;
@@ -1022,6 +1250,8 @@ main(int argc, char *argv[])
 			{
 				for (int i = 0; i < number_of_bodies; i++)
 				{
+					/* state variables */
+
 					/* time */
 
 					fprintf (out[i], "%.15e", t);
@@ -1041,16 +1271,6 @@ main(int argc, char *argv[])
 					fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
 						relative_x[0], relative_x[1], relative_x[2],
 						relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
-
-					/* orbital eccentricity and semimajor axis */
-
-					// printf (" %.15e %.15e", e, e_dif);
-					// printf (" %.15e %.15e", a, a_dif);
-
-					double a_body =
-						calculate_semi_major_axis(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
-					fprintf (out[i], " %.15e", a_body);
 
 					/* angular velocity */
 
@@ -1097,7 +1317,55 @@ main(int argc, char *argv[])
 					// printf (" %.5e %.5e", J2, J2_dif);
 					// printf (" %.5e %.5e", C22, C22_dif);
 
+					/* next line */
 					fprintf(out[i], "\n");
+
+					/* orbital elements */
+
+					if (i > 0)
+					{
+						/* time */
+						fprintf (out_orbital[i-1], "%.15e", t);
+
+						/* semimajor axis */
+
+						bodies[i].a = calculate_semi_major_axis(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].a);
+
+						/* orbital eccentricity */
+
+						bodies[i].e = calculate_eccentricity(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].e);
+
+						/* inclination */
+
+						bodies[i].I = calculate_inclination(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].I);
+
+						/* mean anomaly */
+
+						bodies[i].M = calculate_mean_anomaly(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].M);
+
+						/* argument of periapsis */
+
+						bodies[i].w = calculate_argument_of_periapsis(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].w);
+
+						/* longitude of the ascending node */
+
+						bodies[i].Omega = calculate_longitude_of_the_ascending_node(G, bodies[0].mass, bodies[i].mass, 
+							relative_x, relative_x_dot);
+						fprintf (out_orbital[i-1], " %.15e", bodies[i].Omega);
+
+						/* next line */
+						fprintf(out_orbital[i-1], "\n");
+					}
 
 				} // end loop over bodies
 
@@ -1178,9 +1446,14 @@ main(int argc, char *argv[])
 	gsl_odeiv2_control_free (ode_control);
 	gsl_odeiv2_step_free (ode_step);
 
+	/* close output files */
 	for (int i = 0; i < number_of_bodies + 1; i++)
 	{
 		fclose(out[i]);
+	}
+	for (int i = 0; i < number_of_bodies - 1; i++)
+	{
+		fclose(out_orbital[i]);
 	}
 
 	/* free Voigt elements */
