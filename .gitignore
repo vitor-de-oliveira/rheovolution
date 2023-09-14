@@ -1,11 +1,8 @@
 TIDES
 input/
 output/
-run_tides.sh
-err.err
-out.out
-nohup.out
-.vscode/
 tests/
+.vscode/
+nohup.out
 slurm-*.out
 run_*.sh
