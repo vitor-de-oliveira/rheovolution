@@ -399,6 +399,7 @@ main(int argc, char *argv[])
 		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
 		// for (int i = 0; i < number_of_bodies; i++)
 		// {
+		// 	double a_test, e_test, I_test, M_test, w_test, Omega_test;
 		// 	double relative_x[3];
 		// 	linear_combination_vector(relative_x,
 		// 		1.0, bodies[i].x,
@@ -407,11 +408,25 @@ main(int argc, char *argv[])
 		// 	linear_combination_vector(relative_x_dot,
 		// 		1.0, bodies[i].x_dot,
 		// 		-1.0, bodies[0].x_dot);
-		// 	e = calculate_eccentricity(G, bodies[0].mass, 
+		// 	a_test = calculate_semi_major_axis(G, bodies[0].mass, 
 		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	a = calculate_semi_major_axis(G, bodies[0].mass, 
+		// 	e_test = calculate_eccentricity(G, bodies[0].mass, 
 		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	printf("bodies = %s e = %e a = %e\n", bodies[i].name, e, a);
+		// 	I_test = calculate_inclination(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	M_test = calculate_mean_anomaly(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	w_test = calculate_argument_of_periapsis(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	Omega_test = calculate_longitude_of_the_ascending_node(G, bodies[0].mass, 
+		// 		bodies[i].mass, relative_x, relative_x_dot);
+		// 	printf("From file:\n");
+		// 	printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
+		// 		bodies[i].name, bodies[i].a, bodies[i].e, bodies[i].I, 
+		// 		bodies[i].M, bodies[i].w, bodies[i].Omega);
+		// 	printf("Calculated:\n");
+		// 	printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
+		// 		bodies[i].name, a_test, e_test, I_test, M_test, w_test, Omega_test);
 		// }
 		// exit(99);
 	}
@@ -551,8 +566,48 @@ main(int argc, char *argv[])
 				fprintf(gnuplotPipe, "unset key\n");
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"|angular velocity|\"\n");
-				fprintf(gnuplotPipe, "set title \"%s's Angular Velocity\"\n", bodies[i].name);
+				fprintf(gnuplotPipe, "set title \"%s's angular velocity\"\n", bodies[i].name);
 				fprintf(gnuplotPipe, "plot \'%s\' u 1:8 w l lw 3", filename_read);
+				pclose(gnuplotPipe);
+				/* angular momentum */
+				strcpy(filename_plot, plot_folder);
+				strcat(filename_plot, "figure_");
+				strcat(filename_plot, sim_name);
+				strcat(filename_plot, "_");
+				strcat(filename_plot, bodies[i].name);
+				strcat(filename_plot, "_angular_momentum");
+				strcat(filename_plot, ".png");
+				gnuplotPipe = popen("gnuplot -persistent", "w");
+				fprintf(gnuplotPipe, "reset\n");
+				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+				fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+				fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+				fprintf(gnuplotPipe, "set border lw 2 \n");
+				fprintf(gnuplotPipe, "unset key\n");
+				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+				fprintf(gnuplotPipe, "set ylabel \"|l|\"\n");
+				fprintf(gnuplotPipe, "set title \"%s's angular momentum\"\n", bodies[i].name);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:9 w l lw 3", filename_read);
+				pclose(gnuplotPipe);
+				/* deformation */
+				strcpy(filename_plot, plot_folder);
+				strcat(filename_plot, "figure_");
+				strcat(filename_plot, sim_name);
+				strcat(filename_plot, "_");
+				strcat(filename_plot, bodies[i].name);
+				strcat(filename_plot, "_deformation");
+				strcat(filename_plot, ".png");
+				gnuplotPipe = popen("gnuplot -persistent", "w");
+				fprintf(gnuplotPipe, "reset\n");
+				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+				fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+				fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+				fprintf(gnuplotPipe, "set border lw 2 \n");
+				fprintf(gnuplotPipe, "unset key\n");
+				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+				fprintf(gnuplotPipe, "set ylabel \"|b|\"\n");
+				fprintf(gnuplotPipe, "set title \"%s's deformation\"\n", bodies[i].name);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:11 w l lw 3", filename_read);
 				pclose(gnuplotPipe);
 				/* reads output files of orbital elements of each body */
 				strcpy(filename_read, output_folder);
@@ -685,11 +740,41 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set title \"%s's longitude of the ascending node\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_read);
 					pclose(gnuplotPipe);
-				}
-			}
+				} // end if i > 0
+			} // end loop over bodies
+			/* reads output file of full system */
+			strcpy(filename_read, output_folder);
+			strcat(filename_read, "results_");
+			strcat(filename_read, sim_name);
+			strcat(filename_read, "_");
+			strcat(filename_read, "full_system");
+			strcat(filename_read, ".dat");
+			/* plot outputs */
+			/* total angular momentum */
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, sim_name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, "full_system");
+			strcat(filename_plot, "_total_angular_momentum");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"|Total angular momentum|\"\n");
+			fprintf(gnuplotPipe, "set title \"System's total angular momentum\"\n");
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_read);
+			pclose(gnuplotPipe);
+	
 			return 0;
-		}
-	}
+
+		} // end if argv[2] == plot
+	} // end if argv[2] != NULL
 
 	/* create output files */
 	char filename[150];
@@ -708,6 +793,7 @@ main(int argc, char *argv[])
 		fprintf(out[i], "time(yr)");
 		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
 		fprintf(out[i], " |omega|");
+		fprintf(out[i], " |l|");
 		fprintf(out[i], " b3");
 		fprintf(out[i], " |b|");
 		fprintf(out[i], "\n");
@@ -1281,6 +1367,7 @@ main(int argc, char *argv[])
 
 					/* angular momentum and total angular momentum */
 
+					fprintf (out[i], " %.15e", norm_vector(bodies[i].l));
 					// printf (" %.15e %.15e", norm_vector(l), l_dif);
 					// printf (" %.15e %.15e", norm_vector(l_total), l_total_dif);
 					// printf (" %.15e %.15e %.15e %.15e %.15e %.15e", 

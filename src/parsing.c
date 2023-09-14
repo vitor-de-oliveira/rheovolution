@@ -57,26 +57,35 @@ convert_input	(cltbdy	**bodies,
 		input_deformable_received[i] = false;
 	}
 
-	/* reading input parameters */
-	FILE 	*in1 = fopen(file, "r");
-	if	(in1 == NULL)
+	/* verifying input parameters */
+	FILE 	*in_col = fopen(file, "r");
+	if	(in_col == NULL)
 	{
 		fprintf(stderr, "Warning: could not read input file.\n");
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(13);
 	}
+	else
+	{
+		read = getline(&line, &len, in_col);
+		fclose(in_col);
+	}
+	col_num = count_columns(line);
+	if (col_num < number_of_bodies)
+	{
+		fprintf(stderr, "Warning: number of bodies cannot\n");
+		fprintf(stderr, "exceed number of columns in system file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
+
+	/* reading input parameters */
+	FILE 	*in1 = fopen(file, "r");
    	while ((read = getline(&line, &len, in1)) != -1)
 	{
-		col_num = count_columns(line);
-		if (col_num < number_of_bodies)
-		{
-			fprintf(stderr, "Warning: number of bodies cannot\n");
-			fprintf(stderr, "exceed number of columns in system file.\n");
-			fprintf(stderr, "Exiting the program now.\n");
-			exit(13);
-		}
 		const char tok_del[3] = " \t\n";		// token delimiter
 		char *token = strtok(line, tok_del);
+		if(token == NULL) break;	// in case there is a new lines
 		if (strcmp(token, "Name") == 0)
 		{
 			for (int i = 0; i < number_of_bodies; i++)
@@ -314,7 +323,6 @@ convert_input	(cltbdy	**bodies,
 				}
 				else
 				{
-					printf("%s\n", token);
 					fprintf(stderr, "Please provide yes or no ");
 					fprintf(stderr, "for point mass variable\n");
 					exit(14);
