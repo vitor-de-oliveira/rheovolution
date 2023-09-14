@@ -8,3 +8,4 @@ nohup.out
 .vscode/
 tests/
 slurm-*.out
+run_*.sh
