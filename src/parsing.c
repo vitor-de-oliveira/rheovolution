@@ -39,7 +39,6 @@ convert_input	(cltbdy	**bodies,
     char 	*line = NULL;
     size_t 	len = 0;
     ssize_t read;
-	int 	col_num;
 
 	/* verification variables for input */
 	int 	number_par_inputs = 18;
@@ -55,28 +54,6 @@ convert_input	(cltbdy	**bodies,
 	for (int i = 0; i < number_deformable_inputs; i++)
 	{
 		input_deformable_received[i] = false;
-	}
-
-	/* verifying input parameters */
-	FILE 	*in_col = fopen(file, "r");
-	if	(in_col == NULL)
-	{
-		fprintf(stderr, "Warning: could not read input file.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-	else
-	{
-		read = getline(&line, &len, in_col);
-		fclose(in_col);
-	}
-	col_num = count_columns(line);
-	if (col_num < number_of_bodies)
-	{
-		fprintf(stderr, "Warning: number of bodies cannot\n");
-		fprintf(stderr, "exceed number of columns in system file.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
 	}
 
 	/* reading input parameters */

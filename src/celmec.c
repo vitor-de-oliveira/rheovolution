@@ -176,14 +176,46 @@ calculate_true_anomaly  (const double G,
     linear_combination_vector(e_vec, 
         1.0, term_1, 1.0, term_2);
 
+    // inclination
+    double I = calculate_inclination(G, m1, m2, x, v);
+
+    // eccentricity
+    double e = calculate_eccentricity(G, m1, m2, x, v);
+
     // true anomaly
-    double e_vec_dot_x = dot_product(e_vec, x);
-    double e_vec_norm = norm_vector(e_vec);
-    double x_norm = norm_vector(x);
-    double nu = acos(e_vec_dot_x / (e_vec_norm * x_norm));
-    if (dot_product(x, v) < 0.0)
+    double nu;
+
+    if (e < 1e-15)
     {
-        nu = 2.0 * M_PI - nu;
+        if (I < 1e-15)
+        {
+            nu = acos(x[0] / norm_vector(x));
+            if (v[0] > 0.0)
+            {
+                nu = 2.0 * M_PI - nu;
+            }
+        }
+        else
+        {
+            // vector pointing towards the ascending node
+            double z_vec[] = {0.0, 0.0, 1.0};
+            double n[3];
+            cross_product(n, z_vec, h);
+
+            nu = acos(dot_product(n, x) / (norm_vector(n) * norm_vector(x)));
+            if (dot_product(n, v) > 0.0)
+            {
+                nu = 2.0 * M_PI - nu;
+            }
+        }
+    }
+    else
+    {
+        nu = acos(dot_product(e_vec, x) / (norm_vector(e_vec) *  norm_vector(x)));
+        if (dot_product(x, v) < 0.0)
+        {
+            nu = 2.0 * M_PI - nu;
+        } 
     }
 
     return nu;
@@ -262,13 +294,13 @@ calculate_argument_of_periapsis (const double G,
     // longitude of the ascending node
     double omega;
 
-    if (I < 1e-15)
+    if (e < 1e-15)
     {
-        if (e < 1e-15)
-        {
-            omega = 0.0;
-        }
-        else
+        omega = 0.0;
+    }
+    else
+    {
+        if (I < 1e-15)
         {
             omega = acos(e_vec[0] / e);
             if (e_vec[2] < 0.0)
@@ -276,21 +308,18 @@ calculate_argument_of_periapsis (const double G,
                 omega = 2.0 * M_PI - omega;
             }
         }
-    }
-    else
-    {
-        // vector pointing towards the ascending node
-        double z_vec[] = {0.0, 0.0, 1.0};
-        double n[3];
-        cross_product(n, z_vec, h);
-
-        double n_dot_e_vec = dot_product(n, e_vec);
-        double n_norm = norm_vector(n);
-        double e_vec_norm = norm_vector(e_vec);
-        omega = acos(n_dot_e_vec / (n_norm * e_vec_norm));
-        if (e_vec[2] < 0.0)
+        else
         {
-            omega = 2.0 * M_PI - omega;
+            // vector pointing towards the ascending node
+            double z_vec[] = {0.0, 0.0, 1.0};
+            double n[3];
+            cross_product(n, z_vec, h);
+
+            omega = acos(dot_product(n, e_vec) / (norm_vector(n) * norm_vector(e_vec)));
+            if (e_vec[2] < 0.0)
+            {
+                omega = 2.0 * M_PI - omega;
+            }
         }
     }
 

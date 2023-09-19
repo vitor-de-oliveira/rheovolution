@@ -1,6 +1,118 @@
 #include "dynamical_system.h"
 
 int
+print_CelestialBody(cltbdy body)
+{
+	printf("name = ");
+	printf("%s\n", body.name);
+
+	printf("mass = ");
+	printf("%1.5e\n", body.mass);
+	printf("R = ");	
+	printf("%1.5e\n", body.R);
+	printf("lod = ");	
+	printf("%1.5e\n", body.lod);
+
+	printf("rg = ");	
+	printf("%1.5e\n", body.rg);
+	printf("J2 = ");	
+	printf("%1.5e\n", body.J2);
+	printf("C22 = ");	
+	printf("%1.5e\n", body.C22);
+	printf("I0 = ");	
+	printf("%1.5e\n", body.I0);
+
+	printf("obl = ");
+	printf("%1.5e\n", body.obl);
+	printf("psi = ");	
+	printf("%1.5e\n", body.psi);
+	printf("lib = ");	
+	printf("%1.5e\n", body.lib);
+
+	printf("a = ");
+	printf("%1.5e\n", body.a);
+	printf("e = ");	
+	printf("%1.5e\n", body.e);
+	printf("I = ");	
+	printf("%1.5e\n", body.I);
+	printf("M = ");	
+	printf("%1.5e\n", body.M);
+	printf("w = ");	
+	printf("%1.5e\n", body.w);
+	printf("Omega = ");	
+	printf("%1.5e\n", body.Omega);
+
+	printf("kf = ");	
+	printf("%1.5e\n", body.kf);
+	printf("Dt = ");	
+	printf("%1.5e\n", body.Dt);
+	printf("tau = ");	
+	printf("%1.5e\n", body.tau);
+
+	printf("gamma = ");	
+	printf("%1.5e\n", body.gamma);
+	printf("alpha = ");	
+	printf("%1.5e\n", body.alpha);
+	printf("eta = ");	
+	printf("%1.5e\n", body.eta);
+	printf("alpha_0 = ");	
+	printf("%1.5e\n", body.alpha_0);
+	printf("elements = ");	
+	printf("%d\n", body.elements);
+	for(int i = 0; i < body.elements; i++)
+	{
+		printf("alpha_%d = ", i+1);	
+		printf("%1.5e\n", body.alpha_elements[i]);
+		printf("eta_%d = ", i+1);	
+		printf("%1.5e\n", body.eta_elements[i]);
+	}
+
+	printf("point mass = ");	
+	printf("%d\n", body.point_mass);
+	printf("centrifugal = ");	
+	printf("%d\n", body.centrifugal);
+	printf("tidal = ");	
+	printf("%d\n", body.tidal);
+	
+	printf("x = ");
+	print_vector(body.x);
+	printf("x_dot = ");
+	print_vector(body.x_dot);
+	printf("l = ");
+	print_vector(body.l);
+	double b0[9];
+	construct_traceless_symmetric_matrix(b0, body.b0_me);
+	printf("b0 = \n");
+	print_square_matrix(b0);
+	double u[9];
+	construct_traceless_symmetric_matrix(u, body.u_me);
+	printf("u = \n");
+	print_square_matrix(u);
+	if (body.elements > 0)
+	{
+		double	bk_me_2d_array[body.elements][5];
+		double	bk[9];
+		for (int k = 0; k < body.elements; k++)
+		{
+			for (int l = 0; l < 5; l++)
+			{
+				bk_me_2d_array[k][l] = body.bk_me[l + (k*5)];
+			}
+			construct_traceless_symmetric_matrix(bk, bk_me_2d_array[k]);
+			printf("b_%d = \n", k+1);	
+			print_square_matrix(bk);
+		}
+	}
+
+	printf("omega = ");
+	print_vector(body.omega);
+	printf("b = \n");
+	print_square_matrix(body.b);
+
+	return 0;
+}
+
+int
 field_GV(double t, 
 		 const double y[],
 		 double f[],
@@ -850,6 +962,9 @@ calculate_b	(const int id,
 	// printf("\nalpha = %f\n", alpha);
 	// printf("\nalpha_0 = %f\n", alpha_0);
 	// exit(42);
+
+	// printf("%d\n", id);
+	// print_CelestialBody(bodies[id]);
 
 	return 0;
 }

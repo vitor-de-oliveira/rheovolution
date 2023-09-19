@@ -6,3 +6,4 @@ tests/
 nohup.out
 slurm-*.out
 run_*.sh
+*.err

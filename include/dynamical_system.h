@@ -69,11 +69,9 @@ typedef struct CelestialBody{
 
 } cltbdy;
 
-/* field for 1 extended body and 1 point mass */
-/* uses Generalized-Voigt rheology */
+/* prints CelestialBody */
 int
-field_1EB1PM(double t, const double y[], double f[],
-       		 void *params);
+print_CelestialBody(cltbdy body);
 
 /* field for Generalized-Voigt rheology */
 int

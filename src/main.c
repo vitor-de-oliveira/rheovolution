@@ -37,11 +37,18 @@ main(int argc, char *argv[])
 	char	dev_specs[100];
 	int		system_file_type = 2;
 	int		number_of_bodies = 0;
-	bool	system_file_type_check = false;
-	bool	number_of_bodies_check = false;
+	bool	system_file_type_received = false;
+	bool	number_of_bodies_received = false;
+	bool	dev_specs_file_received = false;
 
 	/* parse input file */
 	FILE	*in = fopen(argv[1], "r");
+	if (in == NULL)
+	{
+		fprintf(stderr, "Warning: could not read input file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
    	while ((read = getline(&line, &len, in)) != -1)
 	{
 		sscanf(line, "%s %s", first_col, second_col);
@@ -76,44 +83,85 @@ main(int argc, char *argv[])
 		{
 			strcpy(dev_specs, input_folder);
 			strcat(dev_specs, second_col);
+			dev_specs_file_received = true;
 		}
 		else if (strcmp(first_col, "system_file_type") == 0)
 		{
 			system_file_type = atoi(second_col);
-			system_file_type_check = true;
+			system_file_type_received = true;
 		}
 		else if (strcmp(first_col, "number_of_bodies") == 0)
 		{
 			number_of_bodies = atoi(second_col);
-			number_of_bodies_check = true;
+			number_of_bodies_received = true;
 		}
 	}
 	fclose(in);
 
-	/* checking if file type and number of bodies were received */
-	if (system_file_type_check == false)
+	/* verify if any of the given files does not exist */
+	FILE *in_system = fopen(system_specs, "r");
+	if (in_system == NULL)
 	{
-		fprintf(stderr, "Error: Please provide type of system file.\n");
+		fprintf(stderr, "Warning: could not read system specs.\n");
 		fprintf(stderr, "Exiting the program now.\n");
-		exit(15);
+		exit(13);
 	}
-	else if (system_file_type != 1 && system_file_type != 2)
+	fclose(in_system);
+	FILE *in_integrator = fopen(integrator_specs, "r");
+	if (in_integrator == NULL)
 	{
-		fprintf(stderr, "Error: Type of system file should be 1 or 2.\n");
+		fprintf(stderr, "Warning: could not read integrator specs.\n");
 		fprintf(stderr, "Exiting the program now.\n");
-		exit(15);
+		exit(13);
 	}
-	if (number_of_bodies_check == false)
+	fclose(in_integrator);
+	if (dev_specs_file_received == true)
 	{
-		fprintf(stderr, "Error: Please provide number of bodies.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(15);
+		FILE *in_dev = fopen(dev_specs, "r");
+		if (in_integrator == NULL)
+		{
+			fprintf(stderr, "Warning: could not read integrator specs.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(13);
+		}
+		fclose(in_dev);	
 	}
-	else if (number_of_bodies < 1)
+
+	/* check if file type is valid */
+	if (system_file_type_received == true)
 	{
-		fprintf(stderr, "Error: Number of bodies should be greater than 0.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(15);
+		if (system_file_type != 1 && system_file_type != 2)
+		{
+			fprintf(stderr, "Error: Type of system file should be either 1 or 2.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(15);
+		}
+	}
+
+	/* set number of bodies */
+	FILE *in_col = fopen(system_specs, "r");
+	read = getline(&line, &len, in_col);
+	int col_num = count_columns(line);
+	fclose(in_col);
+	if (number_of_bodies_received == true)
+	{
+		if (col_num < number_of_bodies)
+		{
+			fprintf(stderr, "Warning: number of bodies cannot\n");
+			fprintf(stderr, "exceed number of columns in system file.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(13);
+		}
+		else if (number_of_bodies < 1)
+		{
+			fprintf(stderr, "Warning: Number of bodies should be greater than 0.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(15);
+		}
+	}
+	else
+	{
+		number_of_bodies = col_num - 1;
 	}
 
 	/* gravitational constant */
@@ -437,6 +485,7 @@ main(int argc, char *argv[])
 	}
 
 	/* for testing */
+	// printf("number of bodies = %d\n", number_of_bodies);
 	// for (int i = 0; i < number_of_bodies; i++)
 	// 	printf("%s ", bodies[i].name);
 	// printf("\n");
@@ -500,6 +549,12 @@ main(int argc, char *argv[])
 	// for (int i = 0; i < number_of_bodies; i++)
 	// 	printf("%d ", bodies[i].centrifugal);
 	// printf("\n");
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	print_vector(bodies[i].x);
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	print_vector(bodies[i].x_dot);
+	// for (int i = 0; i < number_of_bodies; i++)
+	// 	print_CelestialBody(bodies[i]);
 	// exit(99);
 
 	if (argv[2] != NULL)
@@ -991,7 +1046,10 @@ main(int argc, char *argv[])
 	// double u_me[5], *bk_me = *(&bk_me);
 	for (int i  = 0; i < number_of_bodies; i++)
 	{
-		for (int j = 0; j < 5; j++) bodies[i].u_me[i] = 0.0;
+		for (int j = 0; j < 5; j++)
+		{
+			bodies[i].u_me[j] = 0.0;
+		}
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].bk_me = (double *) calloc(bodies[i].elements * 5, sizeof(double));
@@ -1019,6 +1077,8 @@ main(int argc, char *argv[])
 		// calculate_omega(i, bodies, number_of_bodies, G);
 		// printf("omega of body %d after\n", i+1);
 		// print_vector(bodies[i].omega);
+		// print_square_matrix(bodies[i].b);
+		// print_vector(bodies[i].l);
 	}
 
 	// exit(98);
@@ -1217,10 +1277,14 @@ main(int argc, char *argv[])
 	while (t < t_final)
 	// while (counter < 1) // for testing
 	{
+		
 		/* for testing */
 		// printf("omega 1 = \n");
 		// print_vector(omega);
 		// printf("%1.5e\n", t);
+		// for (int i = 0; i < number_of_bodies; i++)
+		// 	print_CelestialBody(bodies[i]);
+		// exit(99);
 
 		if (fabs(t_final-t) < t_step)
 		{
