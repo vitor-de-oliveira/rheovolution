@@ -1,118 +1,6 @@
 #include "dynamical_system.h"
 
 int
-print_CelestialBody(cltbdy body)
-{
-	printf("name = ");
-	printf("%s\n", body.name);
-
-	printf("mass = ");
-	printf("%1.5e\n", body.mass);
-	printf("R = ");	
-	printf("%1.5e\n", body.R);
-	printf("lod = ");	
-	printf("%1.5e\n", body.lod);
-
-	printf("rg = ");	
-	printf("%1.5e\n", body.rg);
-	printf("J2 = ");	
-	printf("%1.5e\n", body.J2);
-	printf("C22 = ");	
-	printf("%1.5e\n", body.C22);
-	printf("I0 = ");	
-	printf("%1.5e\n", body.I0);
-
-	printf("obl = ");
-	printf("%1.5e\n", body.obl);
-	printf("psi = ");	
-	printf("%1.5e\n", body.psi);
-	printf("lib = ");	
-	printf("%1.5e\n", body.lib);
-
-	printf("a = ");
-	printf("%1.5e\n", body.a);
-	printf("e = ");	
-	printf("%1.5e\n", body.e);
-	printf("I = ");	
-	printf("%1.5e\n", body.I);
-	printf("M = ");	
-	printf("%1.5e\n", body.M);
-	printf("w = ");	
-	printf("%1.5e\n", body.w);
-	printf("Omega = ");	
-	printf("%1.5e\n", body.Omega);
-
-	printf("kf = ");	
-	printf("%1.5e\n", body.kf);
-	printf("Dt = ");	
-	printf("%1.5e\n", body.Dt);
-	printf("tau = ");	
-	printf("%1.5e\n", body.tau);
-
-	printf("gamma = ");	
-	printf("%1.5e\n", body.gamma);
-	printf("alpha = ");	
-	printf("%1.5e\n", body.alpha);
-	printf("eta = ");	
-	printf("%1.5e\n", body.eta);
-	printf("alpha_0 = ");	
-	printf("%1.5e\n", body.alpha_0);
-	printf("elements = ");	
-	printf("%d\n", body.elements);
-	for(int i = 0; i < body.elements; i++)
-	{
-		printf("alpha_%d = ", i+1);	
-		printf("%1.5e\n", body.alpha_elements[i]);
-		printf("eta_%d = ", i+1);	
-		printf("%1.5e\n", body.eta_elements[i]);
-	}
-
-	printf("point mass = ");	
-	printf("%d\n", body.point_mass);
-	printf("centrifugal = ");	
-	printf("%d\n", body.centrifugal);
-	printf("tidal = ");	
-	printf("%d\n", body.tidal);
-	
-	printf("x = ");
-	print_vector(body.x);
-	printf("x_dot = ");
-	print_vector(body.x_dot);
-	printf("l = ");
-	print_vector(body.l);
-	double b0[9];
-	construct_traceless_symmetric_matrix(b0, body.b0_me);
-	printf("b0 = \n");
-	print_square_matrix(b0);
-	double u[9];
-	construct_traceless_symmetric_matrix(u, body.u_me);
-	printf("u = \n");
-	print_square_matrix(u);
-	if (body.elements > 0)
-	{
-		double	bk_me_2d_array[body.elements][5];
-		double	bk[9];
-		for (int k = 0; k < body.elements; k++)
-		{
-			for (int l = 0; l < 5; l++)
-			{
-				bk_me_2d_array[k][l] = body.bk_me[l + (k*5)];
-			}
-			construct_traceless_symmetric_matrix(bk, bk_me_2d_array[k]);
-			printf("b_%d = \n", k+1);	
-			print_square_matrix(bk);
-		}
-	}
-
-	printf("omega = ");
-	print_vector(body.omega);
-	printf("b = \n");
-	print_square_matrix(body.b);
-
-	return 0;
-}
-
-int
 field_GV(double t, 
 		 const double y[],
 		 double f[],
@@ -682,74 +570,6 @@ field_GV(double t,
 	return GSL_SUCCESS;
 }
 
-int
-hat_map(double x_hat[9], const double x[3])
-{
-	x_hat[0] = 0.0;
-	x_hat[1] = -1.0 * x[2];
-	x_hat[2] = x[1];
-	x_hat[3] = x[2];
-	x_hat[4] = 0.0;
-	x_hat[5] = -1.0 * x[0];
-	x_hat[6] = -1.0 * x[1];
-	x_hat[7] = x[0];
-	x_hat[8] = 0.0;
-
-	return 0;
-}
-
-int
-check_map(double x[3], const double x_hat[9])
-{
-	x[0] = -1.0 * x_hat[5];
-	x[1] = x_hat[2];
-	x[2] = -1.0 * x_hat[1];
-
-	return 0;
-}
-
-int
-construct_traceless_symmetric_matrix(double M[9], 
-	const double M_main_elements[5])
-{
-	double M_11 = M_main_elements[0];
-	double M_12 = M_main_elements[1];
-	double M_13 = M_main_elements[2];
-	double M_22 = M_main_elements[3];
-	double M_23 = M_main_elements[4];
-
-	M[0] = M_11;
-	M[1] = M_12;
-	M[2] = M_13;
-	M[3] = M_12;
-	M[4] = M_22;
-	M[5] = M_23;
-	M[6] = M_13;
-	M[7] = M_23;
-	M[8] = -1.0 * (M_11 + M_22);
-
-	return 0;
-}
-
-int
-get_main_elements_traceless_symmetric_matrix(double M_main_elements[5], 
-	const double M[9])
-{
-	double M_11 = M[0];
-	double M_12 = M[1];
-	double M_13 = M[2];
-	double M_22 = M[4];
-	double M_23 = M[5];
-
-	M_main_elements[0] = M_11;
-	M_main_elements[1] = M_12;
-	M_main_elements[2] = M_13;
-	M_main_elements[3] = M_22;
-	M_main_elements[4] = M_23;
-
-	return 0;
-}
-
 double
 parameter_gamma(const double G,	const double I0, 
 	const double R, const double kf)
@@ -979,14 +799,13 @@ calculate_inertia_tensor(double I[9], const double I0, const double b[9])
 }
 
 int
-calculate_l	(const int id,
-			 cltbdy *bodies,
+calculate_l	(cltbdy *body,
 			 const int number_of_bodies,
 			 const double G)
 {
 	double I[9];
-	calculate_inertia_tensor(I, bodies[id].I0, bodies[id].b);
-	square_matrix_times_vector(bodies[id].l, I, bodies[id].omega);
+	calculate_inertia_tensor(I, (*body).I0, (*body).b);
+	square_matrix_times_vector((*body).l, I, (*body).omega);
 	
 	return 0;
 }

@@ -420,3 +420,61 @@ tensor_product(double M[], const double x[], const double y[])
 	}
 	return 0;
 }
+
+int
+hat_map(double x_hat[9], const double x[3])
+{
+	x_hat[0] = 0.0;
+	x_hat[1] = -1.0 * x[2];
+	x_hat[2] = x[1];
+	x_hat[3] = x[2];
+	x_hat[4] = 0.0;
+	x_hat[5] = -1.0 * x[0];
+	x_hat[6] = -1.0 * x[1];
+	x_hat[7] = x[0];
+	x_hat[8] = 0.0;
+
+	return 0;
+}
+
+int
+construct_traceless_symmetric_matrix(double M[9], 
+	const double M_main_elements[5])
+{
+	double M_11 = M_main_elements[0];
+	double M_12 = M_main_elements[1];
+	double M_13 = M_main_elements[2];
+	double M_22 = M_main_elements[3];
+	double M_23 = M_main_elements[4];
+
+	M[0] = M_11;
+	M[1] = M_12;
+	M[2] = M_13;
+	M[3] = M_12;
+	M[4] = M_22;
+	M[5] = M_23;
+	M[6] = M_13;
+	M[7] = M_23;
+	M[8] = -1.0 * (M_11 + M_22);
+
+	return 0;
+}
+
+int
+get_main_elements_traceless_symmetric_matrix(double M_main_elements[5], 
+	const double M[9])
+{
+	double M_11 = M[0];
+	double M_12 = M[1];
+	double M_13 = M[2];
+	double M_22 = M[4];
+	double M_23 = M[5];
+
+	M_main_elements[0] = M_11;
+	M_main_elements[1] = M_12;
+	M_main_elements[2] = M_13;
+	M_main_elements[3] = M_22;
+	M_main_elements[4] = M_23;
+
+	return 0;
+}

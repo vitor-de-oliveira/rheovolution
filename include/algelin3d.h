@@ -125,4 +125,17 @@ inner_product_square_matrix(const double M[], const double N[]);
 int
 tensor_product(double M[], const double x[], const double y[]);
 
+/* additional functions */
+
+int
+hat_map(double x_hat[9], const double x[3]);
+
+int
+construct_traceless_symmetric_matrix(double M[9], 
+	const double M_main_elements[5]);
+
+int
+get_main_elements_traceless_symmetric_matrix(double M_main_elements[5], 
+	const double M[9]);
+
 #endif

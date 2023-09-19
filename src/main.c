@@ -447,34 +447,41 @@ main(int argc, char *argv[])
 		// printf("eta = %e alpha = %e tau = %e\n", eta, alpha, eta/alpha);
 		// for (int i = 0; i < number_of_bodies; i++)
 		// {
-		// 	double a_test, e_test, I_test, M_test, w_test, Omega_test;
-		// 	double relative_x[3];
-		// 	linear_combination_vector(relative_x,
-		// 		1.0, bodies[i].x,
-		// 		-1.0, bodies[0].x);
-		// 	double relative_x_dot[3];
-		// 	linear_combination_vector(relative_x_dot,
-		// 		1.0, bodies[i].x_dot,
-		// 		-1.0, bodies[0].x_dot);
-		// 	a_test = calculate_semi_major_axis(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	e_test = calculate_eccentricity(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	I_test = calculate_inclination(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	M_test = calculate_mean_anomaly(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	w_test = calculate_argument_of_periapsis(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
-		// 	Omega_test = calculate_longitude_of_the_ascending_node(G, bodies[0].mass, 
-		// 		bodies[i].mass, relative_x, relative_x_dot);
 		// 	printf("From file:\n");
 		// 	printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
 		// 		bodies[i].name, bodies[i].a, bodies[i].e, bodies[i].I, 
 		// 		bodies[i].M, bodies[i].w, bodies[i].Omega);
+		// 	cltbdy body_local;
+		// 	body_local = bodies[i];
+		// 	calculate_orbital_elements(body_local, bodies[0], G);
 		// 	printf("Calculated:\n");
 		// 	printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
-		// 		bodies[i].name, a_test, e_test, I_test, M_test, w_test, Omega_test);
+		// 		body_local.name, body_local.a, body_local.e, body_local.I, 
+		// 		body_local.M, body_local.w, body_local.Omega);
+			// double a_test, e_test, I_test, M_test, w_test, Omega_test;
+			// double relative_x[3];
+			// linear_combination_vector(relative_x,
+			// 	1.0, bodies[i].x,
+			// 	-1.0, bodies[0].x);
+			// double relative_x_dot[3];
+			// linear_combination_vector(relative_x_dot,
+			// 	1.0, bodies[i].x_dot,
+			// 	-1.0, bodies[0].x_dot);
+			// a_test = calculate_semi_major_axis(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// e_test = calculate_eccentricity(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// I_test = calculate_inclination(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// M_test = calculate_mean_anomaly(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// w_test = calculate_argument_of_periapsis(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// Omega_test = calculate_longitude_of_the_ascending_node(G, bodies[0].mass, 
+			// 	bodies[i].mass, relative_x, relative_x_dot);
+			// printf("Calculated:\n");
+			// printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
+			// 	bodies[i].name, a_test, e_test, I_test, M_test, w_test, Omega_test);
 		// }
 		// exit(99);
 	}
@@ -1071,7 +1078,7 @@ main(int argc, char *argv[])
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		calculate_b(i, bodies, number_of_bodies, G);
-		calculate_l(i, bodies, number_of_bodies, G);
+		calculate_l(&bodies[i], number_of_bodies, G);
 		// printf("omega of body %d before\n", i+1);
 		// print_vector(bodies[i].omega);
 		// calculate_omega(i, bodies, number_of_bodies, G);
@@ -1475,43 +1482,33 @@ main(int argc, char *argv[])
 
 					if (i > 0)
 					{
+						calculate_orbital_elements(&bodies[i], bodies[0], G);
+
 						/* time */
 						fprintf (out_orbital[i-1], "%.15e", t);
 
 						/* semimajor axis */
 
-						bodies[i].a = calculate_semi_major_axis(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].a);
 
 						/* orbital eccentricity */
 
-						bodies[i].e = calculate_eccentricity(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].e);
 
 						/* inclination */
 
-						bodies[i].I = calculate_inclination(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].I);
 
 						/* mean anomaly */
 
-						bodies[i].M = calculate_mean_anomaly(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].M);
 
 						/* argument of periapsis */
 
-						bodies[i].w = calculate_argument_of_periapsis(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].w);
 
 						/* longitude of the ascending node */
 
-						bodies[i].Omega = calculate_longitude_of_the_ascending_node(G, bodies[0].mass, bodies[i].mass, 
-							relative_x, relative_x_dot);
 						fprintf (out_orbital[i-1], " %.15e", bodies[i].Omega);
 
 						/* next line */
