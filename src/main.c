@@ -174,11 +174,6 @@ main(int argc, char *argv[])
 	FILE *in3 = fopen(dev_specs, "r");
 	if	(in3 != NULL)
 	{
-		char 	*line = NULL;
-    	size_t 	len = 0;
-	    ssize_t read;
-		char 	first_col[100];
-		char 	second_col[100];
 		while ((read = getline(&line, &len, in3)) != -1)
 		{
 			sscanf(line, "%s %s",
@@ -499,6 +494,146 @@ main(int argc, char *argv[])
 
 	if (argv[2] != NULL)
 	{
+		if (strcmp(argv[2], "orbital") == 0)
+		{
+			/* input files of first body */
+			char filename_read[150];
+			strcpy(filename_read, output_folder);
+			strcat(filename_read, "results_");
+			strcat(filename_read, sim_name);
+			strcat(filename_read, "_");
+			strcat(filename_read, bodies[0].name);
+			strcat(filename_read, ".dat");
+			FILE *in_state_first_body = fopen(filename_read, "r");
+			if (in_state_first_body == NULL)
+			{
+				fprintf(stderr, "Warning: could not read state evolution file.\n");
+				fprintf(stderr, "Exiting the program now.\n");
+				exit(13);
+			}
+			char	*line_first_body = NULL;
+			size_t 	len_first_body = 0;
+			ssize_t	read_first_body;
+
+			/* loop over bodies except first one */
+			for (int i = 1; i < number_of_bodies; i++)
+			{
+				/* input files of remaining bodies */
+				strcpy(filename_read, output_folder);
+				strcat(filename_read, "results_");
+				strcat(filename_read, sim_name);
+				strcat(filename_read, "_");
+				strcat(filename_read, bodies[i].name);
+				strcat(filename_read, ".dat");
+				FILE *in_state = fopen(filename_read, "r");
+				if (in_state == NULL)
+				{
+					fprintf(stderr, "Warning: could not read state evolution file.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(13);
+				}
+
+				/* output files for orbital elements */
+				char filename_orbital[150];
+				FILE *out_orbital;
+
+				/* names and opens output files for each body */
+				strcpy(filename_orbital, output_folder);
+				strcat(filename_orbital, "results_");
+				strcat(filename_orbital, sim_name);
+				strcat(filename_orbital, "_");
+				strcat(filename_orbital, bodies[i].name);
+				strcat(filename_orbital, "_orbital_elements");
+				strcat(filename_orbital, ".dat");
+				out_orbital = fopen(filename_orbital, "w");
+				/* writes output headers */
+				fprintf(out_orbital, "time(yr)");
+				fprintf(out_orbital, " a(AU)");
+				fprintf(out_orbital, " e");
+				fprintf(out_orbital, " nu");
+				fprintf(out_orbital, " I");
+				fprintf(out_orbital, " w");
+				fprintf(out_orbital, " Omega");
+				fprintf(out_orbital, "\n");
+
+				/* reading input and printing output */
+				read = getline(&line, &len, in_state); // discards first line
+				read_first_body = 
+					getline(&line_first_body, &len_first_body, in_state_first_body);
+				while (true)
+				{
+					/* reading data */
+					read = getline(&line, &len, in_state);
+					read_first_body = 
+						getline(&line_first_body, &len_first_body, in_state_first_body);
+					if (read == -1 || read_first_body == -1) break;
+
+					/* tokenizing data with reentrant version of strtok */
+					const char tok_del[6] = " \t\n";		// token delimiter
+					char *token;
+					char *line_track = line;
+					char *token_first_body;
+					char *line_first_body_track = line_first_body;
+					token = strtok_r(line_track, tok_del, &line_track);
+					token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+					if(token == NULL || token_first_body == NULL) break; // in case there is a newline
+					
+					/* filling in data */
+					double t = atof(token_first_body);
+					for (int j = 0; j < 3; j++)
+					{
+						token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+						bodies[0].x[j] = atof(token_first_body);
+						token = strtok_r(line_track, tok_del, &line_track);
+						bodies[i].x[j] = atof(token);
+					}
+					for (int j = 0; j < 3; j++)
+					{
+						token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+						bodies[0].x_dot[j] = atof(token_first_body);
+						token = strtok_r(line_track, tok_del, &line_track);
+						bodies[i].x_dot[j] = atof(token);
+					}
+				
+					/* calculate orbital elements from state vector */
+					calculate_orbital_elements(&bodies[i], bodies[0], G);
+
+					/* time */
+					fprintf (out_orbital, "%.15e", t);
+
+					/* semimajor axis */
+					fprintf (out_orbital, " %.15e", bodies[i].a);
+
+					/* orbital eccentricity */
+					fprintf (out_orbital, " %.15e", bodies[i].e);
+
+					/* inclination */
+					fprintf (out_orbital, " %.15e", bodies[i].I);
+
+					/* mean anomaly */
+					fprintf (out_orbital, " %.15e", bodies[i].M);
+
+					/* argument of periapsis */
+					fprintf (out_orbital, " %.15e", bodies[i].w);
+
+					/* longitude of the ascending node */
+					fprintf (out_orbital, " %.15e", bodies[i].Omega);
+
+					/* next line */
+					fprintf(out_orbital, "\n");		
+				}
+
+				/* close all files */				
+				fclose(in_state_first_body);
+				fclose(in_state);
+				fclose(out_orbital);
+
+			} // end loop over bodies except first one
+
+			return 0;
+
+		} // end if argv[2] == orbital
+
 		if (strcmp(argv[2], "plot") == 0)
 		{
 			char plot_folder[150];
@@ -508,18 +643,18 @@ main(int argc, char *argv[])
 			if (stat(plot_folder, &st_plot) == -1) {
 				mkdir(plot_folder, 0700);
 			}
-			char filename_read[150];
+			char filename_get[150];
 			char filename_plot[150];
 			FILE *gnuplotPipe;
 			for (int i = 0; i < number_of_bodies; i++)
 			{
-				/* reads output files of each body */
-				strcpy(filename_read, output_folder);
-				strcat(filename_read, "results_");
-				strcat(filename_read, sim_name);
-				strcat(filename_read, "_");
-				strcat(filename_read, bodies[i].name);
-				strcat(filename_read, ".dat");
+				/* get output filenames of each body */
+				strcpy(filename_get, output_folder);
+				strcat(filename_get, "results_");
+				strcat(filename_get, sim_name);
+				strcat(filename_get, "_");
+				strcat(filename_get, bodies[i].name);
+				strcat(filename_get, ".dat");
 				/* plot outputs */
 				/* orbit */
 				if (i > 0)
@@ -541,7 +676,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"x\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"y\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 2:3 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 2:3 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 				}
 				/* angular velocity */
@@ -562,7 +697,7 @@ main(int argc, char *argv[])
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"|angular velocity|\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's angular velocity\"\n", bodies[i].name);
-				fprintf(gnuplotPipe, "plot \'%s\' u 1:8 w l lw 3", filename_read);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:8 w l lw 3", filename_get);
 				pclose(gnuplotPipe);
 				/* angular momentum */
 				strcpy(filename_plot, plot_folder);
@@ -582,7 +717,7 @@ main(int argc, char *argv[])
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"|l|\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's angular momentum\"\n", bodies[i].name);
-				fprintf(gnuplotPipe, "plot \'%s\' u 1:9 w l lw 3", filename_read);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:9 w l lw 3", filename_get);
 				pclose(gnuplotPipe);
 				/* deformation */
 				strcpy(filename_plot, plot_folder);
@@ -602,16 +737,16 @@ main(int argc, char *argv[])
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"|b|\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's deformation\"\n", bodies[i].name);
-				fprintf(gnuplotPipe, "plot \'%s\' u 1:11 w l lw 3", filename_read);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:11 w l lw 3", filename_get);
 				pclose(gnuplotPipe);
 				/* reads output files of orbital elements of each body */
-				strcpy(filename_read, output_folder);
-				strcat(filename_read, "results_");
-				strcat(filename_read, sim_name);
-				strcat(filename_read, "_");
-				strcat(filename_read, bodies[i].name);
-				strcat(filename_read, "_orbital_elements");
-				strcat(filename_read, ".dat");
+				strcpy(filename_get, output_folder);
+				strcat(filename_get, "results_");
+				strcat(filename_get, sim_name);
+				strcat(filename_get, "_");
+				strcat(filename_get, bodies[i].name);
+				strcat(filename_get, "_orbital_elements");
+				strcat(filename_get, ".dat");
 				/* plot outputs */
 				if (i > 0)
 				{
@@ -633,7 +768,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"a\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's semi-major axis\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 					/* eccentricity */
 					strcpy(filename_plot, plot_folder);
@@ -653,7 +788,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"e\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's eccentricity\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:3 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:3 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 					/* inclination */
 					strcpy(filename_plot, plot_folder);
@@ -673,7 +808,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"I\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's inclination\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:4 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:4 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 					/* mean anomaly */
 					strcpy(filename_plot, plot_folder);
@@ -693,7 +828,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"M\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's mean anomaly\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 					/* argument of periapsis */
 					strcpy(filename_plot, plot_folder);
@@ -713,7 +848,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"w\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's argument of periapsis\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:6 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:6 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 					/* longitude of the asceding node */
 					strcpy(filename_plot, plot_folder);
@@ -733,17 +868,17 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"Omega\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's longitude of the ascending node\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_read);
+					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 				} // end if i > 0
 			} // end loop over bodies
 			/* reads output file of full system */
-			strcpy(filename_read, output_folder);
-			strcat(filename_read, "results_");
-			strcat(filename_read, sim_name);
-			strcat(filename_read, "_");
-			strcat(filename_read, "full_system");
-			strcat(filename_read, ".dat");
+			strcpy(filename_get, output_folder);
+			strcat(filename_get, "results_");
+			strcat(filename_get, sim_name);
+			strcat(filename_get, "_");
+			strcat(filename_get, "full_system");
+			strcat(filename_get, ".dat");
 			/* plot outputs */
 			/* total angular momentum */
 			strcpy(filename_plot, plot_folder);
@@ -763,7 +898,7 @@ main(int argc, char *argv[])
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"|Total angular momentum|\"\n");
 			fprintf(gnuplotPipe, "set title \"System's total angular momentum\"\n");
-			fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_read);
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_get);
 			pclose(gnuplotPipe);
 	
 			return 0;
@@ -807,30 +942,6 @@ main(int argc, char *argv[])
 	fprintf(out[number_of_bodies], " z_com(AU)");
 	fprintf(out[number_of_bodies], " |L|");
 	fprintf(out[number_of_bodies], "\n");
-
-	/* output files for orbital elements */
-	FILE *out_orbital[number_of_bodies -1];
-	for (int i = 0; i < number_of_bodies -1; i++)
-	{
-		/* names and opens output files for each body */
-		strcpy(filename, output_folder);
-		strcat(filename, "results_");
-		strcat(filename, sim_name);
-		strcat(filename, "_");
-		strcat(filename, bodies[i+1].name);
-		strcat(filename, "_orbital_elements");
-		strcat(filename, ".dat");
-		out_orbital[i] = fopen(filename, "w");
-		/* writes output headers */
-		fprintf(out_orbital[i], "time(yr)");
-		fprintf(out_orbital[i], " a(AU)");
-		fprintf(out_orbital[i], " e");
-		fprintf(out_orbital[i], " nu");
-		fprintf(out_orbital[i], " I");
-		fprintf(out_orbital[i], " w");
-		fprintf(out_orbital[i], " Omega");
-		fprintf(out_orbital[i], "\n");
-	}
 
 	// /* Calibration and plots of k2 */
 	// double rate = 2.54014310646e-13; // 3.8 cm/yr in AU/yr
@@ -1416,43 +1527,6 @@ main(int argc, char *argv[])
 					/* next line */
 					fprintf(out[i], "\n");
 
-					/* orbital elements */
-
-					if (i > 0)
-					{
-						calculate_orbital_elements(&bodies[i], bodies[0], G);
-
-						/* time */
-						fprintf (out_orbital[i-1], "%.15e", t);
-
-						/* semimajor axis */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].a);
-
-						/* orbital eccentricity */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].e);
-
-						/* inclination */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].I);
-
-						/* mean anomaly */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].M);
-
-						/* argument of periapsis */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].w);
-
-						/* longitude of the ascending node */
-
-						fprintf (out_orbital[i-1], " %.15e", bodies[i].Omega);
-
-						/* next line */
-						fprintf(out_orbital[i-1], "\n");
-					}
-
 				} // end loop over bodies
 
 				/* print on general file */
@@ -1536,10 +1610,6 @@ main(int argc, char *argv[])
 	for (int i = 0; i < number_of_bodies + 1; i++)
 	{
 		fclose(out[i]);
-	}
-	for (int i = 0; i < number_of_bodies - 1; i++)
-	{
-		fclose(out_orbital[i]);
 	}
 
 	/* free Voigt elements */

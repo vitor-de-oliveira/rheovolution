@@ -63,7 +63,7 @@ convert_input	(cltbdy	**bodies,
 	{
 		const char tok_del[3] = " \t\n";		// token delimiter
 		char *token = strtok(line, tok_del);
-		if(token == NULL) break;	// in case there is a new lines
+		if(token == NULL) break;	// in case there is a newline
 		if (strcmp(token, "Name") == 0)
 		{
 			for (int i = 0; i < number_of_bodies; i++)

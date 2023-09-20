@@ -552,7 +552,7 @@ calculate_orbital_elements  (cltbdy *body,
     }
     else
     {
-        nu = acos(dot_product(e_vec, x) / (norm_vector(e_vec) *  norm_vector(x)));
+        nu = acos(dot_product(e_vec, x) / (e *  norm_vector(x)));
         if (dot_product(x, v) < 0.0)
         {
             nu = 2.0 * M_PI - nu;
@@ -580,7 +580,7 @@ calculate_orbital_elements  (cltbdy *body,
         }
         else
         {
-            w = acos(dot_product(n, e_vec) / (norm_vector(n) * norm_vector(e_vec)));
+            w = acos(dot_product(n, e_vec) / (norm_vector(n) * e));
         }
         if (e_vec[2] < 0.0)
         {

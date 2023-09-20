@@ -26,6 +26,7 @@ plot:
 
 example: tides
 	./$(TARGET) example/EM_simplest_scenario.dat
+	./$(TARGET) example/EM_simplest_scenario.dat orbital
 	./$(TARGET) example/EM_simplest_scenario.dat plot
 
 clean:
