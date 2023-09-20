@@ -19,37 +19,39 @@ field_GV(double t,
 	cltbdy 	*bodies;
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
-	int	dim_params_per_body_without_elements = 12;
+	int	dim_params_per_body_without_elements = 14;
 	int	dim_state_per_body_without_elements = 19;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
 		
-		bodies[i].centrifugal 			= (bool) par[2 + 0 + dim_params_skip];
-		bodies[i].tidal 					= (bool) par[2 + 1 + dim_params_skip];
+		bodies[i].fixed_orbit 			= (bool) par[2 + 0 + dim_params_skip];
+		bodies[i].point_mass 			= (bool) par[2 + 1 + dim_params_skip];
+		bodies[i].centrifugal 			= (bool) par[2 + 2 + dim_params_skip];
+		bodies[i].tidal 				= (bool) par[2 + 3 + dim_params_skip];
 		for (int j = 0; j < 3; j++)
 		{
-			bodies[i].omega[j] 			= par[2 + 2 + dim_params_skip + j];
+			bodies[i].omega[j] 			= par[2 + 4 + dim_params_skip + j];
 		}
-		bodies[i].mass 					= par[2 + 5 + dim_params_skip];
-		bodies[i].I0 						= par[2 + 6 + dim_params_skip];
-		bodies[i].gamma 					= par[2 + 7 + dim_params_skip];
-		bodies[i].alpha 					= par[2 + 8 + dim_params_skip];
-		bodies[i].eta						= par[2 + 9 + dim_params_skip];
-		bodies[i].alpha_0 				= par[2 + 10 + dim_params_skip];
-		bodies[i].elements				= (int) par[2 + 11 + dim_params_skip];
+		bodies[i].mass 					= par[2 + 7 + dim_params_skip];
+		bodies[i].I0 					= par[2 + 8 + dim_params_skip];
+		bodies[i].gamma 				= par[2 + 9 + dim_params_skip];
+		bodies[i].alpha 				= par[2 + 10 + dim_params_skip];
+		bodies[i].eta					= par[2 + 11 + dim_params_skip];
+		bodies[i].alpha_0 				= par[2 + 12 + dim_params_skip];
+		bodies[i].elements				= (int) par[2 + 13 + dim_params_skip];
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].alpha_elements[j] 	= par[2 + 12 + dim_params_skip + j];
+				bodies[i].alpha_elements[j] 	= par[2 + 14 + dim_params_skip + j];
 			}
 			bodies[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].eta_elements[j] 	= par[2 + 13 + dim_params_skip + j + bodies[i].elements - 1];
+				bodies[i].eta_elements[j] 	= par[2 + 15 + dim_params_skip + j + bodies[i].elements - 1];
 			}
 		}
 
@@ -89,91 +91,6 @@ field_GV(double t,
 		// print_vector(bodies[i].omega);
 		calculate_b(i, bodies, number_of_bodies, G);
 	}
-
-	// printf("here\n");
-
-	/* for testing */	
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", bodies[i].name);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].mass);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].lod);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].obl);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].psi);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].R);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].rg);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].J2);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].C22);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].lib);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].kf);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].Dt);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].tau);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].a);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].e);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].I);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].M);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].w);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].Omega);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", bodies[i].tidal);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", bodies[i].centrifugal);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// {
-	// 	printf("Body %d\n", i+1);
-	// 	printf("x = \n");
-	// 	print_vector(bodies[i].x);
-	// 	printf("x_dot = \n");
-	// 	print_vector(bodies[i].x_dot);
-	// 	printf("l = \n");
-	// 	print_vector(bodies[i].l);
-	// 	double b0_print[9], u_print[9];
-	// 	construct_traceless_symmetric_matrix(b0_print, bodies[i].b0_me);
-	// 	construct_traceless_symmetric_matrix(u_print, bodies[i].u_me);
-	// 	printf("b0 = \n");
-	// 	print_square_matrix(b0_print);
-	// 	printf("u = \n");
-	// 	print_square_matrix(u_print);
-	// }
-	// exit(99);
 
 	/* for testing */
 	// printf("omega inside = \n");
@@ -291,14 +208,20 @@ field_GV(double t,
 				double scaled_sum_bi_bj_x_dot_x = 
 					dot_product(scaled_sum_bi_bj_x, relative_x);
 				double component_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
-				scale_vector (component_x_dot_2nd_term, 
-					(-15.0 * scaled_sum_bi_bj_x_dot_x) / (2. * bodies[i].mass * x_relative_norm_seventh), 
-					relative_x);
+				if (bodies[i].fixed_orbit == false)
+				{
+					scale_vector (component_x_dot_2nd_term, 
+						(-15.0 * scaled_sum_bi_bj_x_dot_x) / (2. * bodies[i].mass * x_relative_norm_seventh), 
+						relative_x);
+				}
 
 				double x_relative_norm_fifth = pow(x_relative_norm, 5.0);
 				double component_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
-				scale_vector (component_x_dot_3rd_term, 
-					3.0 / (bodies[i].mass * x_relative_norm_fifth), scaled_sum_bi_bj_x);
+				if (bodies[i].fixed_orbit == false)
+				{
+					scale_vector (component_x_dot_3rd_term, 
+						3.0 / (bodies[i].mass * x_relative_norm_fifth), scaled_sum_bi_bj_x);
+				}
 
 				double j_component_x_dot[] = { 0.0, 0.0, 0.0 };
 				linear_combination_three_vector(j_component_x_dot,
@@ -487,68 +410,7 @@ field_GV(double t,
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", bodies[i].name);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].mass);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].lod);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].obl);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].psi);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].R);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].rg);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].J2);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].C22);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].lib);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].kf);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].Dt);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].tau);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].a);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].e);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].I);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].M);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].w);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", bodies[i].Omega);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", bodies[i].tidal);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", bodies[i].centrifugal);
-	// printf("\n");
+	// 		print_CelestialBody(bodies[i]);
 	// exit(99);
 	
 	/* free Voigt elements */

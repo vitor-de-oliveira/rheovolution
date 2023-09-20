@@ -150,6 +150,9 @@ typedef struct CelestialBody{
 	double	*alpha_elements;	// elastic modulus for Voigt elements
 	double	*eta_elements;		// viscosity for Voigt elements
 
+	/* orbital options */
+	bool	fixed_orbit;		// sets a fixed keplerian orbit
+
 	/* deformation options */
 	bool	point_mass;			// point mass
 	bool	centrifugal;		// centrifugal force

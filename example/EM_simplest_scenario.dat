@@ -1,7 +1,6 @@
-name                EM_ss
+name                EM_ss_example
 input_folder        example/specs/
 output_folder       example/output/
 system_specs        EMS_simplest_scenario_system.dat
 integrator_specs    EMS_simplest_scenario_integrator.dat
-system_file_type    2
 number_of_bodies    2

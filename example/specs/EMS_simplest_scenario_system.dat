@@ -17,6 +17,7 @@ I(deg)					0.0000		-5.145
 M(deg)					0.0000  	0.0000		
 w(deg)					0.0000		0.0000		
 OMEGA(deg)				0.0000		0.0000
+fixed_orbit no          no          no
 point_mass  no          yes         no
 centrifugal yes         no          no
 tidal       yes         no          no                           

@@ -427,6 +427,9 @@ print_CelestialBody(cltbdy body)
 		printf("%1.5e\n", body.eta_elements[i]);
 	}
 
+    printf("fixed orbit = ");	
+	printf("%d\n", body.fixed_orbit);
+
 	printf("point mass = ");	
 	printf("%d\n", body.point_mass);
 	printf("centrifugal = ");	

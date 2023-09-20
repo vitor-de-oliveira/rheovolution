@@ -47,8 +47,9 @@ convert_input	(cltbdy	**bodies,
 	{
 		input_par_received[i] = false;
 	}
-	/* verification variables for names and deformable settings */
+	/* verification variables for names, orbit and deformable settings */
 	bool	input_name_received = false;
+	bool	input_fixed_orbit_received = false;
 	int 	number_deformable_inputs = 3; 
 	bool	input_deformable_received[number_deformable_inputs];
 	for (int i = 0; i < number_deformable_inputs; i++)
@@ -240,6 +241,29 @@ convert_input	(cltbdy	**bodies,
 			}
 			input_par_received[17] = true;
 		}
+		else if (strcmp(token, "fixed_orbit") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].fixed_orbit = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].fixed_orbit = false;
+				}
+				else
+				{
+					printf("%s\n", token);
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for centrifugal variable\n");
+					exit(14);
+				}
+			}
+			input_fixed_orbit_received = true;
+		}
 		else if (strcmp(token, "centrifugal") == 0)
 		{
 			for (int i = 0; i < number_of_bodies; i++)
@@ -329,12 +353,21 @@ convert_input	(cltbdy	**bodies,
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(14);
 	}
+	/* orbital variable input verification */
+	if (input_fixed_orbit_received == false)
+	{
+		fprintf(stderr, "Error: missing fixed orbit status ");
+		fprintf(stderr, "from %s.\n", file);
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(14);
+	}
 	/* deformable variables input verification */
 	for (int i = 0; i < number_deformable_inputs; i++)
 	{
 		if(input_deformable_received[i] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "for the deformation variables ");
 			fprintf(stderr, "from %s.\n", file);
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(14);
