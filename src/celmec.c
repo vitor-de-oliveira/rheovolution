@@ -496,11 +496,10 @@ calculate_orbital_elements  (cltbdy *body,
     copy_vector(x, relative_x);
     copy_vector(v, relative_x_dot);
 
+    double a, e, I, M, w, Omega; // orbital elements
+
     // standard gravitational parameter
     double mu = G * (m1 + m2);
-
-    // semi-major axis
-    double a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
 
     // orbital momentum vector
     double h[3];
@@ -522,11 +521,14 @@ calculate_orbital_elements  (cltbdy *body,
     double n[3];
     cross_product(n, z_vec, h);
 
+    // semi-major axis
+    a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
+
     // eccentricity
-    double e = norm_vector(e_vec);
+    e = norm_vector(e_vec);
 
     // inclination
-    double I = acos(h[2] / norm_vector(h));
+    I = acos(h[2] / norm_vector(h));
 
     // true anomaly
     double nu;
@@ -563,11 +565,9 @@ calculate_orbital_elements  (cltbdy *body,
     double E = 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
 
     // mean anomaly
-    double M = E - e * sin(E);
+    M = E - e * sin(E);
 
      // argument of periapsis
-    double w;
-
     if (e < 1e-15)
     {
         w = 0.0;
@@ -589,8 +589,6 @@ calculate_orbital_elements  (cltbdy *body,
     }
 
     // longitude of the ascending node
-    double Omega;
-
     if (I < 1e-15)
     {
         Omega = 0.0;
@@ -604,6 +602,84 @@ calculate_orbital_elements  (cltbdy *body,
         }
     }
 
+    /* Murray */
+
+    // // semi-major axis
+    // a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
+
+    // // eccentricity
+    // e = sqrt(1.0 - norm_squared_vector(h) / (mu *a));
+    
+    // // inclination
+    // I = acos(h[2]/norm_vector(h));
+
+    // // longitude of the ascending node
+    // double ac_Omega;
+    // if (h[2] > 0.0)
+    // {
+    //     Omega = asin(h[0]/(norm_vector(h)*sin(I)));
+    //     ac_Omega = acos(-h[1]/(norm_vector(h)*sin(I)));    
+    // }
+    // else
+    // {
+    //     Omega = asin(-h[0]/(norm_vector(h)*sin(I)));
+    //     ac_Omega = acos(h[1]/(norm_vector(h)*sin(I)));
+    // }
+    // if (ac_Omega > M_PI / 2.0)
+    // {
+    //     if (Omega > 0.0)
+    //     {
+    //         Omega += 2.0 * (M_PI/2.0 - Omega);
+    //     }
+    //     else
+    //     {
+    //         Omega -= 2.0 * (-M_PI/2.0 - Omega);
+    //     }
+    // }
+
+    // // true anomaly
+    // double R_dot = sqrt(norm_squared_vector(v)-norm_squared_vector(h)/norm_squared_vector(x));
+    // double x_dot_v = dot_product(x, v);
+    // if (x_dot_v) R_dot *= -1.0;
+    // double f, ac_f;
+    // f = asin((a*(1.0-e*e)*R_dot)/(norm_vector(h)*e));
+    // ac_f = acos((1.0/e)*((a*(1.0-e*e))/norm_vector(x)-1.0));
+    // if (ac_f > M_PI / 2.0)
+    // {
+    //     if (f > 0.0)
+    //     {
+    //         f += 2.0 * (M_PI/2.0 - f);
+    //     }
+    //     else
+    //     {
+    //         f -= 2.0 * (-M_PI/2.0 - f);
+    //     }
+    // }
+
+    // // argument of periapsis
+    // double w_plus_f, ac_w_plus_f;
+    // w_plus_f = asin(x[2]/(norm_vector(x)*sin(I)));
+    // ac_w_plus_f = acos((1.0/cos(Omega))*((x[0]/norm_vector(x))+sin(Omega)*(x[2]/(norm_vector(x)*sin(I)))*cos(I)));
+    // if (ac_w_plus_f > M_PI / 2.0)
+    // {
+    //     if (w_plus_f > 0.0)
+    //     {
+    //         w_plus_f += 2.0 * (M_PI/2.0 - w_plus_f);
+    //     }
+    //     else
+    //     {
+    //         w_plus_f -= 2.0 * (-M_PI/2.0 - w_plus_f);
+    //     }
+    // }
+    // w = w_plus_f - f;
+
+    // // eccentric anomaly
+    // double E = 2.0 * atan2( tan(0.5*f), sqrt((1.0 + e)/(1.0 - e)) );
+
+    // // mean anomaly
+    // M = E - e * sin(E);
+
+    // writting orbital elements to body
     (*body).a = a;
     (*body).e = e;
     (*body).I = I;
