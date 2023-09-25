@@ -1031,22 +1031,22 @@ main(int argc, char *argv[])
    	while ((read = getline(&line, &len, in2)) != -1)
 	{
 		sscanf(line, "%s %lf", var_name, &var_value);
-		if (strcmp(var_name, "t_init") == 0)
+		if (strcmp(var_name, "t_init(yr)") == 0)
 		{
 			t_init = var_value;
 			input_integrator_received[0] = true;
 		}
-		else if (strcmp(var_name, "t_trans") == 0)
+		else if (strcmp(var_name, "t_trans(yr)") == 0)
 		{
 			t_trans = var_value;
 			input_integrator_received[1] = true;
 		}
-		else if (strcmp(var_name, "t_final") == 0)
+		else if (strcmp(var_name, "t_final(yr)") == 0)
 		{
 			t_final = var_value;
 			input_integrator_received[2] = true;
 		}
-		else if (strcmp(var_name, "t_step") == 0)
+		else if (strcmp(var_name, "t_step(yr)") == 0)
 		{
 			t_step = var_value;
 			input_integrator_received[3] = true;
