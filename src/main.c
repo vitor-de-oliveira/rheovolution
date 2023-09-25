@@ -624,11 +624,12 @@ main(int argc, char *argv[])
 				}
 
 				/* close all files */				
-				fclose(in_state_first_body);
 				fclose(in_state);
 				fclose(out_orbital);
 
 			} // end loop over bodies except first one
+
+			fclose(in_state_first_body);
 
 			return 0;
 
