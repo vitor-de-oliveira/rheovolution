@@ -496,29 +496,34 @@ main(int argc, char *argv[])
 	{
 		if (strcmp(argv[2], "orbital") == 0)
 		{
-			/* input files of first body */
-			char filename_read[150];
-			strcpy(filename_read, output_folder);
-			strcat(filename_read, "results_");
-			strcat(filename_read, sim_name);
-			strcat(filename_read, "_");
-			strcat(filename_read, bodies[0].name);
-			strcat(filename_read, ".dat");
-			FILE *in_state_first_body = fopen(filename_read, "r");
-			if (in_state_first_body == NULL)
-			{
-				fprintf(stderr, "Warning: could not read state evolution file.\n");
-				fprintf(stderr, "Exiting the program now.\n");
-				exit(13);
-			}
-			char	*line_first_body = NULL;
-			size_t 	len_first_body = 0;
-			ssize_t	read_first_body;
+			/* input filename of first body */
+			char filename_read_first_body[150];
+			strcpy(filename_read_first_body, output_folder);
+			strcat(filename_read_first_body, "results_");
+			strcat(filename_read_first_body, sim_name);
+			strcat(filename_read_first_body, "_");
+			strcat(filename_read_first_body, bodies[0].name);
+			strcat(filename_read_first_body, ".dat");
 
 			/* loop over bodies except first one */
 			for (int i = 1; i < number_of_bodies; i++)
 			{
+				/* open input file for first body */
+				FILE *in_state_first_body = fopen(filename_read_first_body, "r");
+				if (in_state_first_body == NULL)
+				{
+					fprintf(stderr, "Warning: could not read state evolution file.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(13);
+				}
+
+				/* auxiliary variables */
+				char	*line_first_body = NULL;
+				size_t 	len_first_body = 0;
+				ssize_t	read_first_body;
+
 				/* input files of remaining bodies */
+				char filename_read[150];
 				strcpy(filename_read, output_folder);
 				strcat(filename_read, "results_");
 				strcat(filename_read, sim_name);
@@ -550,8 +555,8 @@ main(int argc, char *argv[])
 				fprintf(out_orbital, "time(yr)");
 				fprintf(out_orbital, " a(AU)");
 				fprintf(out_orbital, " e");
-				fprintf(out_orbital, " nu");
 				fprintf(out_orbital, " I");
+				fprintf(out_orbital, " M");
 				fprintf(out_orbital, " w");
 				fprintf(out_orbital, " Omega");
 				fprintf(out_orbital, "\n");
@@ -626,10 +631,9 @@ main(int argc, char *argv[])
 				/* close all files */				
 				fclose(in_state);
 				fclose(out_orbital);
+				fclose(in_state_first_body);
 
 			} // end loop over bodies except first one
-
-			fclose(in_state_first_body);
 
 			return 0;
 
@@ -646,6 +650,14 @@ main(int argc, char *argv[])
 			}
 			char filename_get[150];
 			char filename_plot[150];
+			char filename_get_first_body[150];
+			/* get output filenames of first body */
+			strcpy(filename_get_first_body, output_folder);
+			strcat(filename_get_first_body, "results_");
+			strcat(filename_get_first_body, sim_name);
+			strcat(filename_get_first_body, "_");
+			strcat(filename_get_first_body, bodies[0].name);
+			strcat(filename_get_first_body, ".dat");
 			FILE *gnuplotPipe;
 			for (int i = 0; i < number_of_bodies; i++)
 			{
@@ -677,7 +689,8 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set xlabel \"x\"\n");
 					fprintf(gnuplotPipe, "set ylabel \"y\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "plot \'%s\' u 2:3 w l lw 3", filename_get);
+					fprintf(gnuplotPipe, "splot \'%s\' u 2:3:4 w l lw 3, \'%s\' u 2:3:4 w p pt 7 ps 3", 
+						filename_get, filename_get_first_body);
 					pclose(gnuplotPipe);
 				}
 				/* angular velocity */
