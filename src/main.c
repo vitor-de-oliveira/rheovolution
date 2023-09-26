@@ -555,11 +555,14 @@ main(int argc, char *argv[])
 				fprintf(out_orbital, "time(yr)");
 				fprintf(out_orbital, " a(AU)");
 				fprintf(out_orbital, " e");
-				fprintf(out_orbital, " I");
-				fprintf(out_orbital, " M");
-				fprintf(out_orbital, " w");
-				fprintf(out_orbital, " Omega");
+				fprintf(out_orbital, " I(°)");
+				fprintf(out_orbital, " M(°)");
+				fprintf(out_orbital, " w(°)");
+				fprintf(out_orbital, " Omega(°)");
 				fprintf(out_orbital, "\n");
+
+				// convertion units
+				double rad_to_deg = 180.0 / M_PI;
 
 				/* reading input and printing output */
 				read = getline(&line, &len, in_state); // discards first line
@@ -613,16 +616,16 @@ main(int argc, char *argv[])
 					fprintf (out_orbital, " %.15e", bodies[i].e);
 
 					/* inclination */
-					fprintf (out_orbital, " %.15e", bodies[i].I);
+					fprintf (out_orbital, " %.15e", bodies[i].I * rad_to_deg);
 
 					/* mean anomaly */
-					fprintf (out_orbital, " %.15e", bodies[i].M);
+					fprintf (out_orbital, " %.15e", bodies[i].M * rad_to_deg);
 
 					/* argument of periapsis */
-					fprintf (out_orbital, " %.15e", bodies[i].w);
+					fprintf (out_orbital, " %.15e", bodies[i].w * rad_to_deg);
 
 					/* longitude of the ascending node */
-					fprintf (out_orbital, " %.15e", bodies[i].Omega);
+					fprintf (out_orbital, " %.15e", bodies[i].Omega * rad_to_deg);
 
 					/* next line */
 					fprintf(out_orbital, "\n");		
@@ -686,10 +689,11 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
-					fprintf(gnuplotPipe, "set xlabel \"x\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"y\"\n");
+					fprintf(gnuplotPipe, "set xlabel \"x(AU)\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"y(AU)\"\n");
+					fprintf(gnuplotPipe, "set zlabel \"z(AU)\" rotate parallel\n");
 					fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
-					fprintf(gnuplotPipe, "splot \'%s\' u 2:3:4 w l lw 3, \'%s\' u 2:3:4 w p pt 7 ps 3", 
+					fprintf(gnuplotPipe, "splot \'%s\' u 2:3:4 w d, \'%s\' u 2:3:4 w p pt 7 ps 3", 
 						filename_get, filename_get_first_body);
 					pclose(gnuplotPipe);
 				}
@@ -709,7 +713,7 @@ main(int argc, char *argv[])
 				fprintf(gnuplotPipe, "set border lw 2 \n");
 				fprintf(gnuplotPipe, "unset key\n");
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-				fprintf(gnuplotPipe, "set ylabel \"|angular velocity|\"\n");
+				fprintf(gnuplotPipe, "set ylabel \"|angular velocity|(rad/yr)\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's angular velocity\"\n", bodies[i].name);
 				fprintf(gnuplotPipe, "plot \'%s\' u 1:8 w l lw 3", filename_get);
 				pclose(gnuplotPipe);
@@ -780,7 +784,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"a\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"a(AU)\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's semi-major axis\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
@@ -820,7 +824,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"I\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"I(°)\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's inclination\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:4 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
@@ -840,7 +844,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"M\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"M(°)\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's mean anomaly\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
@@ -860,7 +864,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"w\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"w(°)\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's argument of periapsis\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:6 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
@@ -880,7 +884,7 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "set border lw 2 \n");
 					fprintf(gnuplotPipe, "unset key\n");
 					fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-					fprintf(gnuplotPipe, "set ylabel \"Omega\"\n");
+					fprintf(gnuplotPipe, "set ylabel \"{/Symbol W}(°)\"\n");
 					fprintf(gnuplotPipe, "set title \"%s's longitude of the ascending node\"\n", bodies[i].name);
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_get);
 					pclose(gnuplotPipe);

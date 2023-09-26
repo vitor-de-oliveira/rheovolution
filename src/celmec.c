@@ -498,23 +498,24 @@ calculate_orbital_elements  (cltbdy *body,
     copy_vector(x, relative_x);
     copy_vector(v, relative_x_dot);
 
-    // semi-major axis
-    a = calculate_semi_major_axis(G, m1, m2, x, v);
+    /* separate functions */
+    // // semi-major axis
+    // a = calculate_semi_major_axis(G, m1, m2, x, v);
 
-    // eccentricity
-    e = calculate_eccentricity(G, m1, m2, x, v);
+    // // eccentricity
+    // e = calculate_eccentricity(G, m1, m2, x, v);
 
-    // inclination
-    I = calculate_inclination(G, m1, m2, x, v);
+    // // inclination
+    // I = calculate_inclination(G, m1, m2, x, v);
 
-    // mean anomaly
-    M = calculate_mean_anomaly(G, m1, m2, x, v);
+    // // mean anomaly
+    // M = calculate_mean_anomaly(G, m1, m2, x, v);
 
-    // argument of periapsis
-    w = calculate_argument_of_periapsis(G, m1, m2, x, v);
+    // // argument of periapsis
+    // w = calculate_argument_of_periapsis(G, m1, m2, x, v);
 
-    // longitude of the ascending node
-    Omega = calculate_longitude_of_the_ascending_node(G, m1, m2, x, v);
+    // // longitude of the ascending node
+    // Omega = calculate_longitude_of_the_ascending_node(G, m1, m2, x, v);
 
     /* inline */
     // // standard gravitational parameter
@@ -698,7 +699,138 @@ calculate_orbital_elements  (cltbdy *body,
     // // mean anomaly
     // M = E - e * sin(E);
 
-    // writting orbital elements to body
+    /* Mercury */
+    // standard gravitational parameter
+    double mu = G * (m1 + m2);
+
+    // orbital momentum vector
+    double h_vec[3];
+    cross_product(h_vec, x, v);
+
+    // auxiliary variables
+    double r = norm_vector(x);
+    double h = norm_vector(h_vec);
+    double v2 = norm_squared_vector(v);
+    double h2 = norm_squared_vector(h_vec);
+    double s = h2 / mu;
+
+    // semi-major axis
+    a = (mu *r) / (2.0 * mu - r * v2);
+
+    // inclination and node
+    double ci = h_vec[2] / h;
+    if (fabs(ci) < 1.0)
+    {
+        I = acos(ci);
+        Omega = atan2(h_vec[0],-h_vec[1]);
+        if (Omega < 0.0) Omega += 2.0 * M_PI;
+    }
+    else
+    {
+        if (ci < 0.0)
+        {
+            I = M_PI;
+        }
+        else
+        {
+            I = 0.0;
+        }
+        Omega = 0.0;
+    }
+
+    // eccentricity and perihelion distance
+    double q; // perihelion distance
+    double temp = 1.0 + s * (v2 / mu  -  2.0 / r);
+    if (temp > 0.0)
+    {
+        e = sqrt(temp);
+    }
+    else
+    {
+        e = 0.0;
+    }
+    q = s / (1.0 + e);
+
+    // true longitude
+    double to;
+    double temp2;
+    double true_long;
+    if (fabs(h_vec[1]) > 1e-15)
+    {
+        to = -h_vec[0]/h_vec[1];
+        temp = (1.0 - ci) * to;
+        temp2 = temp * temp;
+        true_long = atan2((x[1]*(1.0+temp2*ci)-x[0]*temp),(x[0]*(temp2+ci)-x[1]*temp));
+    }
+    else
+    {
+        true_long = atan2(x[1] * ci, x[0]);
+    }
+    if (ci < 0.0) true_long += M_PI;
+
+    double p; // longitude of perihelion
+    double ce;
+    double bige;
+    double rv;
+    double cf;
+    double f;
+    if (e < 3e-8)
+    {
+        p = 0.0;
+        M = true_long;
+    }
+    else
+    {
+        ce = (v2 * r - mu) / (e * mu);
+        if (e < 1.0) // mean anomaly for ellipse
+        {
+            if (fabs(ce) > 1.0)
+            {
+                if (ce < 0.0)
+                {
+                    ce = -1.0;
+                }
+                else
+                {
+                    ce = 1.0;
+                }
+            }
+            bige = acos(ce);
+            if (rv < 0.0) bige = 2.0 * M_PI - bige;
+            M = bige - e * sin(bige);
+        }
+        else // mean anomaly for hyperbola
+        {
+            if (ce < 1.0) ce = 1.0;
+            bige = log ( ce + sqrt(ce * ce - 1.0) );
+            if (rv < 0.0) bige *= -1.0;
+            M = e * sinh(bige) - bige;
+        }
+        // longitude of perihelion
+        cf = (s - r) / (e * r);
+        if (fabs(cf) > 1.0)
+        {
+            if (cf < 0.0)
+            {
+                cf = -1.0;
+            }
+            else
+            {
+                cf = 1.0;
+            }
+        }
+        f = acos(cf);
+        if (rv < 0.0) f = 2.0 * M_PI - f;
+        p = true_long - f;
+        p = fmod(p + 4.0 * M_PI, 2.0 * M_PI);
+    }
+
+    w = p - Omega;
+
+    if (M < 0.0) M += 2.0 * M_PI;
+    if (M > 2.0 * M_PI) M = fmod(M, 2.0 * M_PI);
+
+    // writting orbital elements to body (in radians)
     (*body).a = a;
     (*body).e = e;
     (*body).I = I;
