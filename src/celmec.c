@@ -480,7 +480,9 @@ calculate_orbital_elements  (cltbdy *body,
                              const cltbdy body_ref,
                              const double G)
 {
-	double relative_x[3];
+    double a, e, I, M, w, Omega; // orbital elements
+
+    double relative_x[3];
 	linear_combination_vector(relative_x,
 		1.0, (*body).x,
 		-1.0, body_ref.x);
@@ -496,111 +498,128 @@ calculate_orbital_elements  (cltbdy *body,
     copy_vector(x, relative_x);
     copy_vector(v, relative_x_dot);
 
-    double a, e, I, M, w, Omega; // orbital elements
-
-    // standard gravitational parameter
-    double mu = G * (m1 + m2);
-
-    // orbital momentum vector
-    double h[3];
-    cross_product(h, x, v);
-
-    // eccentricity vector
-    double v_cross_h[3];
-    cross_product(v_cross_h, v, h);
-    double term_1[] = {0.0, 0.0, 0.0};
-    scale_vector(term_1, 1.0 / mu, v_cross_h);
-    double term_2[] = {0.0, 0.0, 0.0};
-    scale_vector(term_2, -1.0 / norm_vector(x), x);
-    double e_vec[] = {0.0, 0.0, 0.0};
-    linear_combination_vector(e_vec, 
-        1.0, term_1, 1.0, term_2);
-
-    // node vector (vector pointing towards the ascending node)
-    double z_vec[] = {0.0, 0.0, 1.0};
-    double n[3];
-    cross_product(n, z_vec, h);
-
     // semi-major axis
-    a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
+    a = calculate_semi_major_axis(G, m1, m2, x, v);
 
     // eccentricity
-    e = norm_vector(e_vec);
+    e = calculate_eccentricity(G, m1, m2, x, v);
 
     // inclination
-    I = acos(h[2] / norm_vector(h));
-
-    // true anomaly
-    double nu;
-
-    if (e < 1e-15)
-    {
-        if (I < 1e-15)
-        {
-            nu = acos(x[0] / norm_vector(x));
-            if (v[0] > 0.0)
-            {
-                nu = 2.0 * M_PI - nu;
-            }
-        }
-        else
-        {
-            nu = acos(dot_product(n, x) / (norm_vector(n) * norm_vector(x)));
-            if (dot_product(n, v) > 0.0)
-            {
-                nu = 2.0 * M_PI - nu;
-            }
-        }
-    }
-    else
-    {
-        nu = acos(dot_product(e_vec, x) / (e *  norm_vector(x)));
-        if (dot_product(x, v) < 0.0)
-        {
-            nu = 2.0 * M_PI - nu;
-        } 
-    }
-
-    // eccentric anomaly
-    double E = 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
+    I = calculate_inclination(G, m1, m2, x, v);
 
     // mean anomaly
-    M = E - e * sin(E);
+    M = calculate_mean_anomaly(G, m1, m2, x, v);
 
-     // argument of periapsis
-    if (e < 1e-15)
-    {
-        w = 0.0;
-    }
-    else
-    {
-        if (I < 1e-15)
-        {
-            w = acos(e_vec[0] / e);
-        }
-        else
-        {
-            w = acos(dot_product(n, e_vec) / (norm_vector(n) * e));
-        }
-        if (e_vec[2] < 0.0)
-        {
-            w = 2.0 * M_PI - w;
-        }
-    }
+    // argument of periapsis
+    w = calculate_argument_of_periapsis(G, m1, m2, x, v);
 
     // longitude of the ascending node
-    if (I < 1e-15)
-    {
-        Omega = 0.0;
-    }
-    else
-    {
-        Omega = acos(n[0] / norm_vector(n));
-        if (n[1] < 0.0)
-        {
-            Omega = 2.0 * M_PI - Omega;
-        }
-    }
+    Omega = calculate_longitude_of_the_ascending_node(G, m1, m2, x, v);
+
+    /* inline */
+    // // standard gravitational parameter
+    // double mu = G * (m1 + m2);
+
+    // // orbital momentum vector
+    // double h[3];
+    // cross_product(h, x, v);
+
+    // // eccentricity vector
+    // double v_cross_h[3];
+    // cross_product(v_cross_h, v, h);
+    // double term_1[] = {0.0, 0.0, 0.0};
+    // scale_vector(term_1, 1.0 / mu, v_cross_h);
+    // double term_2[] = {0.0, 0.0, 0.0};
+    // scale_vector(term_2, -1.0 / norm_vector(x), x);
+    // double e_vec[] = {0.0, 0.0, 0.0};
+    // linear_combination_vector(e_vec, 
+    //     1.0, term_1, 1.0, term_2);
+
+    // // node vector (vector pointing towards the ascending node)
+    // double z_vec[] = {0.0, 0.0, 1.0};
+    // double n[3];
+    // cross_product(n, z_vec, h);
+
+    // // semi-major axis
+    // a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
+
+    // // eccentricity
+    // e = norm_vector(e_vec);
+
+    // // inclination
+    // I = acos(h[2] / norm_vector(h));
+
+    // // true anomaly
+    // double nu;
+
+    // if (e < 1e-15)
+    // {
+    //     if (I < 1e-15)
+    //     {
+    //         nu = acos(x[0] / norm_vector(x));
+    //         if (v[0] > 0.0)
+    //         {
+    //             nu = 2.0 * M_PI - nu;
+    //         }
+    //     }
+    //     else
+    //     {
+    //         nu = acos(dot_product(n, x) / (norm_vector(n) * norm_vector(x)));
+    //         if (dot_product(n, v) > 0.0)
+    //         {
+    //             nu = 2.0 * M_PI - nu;
+    //         }
+    //     }
+    // }
+    // else
+    // {
+    //     nu = acos(dot_product(e_vec, x) / (e *  norm_vector(x)));
+    //     if (dot_product(x, v) < 0.0)
+    //     {
+    //         nu = 2.0 * M_PI - nu;
+    //     } 
+    // }
+
+    // // eccentric anomaly
+    // double E = 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
+
+    // // mean anomaly
+    // M = E - e * sin(E);
+
+    //  // argument of periapsis
+    // if (e < 1e-15)
+    // {
+    //     w = 0.0;
+    // }
+    // else
+    // {
+    //     if (I < 1e-15)
+    //     {
+    //         w = acos(e_vec[0] / e);
+    //     }
+    //     else
+    //     {
+    //         w = acos(dot_product(n, e_vec) / (norm_vector(n) * e));
+    //     }
+    //     if (e_vec[2] < 0.0)
+    //     {
+    //         w = 2.0 * M_PI - w;
+    //     }
+    // }
+
+    // // longitude of the ascending node
+    // if (I < 1e-15)
+    // {
+    //     Omega = 0.0;
+    // }
+    // else
+    // {
+    //     Omega = acos(n[0] / norm_vector(n));
+    //     if (n[1] < 0.0)
+    //     {
+    //         Omega = 2.0 * M_PI - Omega;
+    //     }
+    // }
 
     /* Murray */
 
