@@ -467,6 +467,9 @@ print_CelestialBody(cltbdy body)
 		}
 	}
 
+	printf("Y = \n");
+	print_square_matrix(body.Y);
+
 	printf("omega = ");
 	print_vector(body.omega);
 	printf("b = \n");

@@ -494,7 +494,7 @@ convert_input	(cltbdy	**bodies,
 			square_matrix_times_vector((*bodies)[i].x_dot, full_rotation_orbit, velocity_in_plane);
 		}
 
-		/* 2nd set of variables - omega and b0_diag */
+		/* 2nd set of variables - omega, body frame transformation and b0_diag */
 		// b0_diag not implemented yet. 
 		// at the moment, it is being dealt with by the main
 		double R_3_psi[9];
@@ -514,6 +514,8 @@ convert_input	(cltbdy	**bodies,
 		square_matrix_times_square_matrix(full_rotation_body,
 			full_rotation_body, R_3_phi);
 		
+		copy_square_matrix((*bodies)[i].Y, full_rotation_body);
+
 		double omega_on_body[] = {0.0, 0.0, 0.0};
 		double omega_direction_on_body[] = {0.0, 0.0, 1.0}; // strong assumption
 		scale_vector(omega_on_body, 2.0 * M_PI / Td, omega_direction_on_body);

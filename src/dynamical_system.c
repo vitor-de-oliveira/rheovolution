@@ -20,7 +20,7 @@ field_GV(double t,
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
 	int	dim_params_per_body_without_elements = 14;
-	int	dim_state_per_body_without_elements = 19;
+	int	dim_state_per_body_without_elements = 28;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
@@ -75,6 +75,10 @@ field_GV(double t,
 			{
 				bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
 			}
+		}
+		for (int j = 0; j < 9; j++)
+		{
+			bodies[i].Y[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
 		}
 
 		elements_counter += bodies[i].elements;
@@ -163,6 +167,7 @@ field_GV(double t,
 			}
 		}
 	}
+	double component_Y[number_of_bodies][9];
 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
@@ -338,7 +343,11 @@ field_GV(double t,
 			1.0, omega_hat_comm_u, -1.0 / tau, lambda);
 		get_main_elements_traceless_symmetric_matrix(component_u_me[i], component_u);
 
-	}
+		// Y component
+
+		square_matrix_times_square_matrix(component_Y[i], omega_hat, bodies[i].Y);
+
+	} // end loop over bodies
 
 	/* for testing */
 	// printf("\nomega_hat_comm_u = \n");
@@ -381,6 +390,10 @@ field_GV(double t,
 			{
 				f[19 + dim_state_skip + 5*k + l] = component_bk_me[i][k][l];
 			}
+		}
+		for (int j = 0; j < 9; j++)
+		{
+			f[19 + 5 * bodies[i].elements + dim_state_skip + j]	= component_Y[i][j];
 		}
 		elements_counter += bodies[i].elements;
 
