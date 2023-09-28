@@ -715,6 +715,7 @@ calculate_orbital_elements  (cltbdy *body,
     double h = norm_vector(h_vec);
     double v2 = norm_squared_vector(v);
     double h2 = norm_squared_vector(h_vec);
+    double rv = dot_product(x, v);
     double s = h2 / mu;
 
     // semi-major axis
@@ -741,8 +742,7 @@ calculate_orbital_elements  (cltbdy *body,
         Omega = 0.0;
     }
 
-    // eccentricity and perihelion distance
-    double q; // perihelion distance
+    // eccentricity
     double temp = 1.0 + s * (v2 / mu  -  2.0 / r);
     if (temp > 0.0)
     {
@@ -752,7 +752,6 @@ calculate_orbital_elements  (cltbdy *body,
     {
         e = 0.0;
     }
-    q = s / (1.0 + e);
 
     // true longitude
     double to;
@@ -774,7 +773,6 @@ calculate_orbital_elements  (cltbdy *body,
     double p; // longitude of perihelion
     double ce;
     double bige;
-    double rv;
     double cf;
     double f;
     if (e < 3e-8)

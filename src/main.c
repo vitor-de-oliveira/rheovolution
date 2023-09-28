@@ -666,8 +666,7 @@ main(int argc, char *argv[])
 			return 0;
 
 		} // end if argv[2] == orbital
-
-		if (strcmp(argv[2], "plot") == 0)
+		else if (strcmp(argv[2], "plot") == 0)
 		{
 			char plot_folder[150];
 			strcpy(plot_folder, output_folder);
@@ -947,6 +946,12 @@ main(int argc, char *argv[])
 			return 0;
 
 		} // end if argv[2] == plot
+		else
+		{
+			fprintf(stderr, "Warning: could not recognize argument of main.\n");
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(13);
+		}
 	} // end if argv[2] != NULL
 
 	/* create output files */
