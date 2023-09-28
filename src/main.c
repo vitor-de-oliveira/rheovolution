@@ -1176,10 +1176,42 @@ main(int argc, char *argv[])
 		// calculate_omega(i, bodies, number_of_bodies, G);
 		// printf("omega of body %d after\n", i+1);
 		// print_vector(bodies[i].omega);
+		// printf("b of body %d\n", i+1);
 		// print_square_matrix(bodies[i].b);
+		// printf("l of body %d\n", i+1);
 		// print_vector(bodies[i].l);
+		// double Y[9], b[9], omega[3];
+		// copy_square_matrix(Y, bodies[0].Y);
+		// copy_square_matrix(b, bodies[0].b);
+		// copy_vector(omega, bodies[0].omega);
+		// double Y_transpose[9];
+		// transpose_square_matrix(Y_transpose, Y);
+		// double B[9];
+		// square_matrix_times_square_matrix(B, 
+		// 	Y_transpose, b);
+		// square_matrix_times_square_matrix(B, 
+		// 	B, Y);
+		// printf("b = \n");
+		// print_square_matrix(b);
+		// printf("\n");
+		// printf("B = \n");
+		// print_square_matrix(B);
+		// printf("\n");
+		// printf("Y = \n");
+		// print_square_matrix(Y);
+		// printf("\n");
+		// printf("Y^T = \n");
+		// print_square_matrix(Y_transpose);
+		// printf("\n");
+		// double Omega[3];
+		// square_matrix_times_vector(Omega, Y_transpose, omega);
+		// printf("omega = \n");
+		// print_vector(omega);
+		// printf("\n");
+		// printf("Omega = \n");
+		// print_vector(Omega);
+		// printf("\n");
 	}
-
 	// exit(98);
 
 	/* for testing */
@@ -1382,13 +1414,14 @@ main(int argc, char *argv[])
 	while (t < t_final)
 	// while (counter < 1) // for testing
 	{
-		
 		/* for testing */
 		// printf("omega 1 = \n");
 		// print_vector(omega);
 		// printf("%1.5e\n", t);
 		// for (int i = 0; i < number_of_bodies; i++)
 		// 	print_CelestialBody(bodies[i]);
+		// printf("Y = \n");
+		// print_square_matrix(bodies[0].Y);
 		// exit(99);
 
 		if (fabs(t_final-t) < t_step)
@@ -1436,6 +1469,10 @@ main(int argc, char *argv[])
 					bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
 				}
 			}
+			for (int j = 0; j < 9; j++)
+			{
+				bodies[i].Y[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
+			}
 
 			elements_counter += bodies[i].elements;
 		}
@@ -1443,6 +1480,8 @@ main(int argc, char *argv[])
 		/* for testing */
 		// print_vector(l);
 		// printf("%.5e\n", norm_vector(l));
+		// printf("Y = \n");
+		// print_square_matrix(bodies[0].Y);
 		// exit(42);
 
 		/* update omega */
@@ -1608,18 +1647,28 @@ main(int argc, char *argv[])
 				fprintf(out[number_of_bodies], "\n");
 
 				/* testing */
-				// double Y[9], b[9], omega[3];
-				// copy_square_matrix(Y, bodies[0].Y);
-				// copy_square_matrix(b, bodies[0].b);
-				// copy_vector(omega, bodies[0].omega);
-				// double Y_transpose[9];
-				// transpose_square_matrix(Y_transpose, Y);
-				// double B[9];
-				// linear_combination_three_square_matrix(B, 
-				// 	1.0, Y_transpose, 1.0, b, 1.0, Y);
-				// print_square_matrix(B);
-				// printf("\n");
+				double Y[9], b[9], omega[3];
+				copy_square_matrix(Y, bodies[0].Y);
+				copy_square_matrix(b, bodies[0].b);
+				copy_vector(omega, bodies[0].omega);
+				double Y_transpose[9];
+				transpose_square_matrix(Y_transpose, Y);
+				double B[9];
+				square_matrix_times_square_matrix(B, 
+					Y_transpose, b);
+				square_matrix_times_square_matrix(B, 
+					B, Y);
+				printf("b = \n");
+				print_square_matrix(b);
+				printf("\n");
+				printf("B = \n");
+				print_square_matrix(B);
+				printf("\n");
+				// printf("Y = \n");
 				// print_square_matrix(Y);
+				// printf("\n");
+				// printf("Y^T = \n");
+				// print_square_matrix(Y_transpose);
 				// printf("\n");
 				// double Omega[3];
 				// square_matrix_times_vector(Omega, Y_transpose, omega);

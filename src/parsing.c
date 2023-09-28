@@ -524,7 +524,7 @@ convert_input	(cltbdy	**bodies,
 		/* 3rd set of variables - I0 */
 		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
 
-		/* 4th set of variables - alpha and eta */
+		/* 4th set of variables - gamma, alpha and eta */
 		(*bodies)[i].gamma = parameter_gamma(G, (*bodies)[i].I0, R, kf);
 		(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
 		(*bodies)[i].eta = (*bodies)[i].gamma * Dt;

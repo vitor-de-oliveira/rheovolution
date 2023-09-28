@@ -110,6 +110,8 @@ field_GV(double t,
 	// 	b_me[i] = ((double) i) * 0.00000000001;
 	// }
 	// construct_traceless_symmetric_matrix(b, b_me);
+	// printf("Y in field_GV = \n");
+	// print_square_matrix(bodies[0].Y);
 
 	// double **component_x;
 	// double **component_x_dot;
@@ -364,7 +366,9 @@ field_GV(double t,
 	// 	component_u_me[3], component_u_me[4]);	
 	// printf("\nu_me = \n");
 	// printf("%1.10e %1.10e %1.10e %1.10e %1.10e\n",
-	// 	u_me[0], u_me[1], u_me[2], u_me[3], u_me[4]);	
+	// 	u_me[0], u_me[1], u_me[2], u_me[3], u_me[4]);
+	// printf("component_Y = \n");
+	// print_square_matrix(component_Y[0]);
 	// exit(42);
 
 	/* writing components */
@@ -697,6 +701,7 @@ calculate_omega	(const int id,
 
 	if (bodies[id].point_mass == true)
 	{
+		null_vector(bodies[id].omega);
 		return 0;
 	}
 
