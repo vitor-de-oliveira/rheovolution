@@ -1147,7 +1147,7 @@ main(int argc, char *argv[])
 	{
 		for (int j = 0; j < 5; j++)
 		{
-			bodies[i].u_me[j] = 0.0;
+			bodies[i].u_me[j] = 0.01;
 		}
 		if (bodies[i].elements > 0)
 		{
@@ -1647,23 +1647,26 @@ main(int argc, char *argv[])
 				fprintf(out[number_of_bodies], "\n");
 
 				/* testing */
-				double Y[9], b[9], omega[3];
-				copy_square_matrix(Y, bodies[0].Y);
-				copy_square_matrix(b, bodies[0].b);
-				copy_vector(omega, bodies[0].omega);
-				double Y_transpose[9];
-				transpose_square_matrix(Y_transpose, Y);
-				double B[9];
-				square_matrix_times_square_matrix(B, 
-					Y_transpose, b);
-				square_matrix_times_square_matrix(B, 
-					B, Y);
-				printf("b = \n");
-				print_square_matrix(b);
-				printf("\n");
-				printf("B = \n");
-				print_square_matrix(B);
-				printf("\n");
+				// double Y[9], b[9], omega[3], u[9];
+				// copy_square_matrix(Y, bodies[0].Y);
+				// copy_square_matrix(b, bodies[0].b);
+				// construct_traceless_symmetric_matrix(u, bodies[0].u_me);
+				// copy_vector(omega, bodies[0].omega);
+				// double Y_transpose[9];
+				// transpose_square_matrix(Y_transpose, Y);
+				// double B[9];
+				// square_matrix_times_square_matrix(B, 
+				// 	Y_transpose, b);
+				// square_matrix_times_square_matrix(B, 
+				// 	B, Y);
+				// printf("|b| = %1.5e\n", norm_vector(b));
+				// printf("b = \n");
+				// print_square_matrix(b);
+				// printf("\n");
+				// printf("|B| = %1.5e\n", norm_vector(B));
+				// printf("B = \n");
+				// print_square_matrix(B);
+				// printf("\n");
 				// printf("Y = \n");
 				// print_square_matrix(Y);
 				// printf("\n");
@@ -1672,11 +1675,16 @@ main(int argc, char *argv[])
 				// printf("\n");
 				// double Omega[3];
 				// square_matrix_times_vector(Omega, Y_transpose, omega);
+				// printf("|omega| = %1.6e\n", norm_vector(omega));
 				// printf("omega = \n");
 				// print_vector(omega);
 				// printf("\n");
 				// printf("Omega = \n");
 				// print_vector(Omega);
+				// printf("\n");
+				// printf("|u| = %1.6e\n", norm_vector(u));
+				// printf("u = \n");
+				// print_square_matrix(u);
 				// printf("\n");
 				// exit(99);
 

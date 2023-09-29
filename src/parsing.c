@@ -548,68 +548,7 @@ convert_input	(cltbdy	**bodies,
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", (*bodies)[i].name);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].mass);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].lod);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].obl);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].psi);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].R);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].rg);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].J2);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].C22);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].lib);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].kf);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].Dt);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].tau);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].a);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].e);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].I);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].M);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].w);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].Omega);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*bodies)[i].tidal);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*bodies)[i].centrifugal);
-	// printf("\n");
+	// 	print_CelestialBody(bodies[i]);
 	// exit(99);
 
 	return 0;
