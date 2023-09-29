@@ -1679,6 +1679,7 @@ main(int argc, char *argv[])
 				// printf("omega = \n");
 				// print_vector(omega);
 				// printf("\n");
+				// printf("|Omega| = %1.6e\n", norm_vector(Omega));
 				// printf("Omega = \n");
 				// print_vector(Omega);
 				// printf("\n");
