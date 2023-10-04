@@ -63,6 +63,9 @@ main(int argc, char *argv[])
 		else if (strcmp(first_col, "output_folder") == 0)
 		{
 			strcpy(output_folder, second_col);
+			strcat(output_folder, "output_");
+			strcat(output_folder, sim_name);
+			strcat(output_folder, "/");
 			// create output folder if it does not exist
 			struct stat st = {0};
 			if (stat(output_folder, &st) == -1) {
