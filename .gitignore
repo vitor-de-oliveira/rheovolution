@@ -1,6 +1,7 @@
 TIDES
 input/
 output/
+output_*/
 tests/
 .vscode/
 nohup.out

@@ -10,7 +10,7 @@ CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werr
 
 DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/dynamical_system.c $(SRC_DIR)/parsing.c
 
-.PHONY: tides_remote example clean clean_slurm compile_icc
+.PHONY: tides_remote run orbital plot example_EM example_EMS example clean clean_slurm compile_icc
 .SILENT: tides tides_remote clean clean_slurm compile_icc
 
 tides_remote: compile_icc tides
@@ -21,13 +21,23 @@ tides:
 run:
 	./$(TARGET) $(input)
 
+orbital:
+	./$(TARGET) $(input) orbital
+
 plot:
 	./$(TARGET) $(input) plot
 
-example: tides
-	./$(TARGET) example/EM_simplest_scenario.dat
-	./$(TARGET) example/EM_simplest_scenario.dat orbital
-	./$(TARGET) example/EM_simplest_scenario.dat plot
+example_EM: 
+	./$(TARGET) example/EM_example.dat
+	./$(TARGET) example/EM_example.dat orbital
+	./$(TARGET) example/EM_example.dat plot
+
+example_EMS:
+	./$(TARGET) example/EMS_example.dat
+	./$(TARGET) example/EMS_example.dat orbital
+	./$(TARGET) example/EMS_example.dat plot
+
+example: example_EM example_EMS
 
 clean:
 	-rm -f $(TARGET)

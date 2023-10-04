@@ -492,7 +492,10 @@ main(int argc, char *argv[])
 	/* for testing */
 	// printf("number of bodies = %d\n", number_of_bodies);
 	// for (int i = 0; i < number_of_bodies; i++)
+	// {
 	// 	print_CelestialBody(bodies[i]);
+	// 	printf("\n");
+	// }
 	// for (int i = 0; i < number_of_bodies; i++)
 	// {
 	// 	double Y_transpose[9];
