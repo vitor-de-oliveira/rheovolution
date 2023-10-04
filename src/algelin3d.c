@@ -330,7 +330,7 @@ square_matrix_times_square_matrix(double MN[],
 			result = 0.0;
 			for (int k = 0; k < DIM_3; k++)
 			{
-				result += M[(DIM_3)*i + k] * N[(DIM_3)*k + j];
+				result += M[DIM_3*i + k] * N[DIM_3*k + j];
 			}
 			MN_local[i*DIM_3 + j] = result;
 		}

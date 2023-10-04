@@ -166,6 +166,10 @@ typedef struct CelestialBody{
 	double	u_me[5];			// main elements of u matrix
 	double	*bk_me;				// main elements of Voigt elements matrix
 
+	/* body frame */
+	double	Y[9];				// transformation (rotation matrix)
+								// to the body frame
+
 	/* non-state variables */
 	double	omega[3];			// angular velocity
 	double	b[9];				// deformation matrix

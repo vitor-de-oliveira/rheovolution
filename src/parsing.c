@@ -494,7 +494,7 @@ convert_input	(cltbdy	**bodies,
 			square_matrix_times_vector((*bodies)[i].x_dot, full_rotation_orbit, velocity_in_plane);
 		}
 
-		/* 2nd set of variables - omega and b0_diag */
+		/* 2nd set of variables - omega, body frame transformation and b0_diag */
 		// b0_diag not implemented yet. 
 		// at the moment, it is being dealt with by the main
 		double R_3_psi[9];
@@ -514,6 +514,8 @@ convert_input	(cltbdy	**bodies,
 		square_matrix_times_square_matrix(full_rotation_body,
 			full_rotation_body, R_3_phi);
 		
+		copy_square_matrix((*bodies)[i].Y, full_rotation_body);
+
 		double omega_on_body[] = {0.0, 0.0, 0.0};
 		double omega_direction_on_body[] = {0.0, 0.0, 1.0}; // strong assumption
 		scale_vector(omega_on_body, 2.0 * M_PI / Td, omega_direction_on_body);
@@ -522,7 +524,7 @@ convert_input	(cltbdy	**bodies,
 		/* 3rd set of variables - I0 */
 		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
 
-		/* 4th set of variables - alpha and eta */
+		/* 4th set of variables - gamma, alpha and eta */
 		(*bodies)[i].gamma = parameter_gamma(G, (*bodies)[i].I0, R, kf);
 		(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
 		(*bodies)[i].eta = (*bodies)[i].gamma * Dt;
@@ -546,68 +548,7 @@ convert_input	(cltbdy	**bodies,
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%s ", (*bodies)[i].name);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].mass);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].lod);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].obl);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].psi);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].R);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].rg);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].J2);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].C22);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].lib);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].kf);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].Dt);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].tau);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].a);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].e);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].I);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].M);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].w);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%1.5e ", (*bodies)[i].Omega);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*bodies)[i].tidal);
-	// printf("\n");
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 	printf("%d ", (*bodies)[i].centrifugal);
-	// printf("\n");
+	// 	print_CelestialBody(bodies[i]);
 	// exit(99);
 
 	return 0;
