@@ -26,10 +26,10 @@ make
 
 The ``configuration_file.dat`` should include the simulation name under ``name``, the location of the input files under ``input_folder``, the location of the output files under ``output_folder``, the name of the files containing the system and the integrator specifications, under ``system_specs`` and ``integrator_specs``, respectively. The number of bodies used can also be given in this file under ``number_of_bodies``. If this value is not passed to the program, the total number of bodies in ``system_specs`` is assumed. The results are written in the ``output_folder`` as ``results_name``.
 
-## Example
+## Examples
 
 ```sh
-make && make example
+make && make examples
 ```
 
 This command compiles the code and runs it with the input files in the folder ``example``, which contains 2 examples: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass, and the specs for the Earth-Moon-Sun system with all objects being treated as point masses.
