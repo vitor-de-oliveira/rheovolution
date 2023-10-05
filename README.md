@@ -5,7 +5,7 @@ This work is part of a postdoctoral project from the São Paulo Research Foundat
 
 Author: V. M. de Oliveira
 
-Last update on this file: October 4th 2023
+Last update on this file: October 5th 2023
 
 ## Important notes
 The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 8th and 9th order and fixed stepsize from the GNU Scientific Library.
@@ -13,9 +13,22 @@ The software simulates the tidal evolution of any number of celestial bodies int
 Up to this point, the simulation assumes that there is no prestress and that the angular velocity of each body is parallel to its biggest moment of inertia.
 
 ## How to compile
+For icc, use
 
 ```sh
 make
+```
+
+For gcc, use
+
+```sh
+make tides
+```
+
+For other compilers, e.g. clang, use
+
+```sh
+make tides CC=clang
 ```
 
 ## How to run
