@@ -19,39 +19,40 @@ field_GV(double t,
 	cltbdy 	*bodies;
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
-	int	dim_params_per_body_without_elements = 14;
+	int	dim_params_per_body_without_elements = 15;
 	int	dim_state_per_body_without_elements = 28;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
 		
-		bodies[i].fixed_orbit 			= (bool) par[2 + 0 + dim_params_skip];
-		bodies[i].point_mass 			= (bool) par[2 + 1 + dim_params_skip];
-		bodies[i].centrifugal 			= (bool) par[2 + 2 + dim_params_skip];
-		bodies[i].tidal 				= (bool) par[2 + 3 + dim_params_skip];
+		bodies[i].keplerian 			= (bool) par[2 + 0 + dim_params_skip];
+		bodies[i].orbit_2body 			= (bool) par[2 + 1 + dim_params_skip];
+		bodies[i].point_mass 			= (bool) par[2 + 2 + dim_params_skip];
+		bodies[i].centrifugal 			= (bool) par[2 + 3 + dim_params_skip];
+		bodies[i].tidal 				= (bool) par[2 + 4 + dim_params_skip];
 		for (int j = 0; j < 3; j++)
 		{
-			bodies[i].omega[j] 			= par[2 + 4 + dim_params_skip + j];
+			bodies[i].omega[j] 			= par[2 + 5 + dim_params_skip + j];
 		}
-		bodies[i].mass 					= par[2 + 7 + dim_params_skip];
-		bodies[i].I0 					= par[2 + 8 + dim_params_skip];
-		bodies[i].gamma 				= par[2 + 9 + dim_params_skip];
-		bodies[i].alpha 				= par[2 + 10 + dim_params_skip];
-		bodies[i].eta					= par[2 + 11 + dim_params_skip];
-		bodies[i].alpha_0 				= par[2 + 12 + dim_params_skip];
-		bodies[i].elements				= (int) par[2 + 13 + dim_params_skip];
+		bodies[i].mass 					= par[2 + 8 + dim_params_skip];
+		bodies[i].I0 					= par[2 + 9 + dim_params_skip];
+		bodies[i].gamma 				= par[2 + 10 + dim_params_skip];
+		bodies[i].alpha 				= par[2 + 11 + dim_params_skip];
+		bodies[i].eta					= par[2 + 12 + dim_params_skip];
+		bodies[i].alpha_0 				= par[2 + 13 + dim_params_skip];
+		bodies[i].elements				= (int) par[2 + 14 + dim_params_skip];
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].alpha_elements[j] 	= par[2 + 14 + dim_params_skip + j];
+				bodies[i].alpha_elements[j] 	= par[2 + 15 + dim_params_skip + j];
 			}
 			bodies[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].eta_elements[j] 	= par[2 + 15 + dim_params_skip + j + bodies[i].elements - 1];
+				bodies[i].eta_elements[j] 	= par[2 + 16 + dim_params_skip + j + bodies[i].elements - 1];
 			}
 		}
 
@@ -182,65 +183,136 @@ field_GV(double t,
 
 		copy_vector (component_x[i], bodies[i].x_dot);
 
-		// x_dot component and l component
+		// x_dot component
 
 		null_vector(component_x_dot[i]);
-		null_vector(component_l[i]);
+		if (bodies[i].keplerian == true)
+		{
+			if (i > 0)
+			{
+				double relative_to_ref_x[3];
+				linear_combination_vector(relative_to_ref_x,
+					1.0, bodies[i].x,
+					-1.0, bodies[0].x);
 
+				double x_relative_to_ref_norm		= norm_vector(relative_to_ref_x);
+				double x_relative_to_ref_norm_cube	= pow(x_relative_to_ref_norm, 3.0);
+				
+				double minus_G_times_total_mass = -1.0 * G * (bodies[0].mass + bodies[i].mass);
+
+				scale_vector (component_x_dot[i], 
+					minus_G_times_total_mass / x_relative_to_ref_norm_cube, relative_to_ref_x);	
+			}
+		}
+		else if (bodies[i].orbit_2body == true)
+		{
+			if (i > 0)
+			{
+				double relative_to_ref_x[3];
+				linear_combination_vector(relative_to_ref_x,
+					1.0, bodies[i].x,
+					-1.0, bodies[0].x);
+				
+				double x_relative_to_ref_norm			= norm_vector(relative_to_ref_x);
+				double x_relative_to_ref_norm_cube		= pow(x_relative_to_ref_norm, 3.0);
+				double x_relative_to_ref_norm_fifth		= pow(x_relative_to_ref_norm, 5.0);
+				double x_relative_to_ref_norm_seventh	= pow(x_relative_to_ref_norm, 7.0);
+
+				double minus_G_times_total_mass = -1.0 * G * (bodies[0].mass + bodies[i].mass);
+
+				double component_x_dot_1st_term[] = { 0.0, 0.0, 0.0 };
+				scale_vector (component_x_dot_1st_term, 
+					1.0 / x_relative_to_ref_norm_cube, relative_to_ref_x);
+
+				double component_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
+				double scaled_sum_bi_bref[9];
+				linear_combination_square_matrix(scaled_sum_bi_bref,
+					bodies[i].I0 / bodies[i].mass, bodies[i].b,
+					bodies[0].I0 / bodies[0].mass, bodies[0].b);
+				double scaled_sum_bi_bref_x[3];
+				square_matrix_times_vector(scaled_sum_bi_bref_x, 
+					scaled_sum_bi_bref, relative_to_ref_x);
+				double scaled_sum_bi_bref_x_dot_x = 
+					dot_product(scaled_sum_bi_bref_x, relative_to_ref_x);
+				scale_vector (component_x_dot_2nd_term, 
+					(15.0 * scaled_sum_bi_bref_x_dot_x) / (2.0 * x_relative_to_ref_norm_seventh), 
+					relative_to_ref_x);
+
+				double component_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
+				scale_vector (component_x_dot_3rd_term, 
+					-3.0 / x_relative_to_ref_norm_fifth, scaled_sum_bi_bref_x);
+
+				linear_combination_three_vector(component_x_dot[i],
+					minus_G_times_total_mass, component_x_dot_1st_term, 
+					minus_G_times_total_mass, component_x_dot_2nd_term, 
+					minus_G_times_total_mass, component_x_dot_3rd_term);
+			}
+		}
+		else
+		{
+			for (int j = 0; j < number_of_bodies; j++)
+			{
+				if (j != i)
+				{
+					double relative_x[3];
+					linear_combination_vector(relative_x,
+						1.0, bodies[i].x,
+						-1.0, bodies[j].x);
+
+					double x_relative_norm 		= norm_vector(relative_x);
+					double x_relative_norm_cube = pow(x_relative_norm, 3.0);
+					double component_x_dot_1st_term[] = { 0.0, 0.0, 0.0 };
+					scale_vector (component_x_dot_1st_term, 
+						-1.0 * bodies[j].mass / x_relative_norm_cube, relative_x);
+
+					double x_relative_norm_seventh = pow(x_relative_norm, 7.0);
+					double scaled_sum_bi_bj[9];
+					linear_combination_square_matrix(scaled_sum_bi_bj,
+						bodies[j].mass * bodies[i].I0, bodies[i].b,
+						bodies[i].mass * bodies[j].I0, bodies[j].b);
+					double scaled_sum_bi_bj_x[3];
+					square_matrix_times_vector(scaled_sum_bi_bj_x, 
+						scaled_sum_bi_bj, relative_x);
+					double scaled_sum_bi_bj_x_dot_x = 
+						dot_product(scaled_sum_bi_bj_x, relative_x);
+					double component_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
+					scale_vector (component_x_dot_2nd_term, 
+						(-15.0 * scaled_sum_bi_bj_x_dot_x) / (2. * bodies[i].mass * x_relative_norm_seventh), 
+						relative_x);
+
+					double x_relative_norm_fifth = pow(x_relative_norm, 5.0);
+					double component_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
+					scale_vector (component_x_dot_3rd_term, 
+						3.0 / (bodies[i].mass * x_relative_norm_fifth), scaled_sum_bi_bj_x);
+
+					double j_component_x_dot[] = { 0.0, 0.0, 0.0 };
+					linear_combination_three_vector(j_component_x_dot,
+						G, component_x_dot_1st_term, 
+						G, component_x_dot_2nd_term, 
+						G, component_x_dot_3rd_term);
+
+					linear_combination_vector(component_x_dot[i],
+						1.0, component_x_dot[i],
+						1.0, j_component_x_dot);
+
+				} // end if (j != i)
+			} // end summation on number of bodies
+		} // end else for if (bodies[i].keplerian == false)
+
+		// l component
+
+		null_vector(component_l[i]);
 		for (int j = 0; j < number_of_bodies; j++)
 		{
 			if (j != i)
 			{
-				// x_dot component
-
 				double relative_x[3];
 				linear_combination_vector(relative_x,
 					1.0, bodies[i].x,
 					-1.0, bodies[j].x);
 
-				double x_relative_norm 		= norm_vector(relative_x);
-				double x_relative_norm_cube = pow(x_relative_norm, 3.0);
-				double component_x_dot_1st_term[] = { 0.0, 0.0, 0.0 };
-				scale_vector (component_x_dot_1st_term, 
-					-1.0 * bodies[j].mass / x_relative_norm_cube, relative_x);
-
-				double x_relative_norm_seventh = pow(x_relative_norm, 7.0);
-				double scaled_sum_bi_bj[9];
-				linear_combination_square_matrix(scaled_sum_bi_bj,
-					bodies[j].mass * bodies[i].I0, bodies[i].b,
-					bodies[i].mass * bodies[j].I0, bodies[j].b);
-				double scaled_sum_bi_bj_x[3];
-				square_matrix_times_vector(scaled_sum_bi_bj_x, 
-					scaled_sum_bi_bj, relative_x);
-				double scaled_sum_bi_bj_x_dot_x = 
-					dot_product(scaled_sum_bi_bj_x, relative_x);
-				double component_x_dot_2nd_term[] = { 0.0, 0.0, 0.0 };
-				if (bodies[i].fixed_orbit == false)
-				{
-					scale_vector (component_x_dot_2nd_term, 
-						(-15.0 * scaled_sum_bi_bj_x_dot_x) / (2. * bodies[i].mass * x_relative_norm_seventh), 
-						relative_x);
-				}
-
+				double x_relative_norm 		 = norm_vector(relative_x);
 				double x_relative_norm_fifth = pow(x_relative_norm, 5.0);
-				double component_x_dot_3rd_term[] = { 0.0, 0.0, 0.0 };
-				if (bodies[i].fixed_orbit == false)
-				{
-					scale_vector (component_x_dot_3rd_term, 
-						3.0 / (bodies[i].mass * x_relative_norm_fifth), scaled_sum_bi_bj_x);
-				}
-
-				double j_component_x_dot[] = { 0.0, 0.0, 0.0 };
-				linear_combination_three_vector(j_component_x_dot,
-					G, component_x_dot_1st_term, 
-					G, component_x_dot_2nd_term, 
-					G, component_x_dot_3rd_term);
-
-				linear_combination_vector(component_x_dot[i],
-					1.0, component_x_dot[i],
-					1.0, j_component_x_dot);
-
-				// l component
 
 				double bx[3];
 				square_matrix_times_vector(bx, bodies[i].b, relative_x);
@@ -253,7 +325,7 @@ field_GV(double t,
 				linear_combination_vector(component_l[i],
 					1.0, component_l[i],
 					1.0, j_component_l);
-			}
+			} // end if (j != i)
 		} // end summation on number of bodies
 
 		// b0 component

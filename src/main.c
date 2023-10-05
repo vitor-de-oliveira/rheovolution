@@ -1343,7 +1343,7 @@ main(int argc, char *argv[])
 	// exit(98);
 
 	/* parameters */
-	int		dim_params_per_body_without_elements = 14;
+	int		dim_params_per_body_without_elements = 15;
 	int		dim_params = 2 + (dim_params_per_body_without_elements * number_of_bodies) + (2 * elements_total);
 	double	params[dim_params];
 	elements_counter = 0; 
@@ -1352,28 +1352,29 @@ main(int argc, char *argv[])
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
-		params[2 + 0 + dim_params_skip] = (double) bodies[i].fixed_orbit;
-		params[2 + 1 + dim_params_skip] = (double) bodies[i].point_mass;
-		params[2 + 2 + dim_params_skip] = (double) bodies[i].centrifugal;
-		params[2 + 3 + dim_params_skip] = (double) bodies[i].tidal;
+		params[2 + 0 + dim_params_skip] = (double) bodies[i].keplerian;
+		params[2 + 1 + dim_params_skip] = (double) bodies[i].orbit_2body;
+		params[2 + 2 + dim_params_skip] = (double) bodies[i].point_mass;
+		params[2 + 3 + dim_params_skip] = (double) bodies[i].centrifugal;
+		params[2 + 4 + dim_params_skip] = (double) bodies[i].tidal;
 		for (int j = 0; j < 3; j++)
 		{
-			params[2 + 4 + dim_params_skip + j] = bodies[i].omega[j];
+			params[2 + 5 + dim_params_skip + j] = bodies[i].omega[j];
 		}
-		params[2 + 7 + dim_params_skip] = bodies[i].mass;
-		params[2 + 8 + dim_params_skip] = bodies[i].I0;
-		params[2 + 9 + dim_params_skip] = bodies[i].gamma;
-		params[2 + 10 + dim_params_skip] = bodies[i].alpha;
-		params[2 + 11 + dim_params_skip] = bodies[i].eta;
-		params[2 + 12 + dim_params_skip] = bodies[i].alpha_0;
-		params[2 + 13 + dim_params_skip] = (double) bodies[i].elements;
+		params[2 + 8 + dim_params_skip] = bodies[i].mass;
+		params[2 + 9 + dim_params_skip] = bodies[i].I0;
+		params[2 + 10 + dim_params_skip] = bodies[i].gamma;
+		params[2 + 11 + dim_params_skip] = bodies[i].alpha;
+		params[2 + 12 + dim_params_skip] = bodies[i].eta;
+		params[2 + 13 + dim_params_skip] = bodies[i].alpha_0;
+		params[2 + 14 + dim_params_skip] = (double) bodies[i].elements;
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 14 + dim_params_skip + j] = bodies[i].alpha_elements[j];
+			params[2 + 15 + dim_params_skip + j] = bodies[i].alpha_elements[j];
 		}
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 15 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
+			params[2 + 16 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
 		}
 		elements_counter += bodies[i].elements;		
 	}
@@ -1500,7 +1501,7 @@ main(int argc, char *argv[])
 		
 			for (int j = 0; j < 3; j++)
 			{
-				params[2 + 2 + dim_params_skip + j] = bodies[i].omega[j];
+				params[2 + 5 + dim_params_skip + j] = bodies[i].omega[j];
 			}
 
 			elements_counter += bodies[i].elements;
@@ -1561,19 +1562,28 @@ main(int argc, char *argv[])
 
 					/* position, and velocity */
 
-					// transform to body 1-centered system
-					double relative_x[3];
-					linear_combination_vector(relative_x,
-						1.0, bodies[i].x,
-						-1.0, bodies[0].x);
-					double relative_x_dot[3];
-					linear_combination_vector(relative_x_dot,
-						1.0, bodies[i].x_dot,
-						-1.0, bodies[0].x_dot);
+					if (bodies[i].keplerian == true)
+					{
+						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
+							bodies[i].x[0], bodies[i].x[1], bodies[i].x[2],
+							bodies[i].x_dot[0], bodies[i].x_dot[1], bodies[i].x_dot[2]);
+					}
+					else
+					{
+						// transform to body 1-centered system
+						double relative_x[3];
+						linear_combination_vector(relative_x,
+							1.0, bodies[i].x,
+							-1.0, bodies[0].x);
+						double relative_x_dot[3];
+						linear_combination_vector(relative_x_dot,
+							1.0, bodies[i].x_dot,
+							-1.0, bodies[0].x_dot);
 
-					fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
-						relative_x[0], relative_x[1], relative_x[2],
-						relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
+						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
+							relative_x[0], relative_x[1], relative_x[2],
+							relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
+					}
 
 					/* angular velocity */
 

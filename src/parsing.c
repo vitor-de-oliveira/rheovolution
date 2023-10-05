@@ -49,7 +49,8 @@ convert_input	(cltbdy	**bodies,
 	}
 	/* verification variables for names, orbit and deformable settings */
 	bool	input_name_received = false;
-	bool	input_fixed_orbit_received = false;
+	bool	input_keplerian_received = false;
+	bool	input_orbit_2body_received = false;
 	int 	number_deformable_inputs = 3; 
 	bool	input_deformable_received[number_deformable_inputs];
 	for (int i = 0; i < number_deformable_inputs; i++)
@@ -61,7 +62,7 @@ convert_input	(cltbdy	**bodies,
 	FILE 	*in1 = fopen(file, "r");
    	while ((read = getline(&line, &len, in1)) != -1)
 	{
-		const char tok_del[3] = " \t\n";		// token delimiter
+		const char tok_del[6] = " \t\n";	// token delimiter
 		char *token = strtok(line, tok_del);
 		if(token == NULL) break;	// in case there is a newline
 		if (strcmp(token, "Name") == 0)
@@ -241,28 +242,51 @@ convert_input	(cltbdy	**bodies,
 			}
 			input_par_received[17] = true;
 		}
-		else if (strcmp(token, "fixed_orbit") == 0)
+		else if (strcmp(token, "keplerian") == 0)
 		{
 			for (int i = 0; i < number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
 				if (strcmp(token, "yes") == 0)
 				{
-					(*bodies)[i].fixed_orbit = true;
+					(*bodies)[i].keplerian = true;
 				}
 				else if (strcmp(token, "no") == 0)
 				{
-					(*bodies)[i].fixed_orbit = false;
+					(*bodies)[i].keplerian = false;
 				}
 				else
 				{
 					printf("%s\n", token);
 					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for centrifugal variable\n");
+					fprintf(stderr, "for keplerian variable\n");
 					exit(14);
 				}
 			}
-			input_fixed_orbit_received = true;
+			input_keplerian_received = true;
+		}
+		else if (strcmp(token, "orbit_2body") == 0)
+		{
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].orbit_2body = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].orbit_2body = false;
+				}
+				else
+				{
+					printf("%s\n", token);
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for orbit_2body variable\n");
+					exit(14);
+				}
+			}
+			input_orbit_2body_received = true;
 		}
 		else if (strcmp(token, "centrifugal") == 0)
 		{
@@ -342,6 +366,7 @@ convert_input	(cltbdy	**bodies,
 			fprintf(stderr, "Error: there is at least one missing input ");
 			fprintf(stderr, "from %s.\n", file);
 			fprintf(stderr, "Exiting the program now.\n");
+			// fprintf(stderr, "Missing input number %d\n", i); // for testing
 			exit(14);
 		}
 	}
@@ -354,9 +379,16 @@ convert_input	(cltbdy	**bodies,
 		exit(14);
 	}
 	/* orbital variable input verification */
-	if (input_fixed_orbit_received == false)
+	if (input_keplerian_received == false)
 	{
-		fprintf(stderr, "Error: missing fixed orbit status ");
+		fprintf(stderr, "Error: missing keplerian status ");
+		fprintf(stderr, "from %s.\n", file);
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(14);
+	}
+	if (input_orbit_2body_received == false)
+	{
+		fprintf(stderr, "Error: missing orbit 2 body status ");
 		fprintf(stderr, "from %s.\n", file);
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(14);

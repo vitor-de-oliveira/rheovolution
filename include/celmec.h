@@ -151,7 +151,9 @@ typedef struct CelestialBody{
 	double	*eta_elements;		// viscosity for Voigt elements
 
 	/* orbital options */
-	bool	fixed_orbit;		// sets a fixed keplerian orbit
+	bool	keplerian;			// sets a fixed Keplerian orbit
+	bool	orbit_2body;		// considers only the gravitational interaction
+								// with the central body
 
 	/* deformation options */
 	bool	point_mass;			// point mass

@@ -428,7 +428,9 @@ print_CelestialBody(cltbdy body)
 	}
 
     printf("fixed orbit = ");	
-	printf("%d\n", body.fixed_orbit);
+	printf("%d\n", body.keplerian);
+    printf("orbit 2body = ");	
+	printf("%d\n", body.orbit_2body);
 
 	printf("point mass = ");	
 	printf("%d\n", body.point_mass);
