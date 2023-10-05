@@ -1663,10 +1663,12 @@ main(int argc, char *argv[])
 				fprintf(out[number_of_bodies], "\n");
 
 				/* testing */
-				// double Y[9], b[9], omega[3], u[9];
+				// double Y[9], b[9];
 				// copy_square_matrix(Y, bodies[0].Y);
 				// copy_square_matrix(b, bodies[0].b);
+				// double u[9];
 				// construct_traceless_symmetric_matrix(u, bodies[0].u_me);
+				// double omega[3];
 				// copy_vector(omega, bodies[0].omega);
 				// double Y_transpose[9];
 				// transpose_square_matrix(Y_transpose, Y);
@@ -1695,7 +1697,7 @@ main(int argc, char *argv[])
 				// printf("omega = \n");
 				// print_vector(omega);
 				// printf("\n");
-				// printf("|Omega| = %1.6e\n", norm_vector(Omega));
+				// printf("|Omega| = %1.6e\n\n", norm_vector(Omega));
 				// printf("Omega = \n");
 				// print_vector(Omega);
 				// printf("\n");

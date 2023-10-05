@@ -71,12 +71,13 @@ make plot input=configuration_file.dat
 ```
 
 ## Examples
+After compiling the code, use
 
 ```sh
-make && make examples
+make examples
 ```
 
-This command compiles the code and runs it with the input files in the folder ``example``, which contains 2 examples: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass, and the specs for the Earth-Moon-Sun system with all objects being treated as point masses.
+This command runs the program with the input files in the folder ``example``, which contains 2 examples: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass, and the specs for the Earth-Moon-Sun system with all objects being treated as point masses.
 
 ## Main references
 Ragazzo C., Ruiz L. S. Viscoelastic tides: models for use in Celestial Mechanics, _Celestial Mechanics and Dynamical Astronomy_, Springer, v. 128, n.1., p. 19--59, 2017.
