@@ -34,10 +34,41 @@ make tides CC=clang
 ## How to run
 
 ```sh
-./TIDES configuration_file.dat  or  make run input=configuration_file.dat
+./TIDES configuration_file.dat
+```
+
+or
+
+```sh
+make run input=configuration_file.dat
 ```
 
 The ``configuration_file.dat`` should include the simulation name under ``name``, the location of the input files under ``input_folder``, the location of the output files under ``output_folder``, the name of the files containing the system and the integrator specifications, under ``system_specs`` and ``integrator_specs``, respectively. The number of bodies used can also be given in this file under ``number_of_bodies``. If this value is not passed to the program, the total number of bodies in ``system_specs`` is assumed. The results are written in the ``output_folder`` as ``results_name``.
+
+## Additional features
+After running the program, it is possible to calculate the orbital elements of every body using
+
+```sh
+./TIDES configuration_file.dat orbital
+```
+
+or
+
+```sh
+make orbital input=configuration_file.dat
+```
+
+After that, it is possible to plot the time evolution of the main variables in the system via ``Gnuplot`` using
+
+```sh
+./TIDES configuration_file.dat plot
+```
+
+or
+
+```sh
+make plot input=configuration_file.dat
+```
 
 ## Examples
 
