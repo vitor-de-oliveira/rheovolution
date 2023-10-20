@@ -480,6 +480,16 @@ main(int argc, char *argv[])
 			// printf("Calculated:\n");
 			// printf("body = %s a = %e e = %e I = %e M = %e w = %e Omega = %e\n", 
 			// 	bodies[i].name, a_test, e_test, I_test, M_test, w_test, Omega_test);
+		// 	double obl_test;
+		// 	if (i == 0)
+		// 	{
+		// 		obl_test = calculate_obliquity_free_body(bodies[i].omega);
+		// 	}
+		// 	else
+		// 	{
+		// 		obl_test = calculate_obliquity_on_orbit(relative_x, relative_x_dot, bodies[i].omega);
+		// 	}
+		// 	printf("obliquity = %f\n", obl_test*180.0/M_PI);
 		// }
 		// exit(99);
 	}
@@ -672,8 +682,170 @@ main(int argc, char *argv[])
 			return 0;
 
 		} // end if argv[2] == orbital
+		else if (strcmp(argv[2], "orientation") == 0)
+		{
+			/* input filename of first body */
+			char filename_read_first_body[150];
+			strcpy(filename_read_first_body, output_folder);
+			strcat(filename_read_first_body, "results_");
+			strcat(filename_read_first_body, sim_name);
+			strcat(filename_read_first_body, "_");
+			strcat(filename_read_first_body, bodies[0].name);
+			strcat(filename_read_first_body, ".dat");
+
+			/* loop over all bodies */
+			for (int i = 0; i < number_of_bodies; i++)
+			{
+				// obs.: it reads the first body file twice for i = 0
+
+				/* open input file for first body */
+				FILE *in_state_first_body = fopen(filename_read_first_body, "r");
+				if (in_state_first_body == NULL)
+				{
+					fprintf(stderr, "Warning: could not read state evolution file.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(13);
+				}
+
+				/* auxiliary variables */
+				char	*line_first_body = NULL;
+				size_t 	len_first_body = 0;
+				ssize_t	read_first_body;
+
+				/* input files of remaining bodies */
+				char filename_read[150];
+				strcpy(filename_read, output_folder);
+				strcat(filename_read, "results_");
+				strcat(filename_read, sim_name);
+				strcat(filename_read, "_");
+				strcat(filename_read, bodies[i].name);
+				strcat(filename_read, ".dat");
+				FILE *in_state = fopen(filename_read, "r");
+				if (in_state == NULL)
+				{
+					fprintf(stderr, "Warning: could not read state evolution file.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(13);
+				}
+
+				/* output files for orientation variables */
+				char filename_orientation[150];
+				FILE *out_orientation;
+
+				/* names and opens output files for each body */
+				strcpy(filename_orientation, output_folder);
+				strcat(filename_orientation, "results_");
+				strcat(filename_orientation, sim_name);
+				strcat(filename_orientation, "_");
+				strcat(filename_orientation, bodies[i].name);
+				strcat(filename_orientation, "_orientation");
+				strcat(filename_orientation, ".dat");
+				out_orientation = fopen(filename_orientation, "w");
+				/* writes output headers */
+				fprintf(out_orientation, "time(yr)");
+				fprintf(out_orientation, " obl(°)");
+				fprintf(out_orientation, "\n");
+
+				// convertion units
+				double rad_to_deg = 180.0 / M_PI;
+
+				/* reading input and printing output */
+				read = getline(&line, &len, in_state); // discards first line
+				read_first_body = 
+					getline(&line_first_body, &len_first_body, in_state_first_body);
+				while (true)
+				{
+					/* reading data */
+					read = getline(&line, &len, in_state);
+					read_first_body = 
+						getline(&line_first_body, &len_first_body, in_state_first_body);
+					if (read == -1 || read_first_body == -1) break;
+
+					/* tokenizing data with reentrant version of strtok */
+					const char tok_del[6] = " \t\n";		// token delimiter
+					char *token;
+					char *line_track = line;
+					char *token_first_body;
+					char *line_first_body_track = line_first_body;
+					token = strtok_r(line_track, tok_del, &line_track);
+					token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+					if(token == NULL || token_first_body == NULL) break; // in case there is a newline
+					
+					/* filling in data */
+					double t = atof(token_first_body);
+					for (int j = 0; j < 3; j++)
+					{
+						token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+						bodies[0].x[j] = atof(token_first_body);
+						token = strtok_r(line_track, tok_del, &line_track);
+						bodies[i].x[j] = atof(token);
+					}
+					for (int j = 0; j < 3; j++)
+					{
+						token_first_body = strtok_r(line_first_body_track, tok_del, &line_first_body_track);
+						bodies[0].x_dot[j] = atof(token_first_body);
+						token = strtok_r(line_track, tok_del, &line_track);
+						bodies[i].x_dot[j] = atof(token);
+					}
+				
+					double relative_x[3];
+					linear_combination_vector(relative_x,
+						1.0, bodies[i].x,
+						-1.0, bodies[0].x);
+					double relative_x_dot[3];
+					linear_combination_vector(relative_x_dot,
+						1.0, bodies[i].x_dot,
+						-1.0, bodies[0].x_dot);
+
+					/* time */
+					fprintf (out_orientation, "%.15e", t);
+
+					/* obliquity */
+					double obliquity;
+					if(bodies[i].point_mass == true)
+					{
+						obliquity = 0.0; // or NAN
+					}
+					else
+					{
+						if (i == 0)
+						{
+							obliquity = calculate_obliquity_free_body(bodies[i].omega);
+						}
+						else
+						{
+							obliquity = calculate_obliquity_on_orbit(relative_x, relative_x_dot, bodies[i].omega);
+						}	
+					}
+					fprintf (out_orientation, " %.15e", obliquity * rad_to_deg);
+
+					/* next line */
+					fprintf(out_orientation, "\n");		
+				}
+
+				/* close all files */				
+				fclose(in_state);
+				fclose(out_orientation);
+				fclose(in_state_first_body);
+
+			} // end loop over all bodies
+
+			return 0;
+
+		} // end if argv[2] == orientation
 		else if (strcmp(argv[2], "plot") == 0)
 		{
+			/* suppresses warning messages by moving
+			 * stderr to /dev/null
+			 * should be used with care
+			*/
+			if(freopen("/dev/null", "w", stderr) == NULL)
+			{
+				fprintf(stderr, "Error: stderr could not be moved to\n");
+				fprintf(stderr, "/dev/null in command %s.\n", argv[2]);
+				exit(22);
+			}
+			/* create figures dir */
 			char plot_folder[150];
 			strcpy(plot_folder, output_folder);
 			strcat(plot_folder, "/figures/");
@@ -919,6 +1091,35 @@ main(int argc, char *argv[])
 					fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_get);
 					pclose(gnuplotPipe);
 				} // end if i > 0
+				/* reads output files of orientation variables of each body */
+				strcpy(filename_get, output_folder);
+				strcat(filename_get, "results_");
+				strcat(filename_get, sim_name);
+				strcat(filename_get, "_");
+				strcat(filename_get, bodies[i].name);
+				strcat(filename_get, "_orientation");
+				strcat(filename_get, ".dat");
+				/* plot outputs */
+				/* obliquity */
+				strcpy(filename_plot, plot_folder);
+				strcat(filename_plot, "figure_");
+				strcat(filename_plot, sim_name);
+				strcat(filename_plot, "_");
+				strcat(filename_plot, bodies[i].name);
+				strcat(filename_plot, "_obliquity");
+				strcat(filename_plot, ".png");
+				gnuplotPipe = popen("gnuplot -persistent", "w");
+				fprintf(gnuplotPipe, "reset\n");
+				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+				fprintf(gnuplotPipe, "set loadpath \"%s\"\n", output_folder);
+				fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+				fprintf(gnuplotPipe, "set border lw 2 \n");
+				fprintf(gnuplotPipe, "unset key\n");
+				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+				fprintf(gnuplotPipe, "set ylabel \"Obliquity(°)\"\n");
+				fprintf(gnuplotPipe, "set title \"%s's obliquity\"\n", bodies[i].name);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_get);
+				pclose(gnuplotPipe);
 			} // end loop over bodies
 			/* reads output file of full system */
 			strcpy(filename_get, output_folder);
@@ -1289,7 +1490,7 @@ main(int argc, char *argv[])
 	}
 	
 	/* state variables */
-	int		dim_state_per_body_without_elements = 28;
+	int		dim_state_per_body_without_elements = 23;
 	int		dim_state = (dim_state_per_body_without_elements * number_of_bodies) + (5 * elements_total);
 	double 	y[dim_state];
 	int		elements_counter = 0;
@@ -1311,9 +1512,9 @@ main(int argc, char *argv[])
 		{
 			y[19 + dim_state_skip + j] 	= bodies[i].bk_me[j];
 		}
-		for (int j = 0; j < 9; j++)
+		for (int j = 0; j < 4; j++)
 		{
-			y[19 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].Y[j];
+			y[19 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
 		}
 		elements_counter += bodies[i].elements;
 
@@ -1476,9 +1677,9 @@ main(int argc, char *argv[])
 					bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
 				}
 			}
-			for (int j = 0; j < 9; j++)
+			for (int j = 0; j < 4; j++)
 			{
-				bodies[i].Y[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
+				bodies[i].q[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
 			}
 
 			elements_counter += bodies[i].elements;
@@ -1663,8 +1864,10 @@ main(int argc, char *argv[])
 				fprintf(out[number_of_bodies], "\n");
 
 				/* testing */
-				// double Y[9], b[9];
+				// printf("t = %f\n\n", t);
+				// double Y[9];
 				// copy_square_matrix(Y, bodies[0].Y);
+				// double b[9];
 				// copy_square_matrix(b, bodies[0].b);
 				// double u[9];
 				// construct_traceless_symmetric_matrix(u, bodies[0].u_me);
@@ -1691,6 +1894,12 @@ main(int argc, char *argv[])
 				// printf("Y^T = \n");
 				// print_square_matrix(Y_transpose);
 				// printf("\n");
+				// double Y_times_Y_transpose[9];
+				// square_matrix_times_square_matrix(Y_times_Y_transpose,
+				// 	Y, Y_transpose);
+				// printf("Y*Y^T = \n");
+				// print_square_matrix(Y_times_Y_transpose);
+				// printf("\n");
 				// double Omega[3];
 				// square_matrix_times_vector(Omega, Y_transpose, omega);
 				// printf("|omega| = %1.6e\n", norm_vector(omega));
@@ -1704,6 +1913,26 @@ main(int argc, char *argv[])
 				// printf("|u| = %1.6e\n", norm_vector(u));
 				// printf("u = \n");
 				// print_square_matrix(u);
+				// printf("\n");
+				// double q[4];
+				// copy_quaternion(q, bodies[0].q);
+				// double Rq[9];
+				// rotation_matrix_from_quaternion(Rq, q);
+				// printf("Rq = \n");
+				// print_square_matrix(Rq);
+				// printf("\n");
+				// double Rq_transpose[9];
+				// transpose_square_matrix(Rq_transpose, Rq);
+				// double Rq_times_Rq_transpose[9];
+				// square_matrix_times_square_matrix(Rq_times_Rq_transpose,
+				// 	Rq, Rq_transpose);
+				// printf("Rq*Rq^T = \n");
+				// print_square_matrix(Rq_times_Rq_transpose);
+				// printf("\n");
+				// double Omega_Rq[3];
+				// square_matrix_times_vector(Omega_Rq, Rq_transpose, omega);
+				// printf("Omega_Rq = \n");
+				// print_vector(Omega_Rq);
 				// printf("\n");
 				// exit(99);
 

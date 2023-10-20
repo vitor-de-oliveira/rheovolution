@@ -109,6 +109,16 @@ calculate_longitude_of_the_ascending_node   (const double G,
                                              const double x[],
                                              const double v[]);
 
+/* body orientation */
+
+double
+calculate_obliquity_free_body(const double p[]);
+
+double
+calculate_obliquity_on_orbit(const double x[],
+                             const double v[],
+					         const double p[]);
+
 /* Struct for celestial bodies (Generalized-Maxwell) */
 typedef struct CelestialBody{
 
@@ -171,6 +181,7 @@ typedef struct CelestialBody{
 	/* body frame */
 	double	Y[9];				// transformation (rotation matrix)
 								// to the body frame
+	double	q[4];				// quaternion for evolving Y 
 
 	/* non-state variables */
 	double	omega[3];			// angular velocity

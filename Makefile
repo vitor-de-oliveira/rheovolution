@@ -1,3 +1,4 @@
+MAKEFLAGS += --no-print-directory
 INCLUDE_DIR = ./include
 SRC_DIR = ./src
 SHELL := /bin/bash
@@ -5,39 +6,49 @@ LIBS = -lgsl -lgslcblas -lm
 
 TARGET = TIDES
 
-CC = gcc
+CC = cc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
 
 DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/dynamical_system.c $(SRC_DIR)/parsing.c
 
-.PHONY: tides_remote run orbital plot example_EM example_EMS examples clean clean_slurm compile_icc
-.SILENT: tides tides_remote clean clean_slurm compile_icc
-
-tides_remote: compile_icc tides
+.PHONY: run orbital orientation plot all example_1 example_2 examples clean clean_slurm check_input
+.SILENT: tides clean clean_slurm
 
 tides:
+ifeq ($(CC),icc)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -diag-disable=10441)
+endif
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
-run:
-	./$(TARGET) $(input)
+run: check_input tides
+	./$(TARGET) $(INPUT)
 
-orbital:
-	./$(TARGET) $(input) orbital
+orbital: check_input tides
+	./$(TARGET) $(INPUT) orbital
 
-plot:
-	./$(TARGET) $(input) plot
+orientation: check_input tides
+	./$(TARGET) $(INPUT) orientation
 
-example_EM: 
-	./$(TARGET) example/EM_example.dat
-	./$(TARGET) example/EM_example.dat orbital
-	./$(TARGET) example/EM_example.dat plot
+plot: check_input tides
+	./$(TARGET) $(INPUT) plot
 
-example_EMS:
-	./$(TARGET) example/EMS_example.dat
-	./$(TARGET) example/EMS_example.dat orbital
-	./$(TARGET) example/EMS_example.dat plot
+all: check_input tides run orbital orientation plot
 
-examples: example_EM example_EMS
+example_1:
+	$(eval EXAMPLE_NAME := Earth-Moon system)
+	$(eval EXAMPLE_DIR := examples/EM_example.dat)
+	@echo "Running $(EXAMPLE_NAME) example."
+	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME) example."
+
+example_2:
+	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
+	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
+	@echo "Running $(EXAMPLE_NAME) example."
+	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME) example."
+
+examples: example_1 example_2
 
 clean:
 	-rm -f $(TARGET)
@@ -45,6 +56,8 @@ clean:
 clean_slurm:
 	-rm -f slurm-*.out
 
-compile_icc:
-	$(eval CC = icc)
-	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -diag-disable=10441)
+check_input:
+ifeq ($(INPUT), )
+	@echo "Please, provide the input file via INPUT=<input_file_path>."
+	@false
+endif
