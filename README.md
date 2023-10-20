@@ -13,14 +13,14 @@ The software simulates the tidal evolution of any number of celestial bodies int
 Up to this point, the simulation assumes that there is no prestress and that the angular velocity of each body is parallel to its biggest moment of inertia.
 
 ## How to compile
-```Makefile
+```makefile
 make
 ```
 
 This command will compile the code using the compiler at ``cc``. If one wants to use another compiler, set the environment variable ``CC`` alongside the command.
 
 ## How to run
-```Makefile
+```makefile
 make run INPUT=configuration_file.dat
 ```
 
@@ -29,33 +29,33 @@ The ``configuration_file.dat`` should include the simulation name under ``name``
 ## Additional features
 After running the program, it is possible to calculate the orbital elements of every body using
 
-```Makefile
+```makefile
 make orbital INPUT=configuration_file.dat
 ```
 
 And also to calculate the orientation variables of every body using
 
-```Makefile
+```makefile
 make orientation INPUT=configuration_file.dat
 ```
 
 After that, it is possible to plot the time evolution of the main variables in the system via ``Gnuplot`` using
 
-```Makefile
+```makefile
 make plot INPUT=configuration_file.dat
 ```
 
 ## All
 If one wants to run the code and calculate all of the additional features, it is possible to do so by typing
 
-```Makefile
+```makefile
 make all INPUT=configuration_file.dat
 ```
 
 ## Examples
 There are also some example files which can be run using
 
-```Makefile
+```makefile
 make examples
 ```
 
