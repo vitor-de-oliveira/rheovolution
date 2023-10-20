@@ -482,15 +482,15 @@ convert_input	(cltbdy	**bodies,
 		double	tau = (*bodies)[i].tau;
 		
 		/* 1st set of variables - x and x_dot */
-		double R_1_I[9];
-		double R_3_Omega[9];
+		double qr_1_I[4];
+		double qr_3_Omega[4];
 
 		if (i == 0)
 		{
 			null_vector((*bodies)[i].x);
 			null_vector((*bodies)[i].x_dot);
-			identity_matrix(R_1_I);			// for 2nd set of variables
-			identity_matrix(R_3_Omega);		// for 2nd set of variables
+			identity_quaternion(qr_1_I);		// for 2nd set of variables
+			identity_quaternion(qr_3_Omega);	// for 2nd set of variables
 		}
 		else
 		{
@@ -500,9 +500,7 @@ convert_input	(cltbdy	**bodies,
 
 			double E = kepler_equation(e, M);
 			double r = a * (1.0 - e * cos(E));
-			// double f = 2.0 * atan(sqrt((1.0 + e)/(1.0 - e)) * tan(0.5 * E));
-			double f =
-				atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
+			double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
 
 			double position_in_plane[] 
 				= {r * cos(f), r * sin(f), 0.0};
@@ -511,47 +509,53 @@ convert_input	(cltbdy	**bodies,
 					n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
 					0.0};
 
-			double R_3_w[9];
-			rotation_matrix_3d_z(R_3_w, w);
-			rotation_matrix_3d_x(R_1_I, I);
-			rotation_matrix_3d_z(R_3_Omega, Omega);
+			double qr_3_w[9];
+			rotation_quaternion_z(qr_3_w, w);
+			rotation_quaternion_x(qr_1_I, I);
+			rotation_quaternion_z(qr_3_Omega, Omega);
 
-			double full_rotation_orbit[9];
-			square_matrix_times_square_matrix(full_rotation_orbit,
-				R_3_Omega, R_1_I);
-			square_matrix_times_square_matrix(full_rotation_orbit,
-				full_rotation_orbit, R_3_w);
+			double full_rotation_orbit_quaternion[4];
+			quaternion_times_quaternion(full_rotation_orbit_quaternion,
+				qr_3_Omega, qr_1_I);
+			quaternion_times_quaternion(full_rotation_orbit_quaternion,
+				full_rotation_orbit_quaternion, qr_3_w);
 
-			square_matrix_times_vector((*bodies)[i].x, full_rotation_orbit, position_in_plane);
-			square_matrix_times_vector((*bodies)[i].x_dot, full_rotation_orbit, velocity_in_plane);
+			rotate_vector_with_quaternion((*bodies)[i].x, 
+				full_rotation_orbit_quaternion, position_in_plane);
+			rotate_vector_with_quaternion((*bodies)[i].x_dot, 
+				full_rotation_orbit_quaternion, velocity_in_plane);
 		}
 
-		/* 2nd set of variables - omega, body frame transformation and b0_diag */
+		/* 2nd set of variables - omega, body frame variables and b0_diag */
 		// b0_diag not implemented yet. 
 		// at the moment, it is being dealt with by the main
-		double R_3_psi[9];
-		rotation_matrix_3d_z(R_3_psi, psi);
-		double R_1_theta[9];
-		rotation_matrix_3d_x(R_1_theta, theta);
-		double R_3_phi[9];
-		rotation_matrix_3d_z(R_3_phi, phi);
+		double qr_3_psi[4];
+		rotation_quaternion_z(qr_3_psi, psi);
+		double qr_1_theta[4];
+		rotation_quaternion_x(qr_1_theta, theta);
+		double qr_3_phi[4];
+		rotation_quaternion_z(qr_3_phi, phi);
 
-		double full_rotation_body[9];
-		square_matrix_times_square_matrix(full_rotation_body,
-			R_3_Omega, R_1_I);
-		square_matrix_times_square_matrix(full_rotation_body,
-			full_rotation_body, R_3_psi);
-		square_matrix_times_square_matrix(full_rotation_body,
-			full_rotation_body, R_1_theta);
-		square_matrix_times_square_matrix(full_rotation_body,
-			full_rotation_body, R_3_phi);
-		
-		copy_square_matrix((*bodies)[i].Y, full_rotation_body);
+		double full_rotation_body_quaternion[4];
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			qr_3_Omega, qr_1_I);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_3_psi);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_1_theta);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_3_phi);
+
+		copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
 		double omega_on_body[] = {0.0, 0.0, 0.0};
 		double omega_direction_on_body[] = {0.0, 0.0, 1.0}; // strong assumption
 		scale_vector(omega_on_body, 2.0 * M_PI / Td, omega_direction_on_body);
-		square_matrix_times_vector((*bodies)[i].omega, full_rotation_body, omega_on_body);
+		rotate_vector_with_quaternion((*bodies)[i].omega,
+			full_rotation_body_quaternion, omega_on_body);
+
+		rotation_matrix_from_quaternion((*bodies)[i].Y, 
+			full_rotation_body_quaternion);
 
 		/* 3rd set of variables - I0 */
 		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
@@ -580,7 +584,7 @@ convert_input	(cltbdy	**bodies,
 
 	/* for testing */
 	// for (int i = 0; i < number_of_bodies; i++)
-	// 	print_CelestialBody(bodies[i]);
+	// 	print_CelestialBody((*bodies)[i]);
 	// exit(99);
 
 	return 0;

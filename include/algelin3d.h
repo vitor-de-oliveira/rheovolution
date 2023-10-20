@@ -125,6 +125,50 @@ inner_product_square_matrix(const double M[], const double N[]);
 int
 tensor_product(double M[], const double x[], const double y[]);
 
+/* quaternion */
+
+int
+print_quaternion(const double q[]);
+
+int
+copy_quaternion(double qc[], const double q[]);
+
+double
+norm_quaternion(const double q[]);
+
+int
+normalize_quaternion(double q_to_normalize[]);
+
+int
+identity_quaternion(double qI[]);
+
+int
+quaternion_from_vector(double qv[4], const double v[3]);
+
+int
+conjugate_quaternion(double qc[], double q[]);
+
+int
+quaternion_times_quaternion(double t[], const double r[], const double s[]);
+
+int
+rotation_quaternion(double qr[4], const double alpha, const double u[3]);
+
+int
+rotation_quaternion_x(double qr[4], const double alpha);
+
+int
+rotation_quaternion_y(double qr[4], const double alpha);
+
+int
+rotation_quaternion_z(double qr[4], const double alpha);
+
+int
+rotate_vector_with_quaternion(double v_rot[3], const double q[4], const double v[3]);
+
+int
+rotation_matrix_from_quaternion(double R[9], const double q[4]);
+
 /* additional functions */
 
 int

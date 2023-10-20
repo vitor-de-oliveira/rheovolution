@@ -360,6 +360,32 @@ calculate_longitude_of_the_ascending_node   (const double G,
     return Omega;
 }
 
+double
+calculate_obliquity_free_body(const double p[])
+{
+    double obl;
+
+    obl = acos(p[2]/norm_vector(p));
+
+    return obl;
+}
+
+double
+calculate_obliquity_on_orbit(const double x[],
+                             const double v[],
+					         const double p[])
+{
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    double obl;
+
+    obl = acos(dot_product(p,h)/(norm_vector(p)*norm_vector(h)));
+
+    return obl;
+}
+
 int
 print_CelestialBody(cltbdy body)
 {
@@ -471,6 +497,8 @@ print_CelestialBody(cltbdy body)
 
 	printf("Y = \n");
 	print_square_matrix(body.Y);
+	printf("q = \n");
+	print_quaternion(body.q);
 
 	printf("omega = ");
 	print_vector(body.omega);
