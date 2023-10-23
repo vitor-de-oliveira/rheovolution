@@ -363,9 +363,11 @@ calculate_longitude_of_the_ascending_node   (const double G,
 double
 calculate_obliquity_free_body(const double p[])
 {
+    double e_z[] = {0.0, 0.0, 1.0};
+
     double obl;
 
-    obl = acos(p[2]/norm_vector(p));
+    obl = angle_between_two_vectors(p, e_z);
 
     return obl;
 }
@@ -381,7 +383,7 @@ calculate_obliquity_on_orbit(const double x[],
 
     double obl;
 
-    obl = acos(dot_product(p,h)/(norm_vector(p)*norm_vector(h)));
+    obl = angle_between_two_vectors(p, h);
 
     return obl;
 }

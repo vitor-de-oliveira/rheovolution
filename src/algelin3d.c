@@ -105,6 +105,30 @@ cross_product(double z[], const double x[], const double y[])
 	return 0;
 }
 
+double
+angle_between_two_vectors(const double x[], const double y[])
+{
+	double omega;
+
+	double frac = dot_product(x,y)/(norm_vector(x)*norm_vector(y));
+
+	// tries to correct numerical errors
+	if (frac > 1.0)
+	{
+		omega = 0.0;
+	}
+	else if (frac < -1.0)
+	{
+		omega = M_PI;
+	}
+	else
+	{
+		omega = acos(frac);
+	}
+
+	return omega;
+}
+
 int
 linear_combination_vector(double z[], const double a, const double x[], 
     const double b, const double y[])
@@ -269,6 +293,90 @@ scale_square_matrix(double aM[], const double a, const double M[])
 	{
 		aM[i] = aM_local[i];
 	}
+
+	return 0;
+}
+
+int
+calculate_eigenvectors_matrix(double M_eig[], const double M[])
+{
+
+	double M_copy[9];
+	copy_square_matrix(M_copy, M);
+
+	gsl_matrix_view M_gsl
+		= gsl_matrix_view_array (M_copy, 3, 3);
+
+	gsl_vector *eval = gsl_vector_alloc (3);
+	gsl_matrix *evec = gsl_matrix_alloc (3, 3);
+
+	gsl_eigen_symmv_workspace * w =	gsl_eigen_symmv_alloc (3);
+
+	gsl_eigen_symmv (&M_gsl.matrix, eval, evec, w);
+
+	gsl_eigen_symmv_sort(eval, evec, GSL_EIGEN_SORT_VAL_DESC);
+
+	// choose the direction of the last eigenvector
+	// as having a positive last entry
+	for (int i = 0; i < 9; i++)
+	{
+		M_eig[i] = evec->data[i];
+	}
+	if (M_eig[8] < 0.0)
+	{
+		M_eig[2] *= -1.0;
+		M_eig[5] *= -1.0;
+		M_eig[8] *= -1.0;
+	}
+
+	gsl_vector_free(eval);
+	gsl_matrix_free(evec);
+	gsl_eigen_symmv_free(w);
+
+	return 0;
+}
+
+int
+calculate_square_matrix_inverse(double M_inv[], const double M[])
+{
+	double M_copy[9];
+	copy_square_matrix(M_copy, M);
+
+	gsl_matrix_view M_gsl
+		= gsl_matrix_view_array (M_copy, 3, 3);
+
+	int s;
+	gsl_permutation * p = gsl_permutation_alloc (3);
+	gsl_linalg_LU_decomp (&M_gsl.matrix, p, &s);
+
+	gsl_matrix *M_inv_gsl = gsl_matrix_alloc (3, 3);
+
+	gsl_linalg_LU_invert(&M_gsl.matrix, p, M_inv_gsl);
+
+	for (int i = 0; i < 9; i++)
+	{
+		M_inv[i] = M_inv_gsl->data[i];
+	}
+
+	gsl_permutation_free (p);
+	gsl_matrix_free (M_inv_gsl);
+
+	return 0;
+}
+
+int
+calculate_diagonalized_square_matrix(double M_diag[], const double M[])
+{
+	/* M_diag = P_inv * M * P */
+	
+	double P[9];
+	calculate_eigenvectors_matrix(P, M);
+
+	double P_inv[9];
+	calculate_square_matrix_inverse(P_inv, P);
+
+	square_matrix_times_square_matrix(M_diag, P_inv, M);
+	square_matrix_times_square_matrix(M_diag, M_diag, P);
 
 	return 0;
 }
