@@ -120,7 +120,7 @@ calculate_obliquity_on_orbit(const double x[],
 					         const double p[]);
 
 /* Struct for celestial bodies (Generalized-Maxwell) */
-typedef struct CelestialBody{
+typedef struct CelestialBody {
 
 	/* body identification */
     char    name[100];  		// name

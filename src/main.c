@@ -10,6 +10,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
+#include <gsl/gsl_eigen.h> // for testing
 
 #include "celmec.h"
 #include "dynamical_system.h"
@@ -1869,6 +1870,9 @@ main(int argc, char *argv[])
 				// copy_square_matrix(Y, bodies[0].Y);
 				// double b[9];
 				// copy_square_matrix(b, bodies[0].b);
+				// I0 = bodies[0].I0;
+				// double l[3];
+				// copy_vector(l, bodies[0].l);
 				// double u[9];
 				// construct_traceless_symmetric_matrix(u, bodies[0].u_me);
 				// double omega[3];
@@ -1934,6 +1938,49 @@ main(int argc, char *argv[])
 				// printf("Omega_Rq = \n");
 				// print_vector(Omega_Rq);
 				// printf("\n");
+				// double P[9];
+				// calculate_eigenvectors_matrix(P, b);
+				// printf("P = \n");
+				// print_square_matrix(P);
+				// printf("det = %f\n", 
+				// 	calculate_square_matrix_determinant(P));
+				// double P_inv[9];
+				// calculate_square_matrix_inverse(P_inv, P);
+				// printf("P_inv = \n");
+				// print_square_matrix(P_inv);
+				// double omega_P[3];
+				// square_matrix_times_vector(omega_P, P_inv, omega);
+				// printf("omega_P = \n");
+				// print_vector(omega_P);
+				// double b_diag[9];
+				// calculate_diagonalized_square_matrix(b_diag, b);
+				// printf("b_diag = \n");
+				// print_square_matrix(b_diag);
+				// double inertia_D[9];
+				// calculate_inertia_tensor(inertia_D, I0, b_diag);
+				// double e_z[] = {0.0, 0.0, 1.0};
+				// double I_3_D[3];
+				// square_matrix_times_vector(I_3_D, inertia_D, e_z);
+				// printf("I_3_D = \n");
+				// print_vector(I_3_D);
+				// double I_3[3];
+				// square_matrix_times_vector(I_3, P, I_3_D);
+				// printf("I_3 = \n");
+				// print_vector(I_3);
+				// printf("l = \n");
+				// print_vector(l);
+				// printf("||I_3|| = %1.10e\n", norm_vector(I_3));
+				// printf("||l|| = %1.10e\n", norm_vector(l));
+				// printf("||I_3||||l|| = %1.10e\n", norm_vector(I_3)*norm_vector(l));
+				// printf("<I_3,l> = %1.10e\n", dot_product(I_3,l));
+				// printf("<I_3,l> /||I_3||||l||= %1.10e\n", 
+				// 	dot_product(I_3,l)/(norm_vector(I_3)*norm_vector(l)));
+				// double theta_Il = angle_between_two_vectors(I_3, l);
+				// printf("theta_Il = %1.10e\n", theta_Il);
+				// double theta_Iomega = angle_between_two_vectors(I_3, omega);
+				// printf("theta_Iomega = %1.10e\n", theta_Iomega);
+				// double theta_lomega = angle_between_two_vectors(l, omega);
+				// printf("theta_lomega = %1.10e\n", theta_lomega);
 				// exit(99);
 
 			} // end if (counter % data_skip == 0)

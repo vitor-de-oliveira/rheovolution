@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_permutation.h>
 
 #define DIM_3 3 // makes it easier to update this lib later
                 // to work on other dimensions
@@ -44,6 +47,9 @@ dot_product(const double x[], const double y[]);
 
 int
 cross_product(double z[], const double x[], const double y[]);
+
+double
+angle_between_two_vectors(const double x[], const double y[]);
 
 int
 linear_combination_vector(double z[], const double a, const double x[], 
@@ -90,6 +96,18 @@ norm_square_matrix(const double M[]);
 
 int
 scale_square_matrix(double aM[], const double a, const double M[]);
+
+// only defined for real symmetric matrices
+int
+calculate_eigenvectors_matrix(double M_eig[], const double M[]);
+
+// only defined for real symmetric matrices
+int
+calculate_square_matrix_inverse(double M_inv[], const double M[]);
+
+// only defined for real symmetric matrices
+int
+calculate_diagonalized_square_matrix(double M_diag[], const double M[]);
 
 /* square matrix vector */
 
