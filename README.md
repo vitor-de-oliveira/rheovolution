@@ -30,13 +30,13 @@ The ``configuration_file.dat`` should include the simulation name under ``name``
 After running the program, it is possible to calculate the orbital elements of every body using
 
 ```makefile
-make orbital INPUT=configuration_file.dat
+make orbit INPUT=configuration_file.dat
 ```
 
-And also to calculate the orientation variables of every body using
+And also to calculate the spin variables of every body using
 
 ```makefile
-make orientation INPUT=configuration_file.dat
+make spin INPUT=configuration_file.dat
 ```
 
 After that, it is possible to plot the time evolution of the main variables in the system via ``Gnuplot`` using
