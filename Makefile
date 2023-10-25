@@ -7,32 +7,39 @@ LIBS = -lgsl -lgslcblas -lm
 TARGET = TIDES
 
 CC = cc
-CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -Wpedantic
+CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+		 -march=native -Wall -Werror -Wpedantic
 
-DEPENDENCIES = $(SRC_DIR)/algelin3d.c $(SRC_DIR)/celmec.c $(SRC_DIR)/dynamical_system.c $(SRC_DIR)/parsing.c
+DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
+				$(SRC_DIR)/celestial_mechanics.c \
+				$(SRC_DIR)/tidal_theory.c \
+				$(SRC_DIR)/dynamical_system.c \
+				$(SRC_DIR)/data_processing.c
 
-.PHONY: run orbital orientation plot all example_1 example_2 examples clean clean_slurm check_input
-.SILENT: tides clean clean_slurm
+.PHONY: run orbit spin plot all example_1 example_2 examples \
+		clean clean_slurm input_check
+.SILENT: tides calibration clean clean_slurm
 
 tides:
 ifeq ($(CC),icc)
-	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 -march=native -Wall -Werror -diag-disable=10441)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+					-march=native -Wall -Werror -diag-disable=10441)
 endif
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
-run: check_input tides
+run: input_check tides
 	./$(TARGET) $(INPUT)
 
-orbital: check_input tides
-	./$(TARGET) $(INPUT) orbital
+orbit: input_check tides
+	./$(TARGET) $(INPUT) orbit
 
-orientation: check_input tides
-	./$(TARGET) $(INPUT) orientation
+spin: input_check tides
+	./$(TARGET) $(INPUT) spin
 
-plot: check_input tides
+plot: input_check tides
 	./$(TARGET) $(INPUT) plot
 
-all: check_input tides run orbital orientation plot
+all: input_check tides run orbit spin plot
 
 example_1:
 	$(eval EXAMPLE_NAME := Earth-Moon system)
@@ -50,13 +57,18 @@ example_2:
 
 examples: example_1 example_2
 
+calibration:
+	$(eval TARGET = CALIBRATION)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/calibration.c $(DEPENDENCIES) $(LIBS)
+	./$(TARGET)
+
 clean:
 	-rm -f $(TARGET)
 
 clean_slurm:
 	-rm -f slurm-*.out
 
-check_input:
+input_check:
 ifeq ($(INPUT), )
 	@echo "Please, provide the input file via INPUT=<input_file_path>."
 	@false

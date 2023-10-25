@@ -1,4 +1,4 @@
-#include "celmec.h"
+#include "celestial_mechanics.h"
 
 double
 kepler_period(double m1, double m2, double G, double a)
@@ -85,6 +85,46 @@ kepler_equation(const double e, const double M)
     gsl_root_fdfsolver_free(s);
 
     return E;
+}
+
+double
+calculate_rg(const double m, const double R, const double I[9])
+{
+	double rg;
+
+	double I_33 = I[8];
+
+	rg = I_33 / (m * R * R);
+
+	return rg;
+}
+
+
+double
+calculate_J2(const double m, const double R, const double I[9])
+{
+	double J2;
+
+	double I_11 = I[0];
+	double I_22 = I[4];
+	double I_33 = I[8];
+
+	J2 = (2.0 * I_33 - I_11 - I_22) / (2.0 * m * R * R);
+
+	return J2;
+}
+
+double
+calculate_C22(const double m, const double R, const double I[9])
+{
+	double C22;
+
+	double I_11 = I[0];
+	double I_22 = I[4];
+
+	C22 = (I_22 - I_11) / (4.0 * m * R * R);
+
+	return C22;
 }
 
 double
@@ -872,4 +912,29 @@ calculate_orbital_elements  (cltbdy *body,
     (*body).Omega = Omega;
 
     return 0;
+}
+
+int
+calculate_center_of_mass(double center_of_mass[3],
+				 		 const cltbdy *bodies,
+			 	 		 const int number_of_bodies,
+			 	 		 const double G)
+{
+	double sum_of_masses = 0.0;
+	double sum_of_masses_times_positions[] = {0.0,0.0,0.0};
+
+	for (int i = 0; i < number_of_bodies; i++)
+	{
+		sum_of_masses += bodies[i].mass;
+		double mass_times_position[3];
+		scale_vector(mass_times_position, bodies[i].mass, bodies[i].x);
+		linear_combination_vector(sum_of_masses_times_positions,
+			1.0, sum_of_masses_times_positions,
+			1.0, mass_times_position);
+	}
+
+	scale_vector(center_of_mass, 
+		1.0 / sum_of_masses, sum_of_masses_times_positions);
+
+	return 0;
 }

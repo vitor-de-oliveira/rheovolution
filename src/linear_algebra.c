@@ -1,4 +1,4 @@
-#include "algelin3d.h"
+#include "linear_algebra.h"
 
 int
 null_vector(double x[])

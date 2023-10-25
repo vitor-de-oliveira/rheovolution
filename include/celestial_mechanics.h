@@ -14,7 +14,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 
-#include "algelin3d.h"
+#include "linear_algebra.h"
 
 /* Kepler 3rd law */
 double
@@ -46,6 +46,19 @@ root_fdf_kepler	(double E,
 double
 kepler_equation	(const double e,
                  const double M);
+
+/* potential terms */
+/* should be calculated using an inertia tensor I[] */
+/* measured in the body's reference frame */
+
+double
+calculate_rg(const double m, const double R, const double I[9]);
+
+double
+calculate_J2(const double m, const double R, const double I[9]);
+
+double
+calculate_C22(const double m, const double R, const double I[9]);
 
 /* orbital elements from state vectors */
 /* taken from text based on Vallado, 2007 */
@@ -119,7 +132,8 @@ calculate_obliquity_on_orbit(const double x[],
                              const double v[],
 					         const double p[]);
 
-/* Struct for celestial bodies (Generalized-Maxwell) */
+/* struct for celestial bodies (Generalized-Voigt) */
+
 typedef struct CelestialBody {
 
 	/* body identification */
@@ -198,5 +212,11 @@ int
 calculate_orbital_elements  (cltbdy *body, 
                              const cltbdy body_ref,
                              const double G);
+
+int
+calculate_center_of_mass(double center_of_mass[3],
+				 		 const cltbdy *bodies,
+			 	 		 const int number_of_bodies,
+			 	 		 const double G);
 
 #endif
