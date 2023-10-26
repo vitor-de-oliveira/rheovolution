@@ -6,8 +6,7 @@ field_GV(double t,
 		 double f[],
        	 void *params)
 {
-	/* reinforce autonomous trait of the system */
-	(void)(t);
+	(void)(t); // reinforce autonomous trait of the system
 
 	/* preparing variables and parameters */
 
@@ -90,64 +89,9 @@ field_GV(double t,
 	/* calculate omega and b for every body */
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		// printf("omega of bodies %d before\n", i+1);
-		// print_vector(bodies[i].omega);
 		calculate_omega(i, bodies, number_of_bodies, G);
-		// printf("omega of body %d after\n", i+1);
-		// print_vector(bodies[i].omega);
 		calculate_b(i, bodies, number_of_bodies, G);
 	}
-
-	/* for testing */
-	// printf("omega inside = \n");
-	// print_vector(omega);
-	// printf("b = \n");
-	// print_square_matrix(b);
-	// exit(42);
-	// null_matrix(b);
-	// null_matrix(omega);
-	// double b_me[5];
-	// for (int i = 0; i < 5; i++)
-	// {
-	// 	b_me[i] = ((double) i) * 0.00000000001;
-	// }
-	// construct_traceless_symmetric_matrix(b, b_me);
-	// printf("Y in field_GV = \n");
-	// print_square_matrix(bodies[0].Y);
-
-	// double **component_x;
-	// double **component_x_dot;
-	// double **component_l;
-	// double **component_b0_me;
-	// double **component_u_me;
-	// double ***component_bk_me = *(&component_bk_me);
-
-	// component_x	= (double **) malloc(number_of_bodies * sizeof(double *));
-	// component_x_dot	= (double **) malloc(number_of_bodies * sizeof(double *));
-	// component_l	= (double **) malloc(number_of_bodies * sizeof(double *));
-	// component_b0_me	= (double **) malloc(number_of_bodies * sizeof(double *));
-	// component_u_me	= (double **) malloc(number_of_bodies * sizeof(double *));
-	// if (elements_total > 0)
-	// {
-	// 	component_bk_me	= (double ***) malloc(number_of_bodies * sizeof(double **));
-	// }
-	// for (int i = 0; i < number_of_bodies; i++)
-	// {
-	// 	component_x[i] = (double *) malloc(3 * sizeof(double));
-	// 	component_x_dot[i] = (double *) malloc(3 * sizeof(double));
-	// 	component_l[i] = (double *) malloc(3 * sizeof(double));
-	// 	component_b0_me[i] = (double *) malloc(5 * sizeof(double));
-	// 	component_u_me[i] = (double *) malloc(5 * sizeof(double));
-	// 	if (bodies[i].elements > 0)
-	// 	{
-	// 		component_bk_me[i] = (double **) malloc(bodies[i].elements * sizeof(double *));
-
-	// 		for (int j = 0; j < bodies[i].elements; j++)
-	// 		{
-	// 			component_bk_me[i][j] = (double *) malloc(5 * sizeof(double));
-	// 		}
-	// 	}
-	// }
 
 	double component_x[number_of_bodies][3];
 	double component_x_dot[number_of_bodies][3];
@@ -326,8 +270,8 @@ field_GV(double t,
 				linear_combination_vector(component_l[i],
 					1.0, component_l[i],
 					1.0, j_component_l);
-			} // end if (j != i)
-		} // end summation on number of bodies
+			} 
+		} 
 
 		// b0 component
 
@@ -357,8 +301,6 @@ field_GV(double t,
 				{
 					bk_me_2d_array[k][l] = bodies[i].bk_me[l + (k*5)];
 
-					/* for testing */
-					// printf("bk_me = %f\n",bk_me[i][j]);
 				}
 				construct_traceless_symmetric_matrix(bk[k], bk_me_2d_array[k]);
 
@@ -379,16 +321,6 @@ field_GV(double t,
 				scale_square_matrix(lambda_over_eta_elements,
 					1.0 / bodies[i].eta_elements[k], lambda);
 
-				/* for testing */
-				// printf("\ntau_%d = %f\n", i, tau_elements[i]);
-				// printf("\nminus_1_over_tau_%d = %f\n", i, -1.0 / tau_elements[i]);
-				// printf("\nomega_hat_comm_bk = \n");
-				// print_square_matrix(omega_hat_comm_bk);
-				// printf("\nminus_bk_over_tau_elements = \n");
-				// print_square_matrix(minus_bk_over_tau_elements);
-				// printf("\nlambda_over_eta_elements = \n");
-				// print_square_matrix(lambda_over_eta_elements);
-
 				double component_bk[] = { 0.0, 0.0, 0.0,
 										0.0, 0.0, 0.0,
 										0.0, 0.0, 0.0 };
@@ -400,11 +332,6 @@ field_GV(double t,
 				get_main_elements_traceless_symmetric_matrix(component_bk_me[i][k],
 					component_bk);
 
-				/* for testing */
-				// printf("\nalpha_%d = %f\n", i, alpha_elements[i]);
-				// printf("\ntau_%d = %f\n", i, tau_elements[i]);
-				// printf("\ncomponent_bk = \n");
-				// print_square_matrix(component_bk);
 			}
 		} // end bodies[i].elements > 0
 
@@ -427,26 +354,6 @@ field_GV(double t,
 			quaternion_half_omega, bodies[i].q);
 
 	} // end loop over bodies
-
-	/* for testing */
-	// printf("\nomega_hat_comm_u = \n");
-	// print_square_matrix(omega_hat_comm_u);
-	// printf("\ntau = \n");
-	// printf("%f\n", tau);
-	// printf("\nlambda = \n");
-	// print_square_matrix(lambda);
-	// printf("\ncomponent_u = \n");
-	// print_square_matrix(component_u);	
-	// printf("\ncomponent_u_me = \n");
-	// printf("%1.10e %1.10e %1.10e %1.10e %1.10e\n",
-	// 	component_u_me[0], component_u_me[1], component_u_me[2],
-	// 	component_u_me[3], component_u_me[4]);	
-	// printf("\nu_me = \n");
-	// printf("%1.10e %1.10e %1.10e %1.10e %1.10e\n",
-	// 	u_me[0], u_me[1], u_me[2], u_me[3], u_me[4]);
-	// printf("component_Y = \n");
-	// print_square_matrix(component_Y[0]);
-	// exit(42);
 
 	/* writing components */
 
@@ -478,13 +385,7 @@ field_GV(double t,
 		}
 		elements_counter += bodies[i].elements;
 
-	} // end for (int i = 0; i < number_of_bodies; i++)
-
-	/* for testing */
-	// for (int i = 0; i < number_of_bodies * 19; i++)
-	// {
-	// 	printf("f[%d] = %1.5e\n", i, f[i]);
-	// }
+	}
 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
@@ -501,11 +402,6 @@ field_GV(double t,
 	{
 		free(component_bk_me);
 	}
-
-	/* for testing */
-	// for (int i = 0; i < number_of_bodies; i++)
-	// 		print_CelestialBody(bodies[i]);
-	// exit(99);
 	
 	/* free Voigt elements */
 	for (int i = 0; i < number_of_bodies; i++)
@@ -520,8 +416,6 @@ field_GV(double t,
 
 	/* free array of celestial bodies */
 	free(bodies);
-
-	// printf("here again\n");
 
 	return GSL_SUCCESS;
 }
