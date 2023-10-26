@@ -1,9 +1,12 @@
 TIDES
+CALIBRATION
 input/
 output/
-run_tides.sh
-err.err
-out.out
-nohup.out
-.vscode/
+output_*/
 tests/
+.vscode/
+nohup.out
+slurm-*.out
+run_*.sh
+*.err
+.nfs*

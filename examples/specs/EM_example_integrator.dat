@@ -1,0 +1,7 @@
+t_init(yr)      0.0
+t_trans(yr)     1.0e2
+t_final(yr)     1.0e3
+t_step(yr)      2.73037864e-4
+eps_abs         1.0e-5
+eps_rel         1.0e-5
+data_skip       10

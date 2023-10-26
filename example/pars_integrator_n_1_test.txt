@@ -1,7 +1,0 @@
-t_init      = 0.0
-t_trans     = 0.0
-t_final     = 1000.0
-t_step      = 1e-2
-eps_abs     = 1e-6
-eps_rel     = 1e-6
-data_skip   = 1
