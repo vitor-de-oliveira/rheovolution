@@ -177,59 +177,24 @@ main(int argc, char *argv[])
     	= gsl_odeiv2_evolve_alloc (dim_state);
 
 	/* create output files */
-	char filename[150];
 	FILE *out[simulation.number_of_bodies + 1];
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		/* names and opens output files for each body */
-		strcpy(filename, simulation.output_folder);
-		strcat(filename, "results_");
-		strcat(filename, simulation.name);
-		strcat(filename, "_");
-		strcat(filename, bodies[i].name);
-		strcat(filename, ".dat");
-		out[i] = fopen(filename, "w");
-		/* writes output headers */
-		fprintf(out[i], "time(yr)");
-		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
-		if (bodies[i].point_mass == false)
-		{
-			fprintf(out[i], " omega_x omega_y omega_z");
-			fprintf(out[i], " l_x l_y l_z");
-			fprintf(out[i], " |b|");
-		}
-		fprintf(out[i], "\n");
-	}
-	/* names and opens general output file */
-	strcpy(filename, simulation.output_folder);
-	strcat(filename, "results_");
-	strcat(filename, simulation.name);
-	strcat(filename, "_");
-	strcat(filename, "full_system");
-	strcat(filename, ".dat");
-	out[simulation.number_of_bodies] = fopen(filename, "w");
-	fprintf(out[simulation.number_of_bodies], "time(yr)");
-	fprintf(out[simulation.number_of_bodies], " x_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " y_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " z_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " |L|");
-	fprintf(out[simulation.number_of_bodies], "\n");
+	create_output_files(bodies, simulation, out);
 
 	/* integration loop */
-	int		counter = 0;	
-	double 	t = simulation.t_init;
-	while (t < simulation.t_final)
+	simulation.counter = 0;	
+	simulation.t = simulation.t_init;
+	while (simulation.t < simulation.t_final)
 	{
-		if (fabs(simulation.t_final-t) < simulation.t_step)
+		if (fabs(simulation.t_final-simulation.t) < simulation.t_step)
 		{
-			simulation.t_step = simulation.t_final - t; // smaller last step
+			simulation.t_step = simulation.t_final - simulation.t; // smaller last step
 		}
 
 	  	gsl_odeiv2_system sys = {field_GV, NULL, dim_state, params};
 	
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
-				ode_control, ode_step, &sys, &t, simulation.t_step, y);
+				ode_control, ode_step, &sys, &simulation.t, simulation.t_step, y);
 
 		if (status != GSL_SUCCESS)
 		{
@@ -292,115 +257,19 @@ main(int argc, char *argv[])
 			calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
 		}
 
-		/* writes output */
-		if (t > simulation.t_trans)
+		/* write output */
+		if (simulation.t > simulation.t_trans)
 		{
-			if (counter % simulation.data_skip == 0)
+			if (simulation.counter % simulation.data_skip == 0)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					/* state variables */
-
-					/* time */
-					fprintf (out[i], "%.15e", t);
-
-					/* position, and velocity */
-					if (bodies[i].keplerian == true)
-					{
-						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
-							bodies[i].x[0], bodies[i].x[1], bodies[i].x[2],
-							bodies[i].x_dot[0], bodies[i].x_dot[1], bodies[i].x_dot[2]);
-					}
-					else
-					{
-						// transform to body 1-centered system
-						double relative_x[3];
-						linear_combination_vector(relative_x,
-							1.0, bodies[i].x,
-							-1.0, bodies[0].x);
-						double relative_x_dot[3];
-						linear_combination_vector(relative_x_dot,
-							1.0, bodies[i].x_dot,
-							-1.0, bodies[0].x_dot);
-
-						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
-							relative_x[0], relative_x[1], relative_x[2],
-							relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
-					}
-
-					if (bodies[i].point_mass == false)
-					{
-						/* angular velocity vector */
-						fprintf (out[i], " %.15e %.15e %.15e", 
-							bodies[i].omega[0], bodies[i].omega[1], bodies[i].omega[2]);
-
-						/* angular momentum vector */
-						fprintf (out[i], " %.15e %.15e %.15e", 
-							bodies[i].l[0], bodies[i].l[1], bodies[i].l[2]);
-
-						/* deformation matrix */
-						fprintf (out[i], " %.15e", norm_square_matrix(bodies[i].b));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].b[0], bodies[i].b[1], bodies[i].b[2],
-						// 	bodies[i].b[3], bodies[i].b[4], bodies[i].b[5],
-						// 	bodies[i].b[6], bodies[i].b[7], bodies[i].b[8]);
-
-						/* prestress */
-						// printf (" %.15e", norm_square_matrix(bodies[i].b0));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].b0[0], bodies[i].b0[1], bodies[i].b0[2],
-						// 	bodies[i].b0[3], bodies[i].b0[4], bodies[i].b0[5],
-						// 	bodies[i].b0[6], bodies[i].b0[7], bodies[i].b0[8]);
-
-						/* rheology */
-						// printf (" %.15e", norm_square_matrix(bodies[i].u));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].u[0], bodies[i].u[1], bodies[i].u[2],
-						// 	bodies[i].u[3], bodies[i].u[4], bodies[i].u[5],
-						// 	bodies[i].u[6], bodies[i].u[7], bodies[i].u[8]);
-					}
-
-					/* next line */
-					fprintf(out[i], "\n");
-
-				} // end loop over bodies
-
-				/* prints on general file */
-
-				/* time */
-				fprintf (out[simulation.number_of_bodies], "%.15e", t);
-
-				/* location of center of mass */
-				double center_of_mass[3];
-				calculate_center_of_mass(center_of_mass, bodies, simulation.number_of_bodies, simulation.G);
-				double relative_center_of_mass[3];
-				linear_combination_vector(relative_center_of_mass,
-					1.0, center_of_mass,
-					-1.0, bodies[0].x);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[0]);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[1]);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[2]);
-
-				/* total angular momentum */
-				double l_total[3];
-				calculate_total_angular_momentum(l_total, bodies, simulation.number_of_bodies, simulation.G);
-				fprintf (out[simulation.number_of_bodies], " %.15e", norm_vector(l_total));
-
-				/* next line */
-				fprintf(out[simulation.number_of_bodies], "\n");
-
-			} // end if (counter % data_skip == 0)
-
-			counter++;
-
-		} // end if (t > t_trans)
+				write_output(bodies, simulation, out);
+			}
+			simulation.counter++;
+		}
 	}
 
 	/* close output files */
-	for (int i = 0; i < simulation.number_of_bodies + 1; i++)
-	{
-		fclose(out[i]);
-	}
+	close_output_files(simulation, out);
 
 	/* free GSL variables */
 	gsl_odeiv2_evolve_free (ode_evolve);
