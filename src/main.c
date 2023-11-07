@@ -154,12 +154,6 @@ main(int argc, char *argv[])
 					bodies[i].lod = omega_correction_lod[i];
 
 					initialize_angular_velocity(&bodies[i]);
-					
-					printf("bodies_copy[i].lod = %1.10e\n", bodies_copy[i].lod * 365.25);
-					printf("omega_correction_lod_after_simulation = %1.10e\n", omega_correction_lod_after_simulation[i] * 365.25);
-					printf("omega_correction_step = %1.10e\n", omega_correction_step[i] * 365.25);
-					printf("omega_correction_lod = %1.10e\n", omega_correction_lod[i] * 365.25);
-					printf("\n");	
 				}
 				else
 				{
