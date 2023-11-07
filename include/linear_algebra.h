@@ -40,6 +40,12 @@ norm_vector(const double x[]);
 int
 scale_vector(double ax[], const double a, const double x[]);
 
+int
+vector_from_spherical_coordinates   (double x[],
+                                     const double r,
+                                     const double theta,
+                                     const double phi);
+
 /* vector vector */
 
 double

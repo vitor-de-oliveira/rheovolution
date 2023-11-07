@@ -68,6 +68,19 @@ scale_vector(double ax[], const double a, const double x[])
 	return 0;
 }
 
+int
+vector_from_spherical_coordinates   (double x[],
+                                     const double r,
+                                     const double theta,
+                                     const double phi)
+{
+	x[0] = r * cos(theta) * sin(phi);
+	x[1] = r * sin(theta) * sin(phi);	
+	x[2] = r * cos(phi);
+
+	return 0;
+}
+
 double
 dot_product(const double x[], const double y[])
 {

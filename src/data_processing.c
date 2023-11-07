@@ -40,6 +40,7 @@ parse_input(siminf *simulation,
 	bool	system_file_type_received = false;
 	bool	number_of_bodies_received = false;
 	bool	dev_specs_file_received = false;
+	bool	omega_correction_received = false;
 
 	/* parse input file */
 	FILE	*in = fopen(input_file, "r");
@@ -82,10 +83,10 @@ parse_input(siminf *simulation,
 			strcpy((*simulation).system_specs, (*simulation).input_folder);
 			strcat((*simulation).system_specs, second_col);
 		}
-		else if (strcmp(first_col, "integrator_specs") == 0)
+		else if (strcmp(first_col, "simulation_specs") == 0)
 		{
-			strcpy((*simulation).integrator_specs, (*simulation).input_folder);
-			strcat((*simulation).integrator_specs, second_col);
+			strcpy((*simulation).simulation_specs, (*simulation).input_folder);
+			strcat((*simulation).simulation_specs, second_col);
 		}
 		else if (strcmp(first_col, "dev_specs") == 0)
 		{
@@ -103,6 +104,27 @@ parse_input(siminf *simulation,
 			(*simulation).number_of_bodies = atoi(second_col);
 			number_of_bodies_received = true;
 		}
+		else if (strcmp(first_col, "omega_correction") == 0)
+		{
+			if (strcmp(second_col, "yes") == 0)
+			{
+				(*simulation).omega_correction = true;
+				(*simulation).write_to_file = false;
+			}
+			else if (strcmp(second_col, "no") == 0)
+			{
+				(*simulation).omega_correction = false;
+				(*simulation).write_to_file = true;
+			}
+			else
+			{
+				printf("%s\n", second_col);
+				fprintf(stderr, "Please provide yes or no ");
+				fprintf(stderr, "for omega correction\n");
+				exit(14);
+			}
+			omega_correction_received = true;
+		}
 	}
 	fclose(in);
 
@@ -115,20 +137,20 @@ parse_input(siminf *simulation,
 		exit(13);
 	}
 	fclose(in_system);
-	FILE *in_integrator = fopen((*simulation).integrator_specs, "r");
-	if (in_integrator == NULL)
+	FILE *in_simulation = fopen((*simulation).simulation_specs, "r");
+	if (in_simulation == NULL)
 	{
-		fprintf(stderr, "Warning: could not read integrator specs.\n");
+		fprintf(stderr, "Warning: could not read simulation specs.\n");
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(13);
 	}
-	fclose(in_integrator);
+	fclose(in_simulation);
 	if (dev_specs_file_received == true)
 	{
 		FILE *in_dev = fopen((*simulation).dev_specs, "r");
-		if (in_integrator == NULL)
+		if (in_simulation == NULL)
 		{
-			fprintf(stderr, "Warning: could not read integrator specs.\n");
+			fprintf(stderr, "Warning: could not read simulation specs.\n");
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
@@ -176,6 +198,13 @@ parse_input(siminf *simulation,
 		(*simulation).number_of_bodies = col_num - 1;
 	}
 
+	/* check and set omega correction */
+	if (omega_correction_received == false)
+	{
+		(*simulation).omega_correction = false;
+		(*simulation).write_to_file = true;
+	}
+
 	/* gravitational constant */
 	(*simulation).G = 4.0 * M_PI * M_PI; // AU Msun year
 
@@ -207,19 +236,19 @@ parse_input(siminf *simulation,
 		fclose(in3);
 	}
 
-	/* verification variables for integrator input */
-	int 	number_integrator_inputs = 7;
-	bool	input_integrator_received[number_integrator_inputs];
-	for (int i = 0; i < number_integrator_inputs; i++)
+	/* verification variables for simulation input */
+	int 	number_simulation_inputs = 7;
+	bool	input_simulation_received[number_simulation_inputs];
+	for (int i = 0; i < number_simulation_inputs; i++)
 	{
-		input_integrator_received[i] = false;
+		input_simulation_received[i] = false;
 	}
 
-	/* reading integrator specs from user */
-	FILE *in2 = fopen((*simulation).integrator_specs, "r");
+	/* reading simulation specs from user */
+	FILE *in2 = fopen((*simulation).simulation_specs, "r");
 	if	(in2 == NULL)
 	{
-		fprintf(stderr, "Warning: could not read integrator specs file.\n");
+		fprintf(stderr, "Warning: could not read simulation specs file.\n");
 		fprintf(stderr, "Exiting the program now.\n");
 		exit(13);
 	}
@@ -229,48 +258,48 @@ parse_input(siminf *simulation,
 		if (strcmp(first_col, "t_init(yr)") == 0)
 		{
 			(*simulation).t_init = second_col_double;
-			input_integrator_received[0] = true;
+			input_simulation_received[0] = true;
 		}
 		else if (strcmp(first_col, "t_trans(yr)") == 0)
 		{
 			(*simulation).t_trans = second_col_double;
-			input_integrator_received[1] = true;
+			input_simulation_received[1] = true;
 		}
 		else if (strcmp(first_col, "t_final(yr)") == 0)
 		{
 			(*simulation).t_final = second_col_double;
-			input_integrator_received[2] = true;
+			input_simulation_received[2] = true;
 		}
 		else if (strcmp(first_col, "t_step(yr)") == 0)
 		{
 			(*simulation).t_step = second_col_double;
-			input_integrator_received[3] = true;
+			input_simulation_received[3] = true;
 		}
 		else if (strcmp(first_col, "eps_abs") == 0)
 		{
 			(*simulation).eps_abs = second_col_double;
-			input_integrator_received[4] = true;
+			input_simulation_received[4] = true;
 		}
 		else if (strcmp(first_col, "eps_rel") == 0)
 		{
 			(*simulation).eps_rel = second_col_double;
-			input_integrator_received[5] = true;
+			input_simulation_received[5] = true;
 		}
 		else if (strcmp(first_col, "data_skip") == 0)
 		{
 			(*simulation).data_skip = (int) second_col_double;
-			input_integrator_received[6] = true;
+			input_simulation_received[6] = true;
 		}
 	}
 	fclose(in2);
 
 	/* parameter input verification */
-	for (int i = 0; i < number_integrator_inputs; i++)
+	for (int i = 0; i < number_simulation_inputs; i++)
 	{
-		if(input_integrator_received[i] == false)
+		if(input_simulation_received[i] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", (*simulation).integrator_specs);
+			fprintf(stderr, "from %s.\n", (*simulation).simulation_specs);
 			exit(13);
 		}
 	}
@@ -529,7 +558,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		ssize_t read;
 
 		/* verification variables for input */
-		int 	number_par_inputs = 18;
+		int 	number_par_inputs = 21;
 		bool	input_par_received[number_par_inputs];
 		for (int i = 0; i < number_par_inputs; i++)
 		{
@@ -539,7 +568,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		bool	input_name_received = false;
 		bool	input_keplerian_received = false;
 		bool	input_orbit_2body_received = false;
-		int 	number_deformable_inputs = 3; 
+		int 	number_deformable_inputs = 4; 
 		bool	input_deformable_received[number_deformable_inputs];
 		for (int i = 0; i < number_deformable_inputs; i++)
 		{
@@ -730,6 +759,33 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				}
 				input_par_received[17] = true;
 			}
+			else if (strcmp(token, "ks") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].ks = atof(token);
+				}
+				input_par_received[18] = true;
+			}
+			else if (strcmp(token, "azi(deg)") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].azi = atof(token);
+				}
+				input_par_received[19] = true;
+			}
+			else if (strcmp(token, "pol(deg)") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].pol = atof(token);
+				}
+				input_par_received[20] = true;
+			}
 			else if (strcmp(token, "keplerian") == 0)
 			{
 				for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -843,6 +899,28 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				}
 				input_deformable_received[2] = true;
 			}
+			else if (strcmp(token, "prestress") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					if (strcmp(token, "yes") == 0)
+					{
+						(*bodies)[i].prestress = true;
+					}
+					else if (strcmp(token, "no") == 0)
+					{
+						(*bodies)[i].prestress = false;
+					}
+					else
+					{
+						fprintf(stderr, "Please provide yes or no ");
+						fprintf(stderr, "for prestress variable\n");
+						exit(14);
+					}
+				}
+				input_deformable_received[3] = true;
+			}
 		}
 		fclose(in1);
 
@@ -899,6 +977,8 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		double deg_to_rad = M_PI / 180.0;
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
+			(*bodies)[i].azi *= deg_to_rad;
+			(*bodies)[i].pol *= deg_to_rad;
 			(*bodies)[i].obl *= deg_to_rad;
 			(*bodies)[i].psi *= deg_to_rad;
 			(*bodies)[i].lib *= deg_to_rad;
@@ -949,7 +1029,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			double	m = (*bodies)[i].mass;
 			double	R = (*bodies)[i].R;
-			double  Td = (*bodies)[i].lod;
 
 			double	rg = (*bodies)[i].rg;
 			double	J2 = (*bodies)[i].J2;
@@ -965,6 +1044,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			double	w = (*bodies)[i].w;
 			double	Omega = (*bodies)[i].Omega;
 
+			double	ks = (*bodies)[i].ks;
 			double	kf = (*bodies)[i].kf;
 			double	Dt = (*bodies)[i].Dt;
 			double	tau = (*bodies)[i].tau;
@@ -1036,14 +1116,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 
 			copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
-			double omega_on_body[] = {0.0, 0.0, 0.0};
-			double omega_direction_on_body[] = {0.0, 0.0, 1.0}; // strong assumption
-			scale_vector(omega_on_body, 2.0 * M_PI / Td, omega_direction_on_body);
-			rotate_vector_with_quaternion((*bodies)[i].omega,
-				full_rotation_body_quaternion, omega_on_body);
+			rotation_matrix_from_quaternion((*bodies)[i].Y, (*bodies)[i].q);
 
-			rotation_matrix_from_quaternion((*bodies)[i].Y, 
-				full_rotation_body_quaternion);
+			initialize_angular_velocity(&(*bodies)[i]);
 
 			/* 3rd set of variables - I0 */
 			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
@@ -1066,6 +1141,16 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					(*bodies)[i].alpha_elements[j] = 1.0;
 					(*bodies)[i].eta_elements[j] = 1.0;
 				}
+			}
+
+			/* prestress */
+			if ((*bodies)[i].prestress == true)
+			{
+				(*bodies)[i].alpha_0 = parameter_alpha_0(simulation.G, (*bodies)[i].I0, R, kf, ks);
+			}
+			else
+			{
+				(*bodies)[i].alpha_0 = 0.0;
 			}
 
 		} // end loop over bodies
@@ -1191,6 +1276,21 @@ write_output(const cltbdy *bodies,
 			// 	bodies[i].u[0], bodies[i].u[1], bodies[i].u[2],
 			// 	bodies[i].u[3], bodies[i].u[4], bodies[i].u[5],
 			// 	bodies[i].u[6], bodies[i].u[7], bodies[i].u[8]);
+
+			/* UNDER CONSTRUCTION */
+			// printf("I0 = %1.5e\n", bodies[i].I0);
+			// printf ("t = %.15e\n", simulation.t);
+			// double b_diag[9], I_diag[9];
+			// calculate_diagonalized_square_matrix(b_diag, bodies[i].b);
+			// calculate_inertia_tensor(I_diag, bodies[i].I0, b_diag);
+			// double rg, J2, C22;
+			// rg = calculate_rg(bodies[i].mass, bodies[i].R, I_diag);
+			// printf("rg = %1.5e\n", rg);
+			// J2 = calculate_J2(bodies[i].mass, bodies[i].R, I_diag);
+			// printf("J2 = %1.5e\n", J2);			
+			// C22 = calculate_C22(bodies[i].mass, bodies[i].R, I_diag);
+			// printf("C22 = %1.5e\n", C22);
+			// exit(99);
 		}
 
 		/* next line */
@@ -1286,7 +1386,7 @@ write_simulation_overview	(const int time_spent_in_seconds,
 	fprintf(in1_copy, "\n\n");
 	fclose(in1_copy);
 	fclose(in1_to_copy);
-	FILE *in2_to_copy = fopen(simulation.integrator_specs, "r");
+	FILE *in2_to_copy = fopen(simulation.simulation_specs, "r");
 	FILE *in2_copy = fopen(filename, "a");
 	char ch2 = fgetc(in2_to_copy);
     while(ch2 != EOF)

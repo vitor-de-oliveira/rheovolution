@@ -9,11 +9,41 @@ calculate_inertia_tensor(double I[9], const double I0, const double b[9])
 	return 0;
 }
 
+int
+body_frame_deformation_from_stokes_coefficients	(double B[9],
+												 const cltbdy body)
+{
+	for (int i = 0; i < 9; i++)
+	{
+		B[i] = 0.0;
+	}
+
+	double mR2 = body.mass * body.R * body.R;
+
+	B[0] = (body.I0 - (body.rg - body.J2 - 2.0 * body.C22) * mR2) / body.I0;
+	B[4] = (body.I0 - (body.rg - body.J2 + 2.0 * body.C22) * mR2) / body.I0;
+	B[8] = -1.0 * (B[0] + B[4]); // B[8] = (body.I0 - body.rg * mR2)/body.I0;
+
+	return 0;
+}
+
 double
-parameter_gamma(const double G,	const double I0, 
-	const double R, const double kf)
+parameter_gamma(const double G,
+				const double I0, 
+				const double R,
+				const double kf)
 {
 	return 3.0 * I0 * G / (pow(R, 5.0) * kf);
+}
+
+double
+parameter_alpha_0	(const double G,
+					 const double I0, 
+					 const double R,
+					 const double kf,
+					 const double ks)
+{
+	return (3.0 * I0 * G / pow(R, 5.0)) * (1.0 / ks - 1.0 / kf);
 }
 
 double
@@ -69,10 +99,6 @@ calculate_g	(double g[9],
 			 const int number_of_bodies,
 			 const double G)
 {
-	/* for testing */
-	// null_matrix(g);
-	// return 0;
-
 	/* construct b0, and u matrices */
 	double b0[9], u[9];
 	construct_traceless_symmetric_matrix(b0, bodies[id].b0_me);
@@ -110,28 +136,15 @@ calculate_g	(double g[9],
 			for (int j = 0; j < 5; j++)
 			{
 				bk_me_2d_array[i][j] = bodies[id].bk_me[j + (i*5)];
-
-				/* for testing */
-				// printf("bk_me = %f\n",bk_me[i][j]);
 			}
 			bk[i] = (double *) malloc(9 * sizeof(double));
 			construct_traceless_symmetric_matrix(bk[i], bk_me_2d_array[i]);
-
-			/* for testing */
-			// print_square_matrix(bk[i]);
 
 			linear_combination_square_matrix(g,
 							1.0, g,
 				 bodies[id].alpha, bk[i]);
 		}
 	}
-
-	/* for testing */
-	// for (int i  = 0; i < elements; i++)
-	// {
-	// 	printf("\nbk_%d = \n", i+1);
-	// 	print_square_matrix(bk[i]);
-	// }
 
 	/* freeing Voigt elements */
 	if (bodies[id].elements > 0)
@@ -170,15 +183,15 @@ calculate_b	(const int id,
 			 const int number_of_bodies,
 			 const double G)
 {
-	/* for testing */
-	// null_matrix(b);
-	// return 0;
-
-	if (bodies[id].point_mass == true) /* if body is a point mass, b equals 0 */
+	/**
+	 * if body is a point mass, b equals 0 
+	 * if body is not deformable, b equals to b0
+	**/
+	if (bodies[id].point_mass == true)
 	{
 		null_matrix(bodies[id].b);
 	}
-	else if (bodies[id].centrifugal == false && bodies[id].tidal == false) /* if body is not deformable, b equals to b0 */
+	else if (bodies[id].centrifugal == false && bodies[id].tidal == false)
 	{
 		construct_traceless_symmetric_matrix(bodies[id].b, bodies[id].b0_me);
 	}
@@ -206,25 +219,6 @@ calculate_b	(const int id,
 		}
 	}
 
-	/* for testing */
-	// printf("\nb = \n");
-	// print_square_matrix(b);
-	// printf("\ntilde_x = \n");
-	// print_vector(tilde_x);
-	// printf("\nb0 = \n");
-	// print_square_matrix(b0);
-	// printf("\nu = \n");
-	// print_square_matrix(u);
-	// printf("\nG = %f\n", G);
-	// printf("\nm2 = %f\n", m2);
-	// printf("\ngamma = %f\n", gamma);
-	// printf("\nalpha = %f\n", alpha);
-	// printf("\nalpha_0 = %f\n", alpha_0);
-	// exit(42);
-
-	// printf("%d\n", id);
-	// print_CelestialBody(bodies[id]);
-
 	return 0;
 }
 
@@ -246,10 +240,6 @@ calculate_omega	(const int id,
 			 	 const int number_of_bodies,
 			 	 const double G)
 {
-	/* for testing */
-	// scale_vector(omega, 1.0 / I0, l);
-	// return 0;
-
 	if (bodies[id].point_mass == true)
 	{
 		null_vector(bodies[id].omega);
@@ -264,12 +254,8 @@ calculate_omega	(const int id,
 	copy_vector(omega, bodies[id].omega);
 
 	for (int i = 0; i < number_of_iterates; i++)
-	// while (error > max_error)
+	// while (error > max_error) // an alternative
 	{
-		/* for testing */
-		// printf("%d\n", id);
-		// print_vector(omega);
-
 		/* store omega previous value */
 		copy_vector(previous_omega, omega);
 
@@ -287,7 +273,7 @@ calculate_omega	(const int id,
 		linear_combination_square_matrix(aux_H_first_term,
 			 1.0, Id,
 			-1.0 / c, g);
-		/* add centrifugal term if chosen */
+		/* add centrifugal term in H if chosen */
 		if (bodies[id].centrifugal == true)
 		{
 			linear_combination_square_matrix(aux_H_first_term,

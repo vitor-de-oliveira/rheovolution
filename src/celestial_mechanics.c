@@ -938,3 +938,68 @@ calculate_center_of_mass(double center_of_mass[3],
 
 	return 0;
 }
+
+int
+initialize_angular_velocity(cltbdy *body)
+{
+    double omega_on_body[] = {0.0, 0.0, 0.0};
+    vector_from_spherical_coordinates(omega_on_body,
+        2.0 * M_PI / (*body).lod,
+        (*body).azi,
+        (*body).pol);
+    rotate_vector_with_quaternion((*body).omega,
+        (*body).q, omega_on_body);
+
+    return 0;
+}
+
+double
+largest_time_scale	(const cltbdy *bodies,
+			 	 	 const int number_of_bodies,
+			 	 	 const double G)
+{
+    double largest = 0.0;
+    double largest_orbital_period = 0.0;
+    double largest_rotational_period = 0.0;
+    double largest_rheology_time_scale = 0.0;
+
+    for (int i = 0; i < number_of_bodies; i++)
+    {
+        if (i > 0)
+        {
+            double body_orbital_period = 
+                kepler_period(bodies[0].mass, bodies[i].mass, 
+                    G, bodies[i].a);
+            if (body_orbital_period > largest_orbital_period)
+            {
+                largest_orbital_period = body_orbital_period;
+            }
+        }
+        double body_rotational_period = bodies[i].lod;
+        if (body_rotational_period > largest_rotational_period)
+        {
+            largest_rotational_period = body_rotational_period;
+        }
+        double body_rheology_max_time = bodies[i].tau;
+        if (body_rheology_max_time > largest_rheology_time_scale)
+        {
+            largest_rheology_time_scale = body_rheology_max_time;
+        }
+    }
+
+    if (largest_orbital_period > largest)
+    {
+        largest = largest_orbital_period;
+    }
+    if (largest_rotational_period > largest)
+    {
+        largest = largest_rotational_period;
+    }
+    if (largest_rheology_time_scale > largest)
+    {
+        largest = largest_rheology_time_scale;
+    }
+
+    return largest;
+
+}

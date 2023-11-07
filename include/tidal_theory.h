@@ -15,11 +15,22 @@ calculate_inertia_tensor(double I[9],
 						 const double I0,
 						 const double b[9]);
 
+int
+body_frame_deformation_from_stokes_coefficients	(double B[9],
+												 const cltbdy body);
+
 double
 parameter_gamma(const double G,
 				const double I0, 
 				const double R,
 				const double kf);
+
+double
+parameter_alpha_0	(const double G,
+					 const double I0, 
+					 const double R,
+					 const double kf,
+					 const double ks);
 
 double
 calculate_c(const cltbdy body);

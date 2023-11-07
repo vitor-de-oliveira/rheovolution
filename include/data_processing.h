@@ -36,12 +36,14 @@ typedef struct SimulationInfo {
 	char	input_folder[100];
 	char	output_folder[100];
 	char	system_specs[100];
-	char	integrator_specs[100];
+	char	simulation_specs[100];
 	char	dev_specs[100];
 
 	/* general specs */
 	double	G;							// gravitational parameter
 	char	units[100];					// units used for simulation
+	bool	write_to_file;
+	bool	omega_correction;
 
 	/* system specs */
 	int		system_file_type;
@@ -62,6 +64,8 @@ typedef struct SimulationInfo {
 	/* auxiliary variables */
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
+	int		omega_correction_counter;
+	double	omega_correction_t_final;
 
 } siminf;
 

@@ -60,6 +60,119 @@ main(int argc, char *argv[])
 		}
 	}
 
+	/* correction for the angular velocity's initial value */
+	int		omega_correction_number_of_iterates = 10;
+	bool	omega_correction_on_body[simulation.number_of_bodies];
+	bool	bissection_found[simulation.number_of_bodies];
+	double	omega_correction_step[simulation.number_of_bodies];
+	double 	omega_correction_lod[simulation.number_of_bodies];
+	double	omega_correction_lod_after_simulation[simulation.number_of_bodies];
+	siminf	simulation_copy;
+	cltbdy	*bodies_copy;
+	if (simulation.omega_correction == true)
+	{
+		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			if (bodies[i].elements > 0)
+			{
+				bodies_copy[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+				bodies_copy[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+			}
+			bodies_copy[i] = bodies[i];
+			if ((bodies[i].point_mass == false) &&
+				(bodies[i].centrifugal == true || bodies[i].tidal == true))
+			{
+				omega_correction_on_body[i] = true;
+			}
+			else
+			{
+				omega_correction_on_body[i] = false;
+			}
+			bissection_found[i] = false;
+			omega_correction_lod[i] = bodies[i].lod;
+		}
+		simulation.omega_correction_t_final = 
+			10.0 * largest_time_scale(bodies, 
+						simulation.number_of_bodies,
+						simulation.G);
+		simulation.omega_correction_counter = 0;
+		simulation_copy = simulation;
+	}
+
+	back_omega_correction:;
+
+	if (simulation.omega_correction == true)
+	{
+		if (simulation.omega_correction_counter > 0) // already run once
+		{
+			simulation.t_step = simulation_copy.t_step;
+			if (simulation.omega_correction_counter == omega_correction_number_of_iterates)
+			{
+				simulation.write_to_file = true;
+				simulation.omega_correction = false;
+			}
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				if (omega_correction_on_body[i] == true)
+				{
+					omega_correction_lod_after_simulation[i] 
+						= 2.0 * M_PI / norm_vector(bodies[i].omega);
+
+					if (simulation.omega_correction_counter == 1) // defines first step
+					{
+						omega_correction_step[i] = 
+							bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+					}
+					else
+					{
+						double aux = bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+
+						if (bissection_found[i] == true)
+						{
+							if (omega_correction_step[i] * aux < 0.0)
+							{
+								omega_correction_step[i] *= -0.5;
+							}
+							else
+							{
+								omega_correction_step[i] *= 0.5;
+							}
+						}
+						else
+						{
+							if (omega_correction_step[i] * aux < 0.0)
+							{
+								omega_correction_step[i] *= -0.5;
+								bissection_found[i] = true;
+							}
+						}
+					}
+					omega_correction_lod[i] += omega_correction_step[i];
+
+					bodies[i] = bodies_copy[i];
+					bodies[i].lod = omega_correction_lod[i];
+
+					initialize_angular_velocity(&bodies[i]);
+					
+					printf("bodies_copy[i].lod = %1.10e\n", bodies_copy[i].lod * 365.25);
+					printf("omega_correction_lod_after_simulation = %1.10e\n", omega_correction_lod_after_simulation[i] * 365.25);
+					printf("omega_correction_step = %1.10e\n", omega_correction_step[i] * 365.25);
+					printf("omega_correction_lod = %1.10e\n", omega_correction_lod[i] * 365.25);
+					printf("\n");	
+				}
+				else
+				{
+					bodies[i] = bodies_copy[i]; // reboot to initial state
+				}
+				if (simulation.omega_correction == true)
+				{
+					bodies[i].keplerian = true; // fix all motion to keplerian
+				}
+			}
+		}
+	}
+
 	/* complete b0_me */
 	// I am using same b0_diag and alpha_0 for every body for now!
 	for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -69,16 +182,32 @@ main(int argc, char *argv[])
 		bodies[i].b0_me[2] = 0.0;
 		bodies[i].b0_me[3] = 0.0;
 		bodies[i].b0_me[4] = 0.0;
-		bodies[i].alpha_0 = 0.0;
 	}
+
+	/* UNDER CONSTRUCTION */
+	// for (int i = 0; i < simulation.number_of_bodies; i++)
+	// {
+	// 	double B0[9];
+	// 	body_frame_deformation_from_stokes_coefficients(B0, bodies[i]);
+	// 	// print_square_matrix(B0);
+	// 	double Y[9], Y_trans[9];
+	// 	copy_square_matrix(Y, bodies[i].Y);
+	// 	transpose_square_matrix(Y_trans, Y);
+	// 	square_matrix_times_square_matrix(B0, Y, B0);
+	// 	square_matrix_times_square_matrix(B0, B0, Y_trans);
+	// 	// print_square_matrix(B0);
+	// 	get_main_elements_traceless_symmetric_matrix(bodies[i].b0_me, B0);
+	// 	// exit(99);
+	// }
 
 	/* variables not given by user */
 	for (int i  = 0; i < simulation.number_of_bodies; i++)
 	{
-		for (int j = 0; j < 5; j++)
-		{
-			bodies[i].u_me[j] = 0.01;
-		}
+		bodies[i].u_me[0] = 0.01;
+		bodies[i].u_me[1] = 0.0;
+		bodies[i].u_me[2] = 0.0;
+		bodies[i].u_me[3] = 0.01;
+		bodies[i].u_me[4] = 0.0;
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].bk_me = (double *) calloc(bodies[i].elements * 5, sizeof(double));
@@ -178,16 +307,30 @@ main(int argc, char *argv[])
 
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
-	create_output_files(bodies, simulation, out);
+	if (simulation.write_to_file == true)
+	{
+		create_output_files(bodies, simulation, out);
+	}
 
 	/* integration loop */
 	simulation.counter = 0;	
 	simulation.t = simulation.t_init;
-	while (simulation.t < simulation.t_final)
+	double	final_time;
+	int	loop_counter = 0;
+	if (simulation.omega_correction == false)
 	{
-		if (fabs(simulation.t_final-simulation.t) < simulation.t_step)
+		final_time = simulation.t_final;
+	}
+	else
+	{
+		final_time = simulation.omega_correction_t_final;
+	}
+	while (simulation.t < final_time)
+	// while (loop_counter < 1 ) // for debugging
+	{
+		if (fabs(final_time-simulation.t) < simulation.t_step)
 		{
-			simulation.t_step = simulation.t_final - simulation.t; // smaller last step
+			simulation.t_step = final_time - simulation.t; // smaller last step
 		}
 
 	  	gsl_odeiv2_system sys = {field_GV, NULL, dim_state, params};
@@ -258,23 +401,37 @@ main(int argc, char *argv[])
 		}
 
 		/* write output */
-		if (simulation.t > simulation.t_trans)
+		if (simulation.write_to_file == true)
 		{
-			if (simulation.counter % simulation.data_skip == 0)
+			if (simulation.t > simulation.t_trans)
 			{
-				write_output(bodies, simulation, out);
+				if (simulation.counter % simulation.data_skip == 0)
+				{
+					write_output(bodies, simulation, out);
+				}
+				simulation.counter++;
 			}
-			simulation.counter++;
 		}
+
+		loop_counter++;
 	}
 
 	/* close output files */
-	close_output_files(simulation, out);
+	if (simulation.write_to_file == true)
+	{
+		close_output_files(simulation, out);
+	}
 
 	/* free GSL variables */
 	gsl_odeiv2_evolve_free (ode_evolve);
 	gsl_odeiv2_control_free (ode_control);
 	gsl_odeiv2_step_free (ode_step);
+
+	if (simulation.omega_correction == true)
+	{
+		simulation.omega_correction_counter++;
+		goto back_omega_correction;
+	}
 
 	/* free Voigt elements */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -290,13 +447,30 @@ main(int argc, char *argv[])
 	/* free array of celestial bodies */
 	free(bodies);
 
+	if (simulation.omega_correction == true)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			if (bodies_copy[i].elements > 0)
+			{
+				free(bodies_copy[i].alpha_elements);
+				free(bodies_copy[i].eta_elements);	
+				free(bodies_copy[i].bk_me);
+			}
+		}
+		free(bodies_copy);
+	}
+
 	/* stop clock */
 	end_time = clock();
 	int time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
 	/* write overview file */
-	write_simulation_overview(time_spent_in_seconds, simulation);
-	
+	if (simulation.write_to_file == true)
+	{
+		write_simulation_overview(time_spent_in_seconds, simulation);
+	}
+
 	return 0;
 }

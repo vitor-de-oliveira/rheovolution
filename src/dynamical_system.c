@@ -384,7 +384,6 @@ field_GV(double t,
 			f[19 + 5 * bodies[i].elements + dim_state_skip + j]	= component_q[i][j];
 		}
 		elements_counter += bodies[i].elements;
-
 	}
 
 	for (int i = 0; i < number_of_bodies; i++)

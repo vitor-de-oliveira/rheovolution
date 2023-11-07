@@ -143,6 +143,8 @@ typedef struct CelestialBody {
 	double  mass;       		// mass (sun mass)
 	double	R;		    		// radius (km)
 	double	lod;	    		// length of day (day)
+	double	azi;				// azimuthal angle of angular velocity (deg)
+	double	pol;				// polar angle of angular velocity (deg)
 
 	double	rg;		    		// moment of inertia factor
 	double	J2;		    		// gravity field coefficient
@@ -162,6 +164,7 @@ typedef struct CelestialBody {
 	double	w;		    		// argument of periapsis (deg)
 	double	Omega;	    		// longitude of the ascending node (deg)
 
+	double	ks;					// secular Love number
 	double	kf;		    		// fluid Love number
 	double	Dt;		    		// tidal lag (s)
 	double	tau;	    		// Maxwell relaxation time plus tidal lag (yr)
@@ -183,6 +186,7 @@ typedef struct CelestialBody {
 	bool	point_mass;			// point mass
 	bool	centrifugal;		// centrifugal force
 	bool	tidal;				// tidal force
+	bool	prestress;			// permanent deformation
 
 	/* state variables */
 	double	x[3];				// position
@@ -218,5 +222,13 @@ calculate_center_of_mass(double center_of_mass[3],
 				 		 const cltbdy *bodies,
 			 	 		 const int number_of_bodies,
 			 	 		 const double G);
+
+int
+initialize_angular_velocity(cltbdy *body);
+
+double
+largest_time_scale	(const cltbdy *bodies,
+			 	 	 const int number_of_bodies,
+			 	 	 const double G);
 
 #endif
