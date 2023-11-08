@@ -67,8 +67,8 @@ main(int argc, char *argv[])
 	double	omega_correction_step[simulation.number_of_bodies];
 	double 	omega_correction_lod[simulation.number_of_bodies];
 	double	omega_correction_lod_after_simulation[simulation.number_of_bodies];
-	siminf	simulation_copy;
-	cltbdy	*bodies_copy;
+	siminf	simulation_copy = *(&simulation_copy);
+	cltbdy	*bodies_copy = *(&bodies_copy);
 	if (simulation.omega_correction == true)
 	{
 		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
