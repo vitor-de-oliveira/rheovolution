@@ -60,35 +60,177 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* complete b0_me */
-	// I am using same b0_diag and alpha_0 for every body for now!
-	for (int i = 0; i < simulation.number_of_bodies; i++)
+	/* correction for the angular velocity's initial value */
+	int		omega_correction_number_of_iterates = 20;
+	bool	omega_correction_on_body[simulation.number_of_bodies];
+	double	omega_correction_step[simulation.number_of_bodies];
+	double 	omega_correction_lod[simulation.number_of_bodies];
+	double	omega_correction_lod_after_simulation[simulation.number_of_bodies];
+	siminf	simulation_copy = *(&simulation_copy);
+	cltbdy	*bodies_copy = *(&bodies_copy);
+	if (simulation.omega_correction == true)
 	{
-		bodies[i].b0_me[0] = 0.0;
-		bodies[i].b0_me[1] = 0.0;
-		bodies[i].b0_me[2] = 0.0;
-		bodies[i].b0_me[3] = 0.0;
-		bodies[i].b0_me[4] = 0.0;
-		bodies[i].alpha_0 = 0.0;
+		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			if (bodies[i].elements > 0)
+			{
+				bodies_copy[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+				bodies_copy[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+			}
+			bodies_copy[i] = bodies[i];
+			if (bodies[i].point_mass == false)
+			{
+				omega_correction_on_body[i] = true;
+			}
+			else
+			{
+				omega_correction_on_body[i] = false;
+			}
+			omega_correction_lod[i] = bodies[i].lod;
+		}
+		simulation.omega_correction_t_final = 
+			10.0 * largest_time_scale(bodies, 
+						simulation.number_of_bodies,
+						simulation.G);
+		simulation.omega_correction_counter = 0;
+		simulation_copy = simulation;
 	}
 
-	/* variables not given by user */
-	for (int i  = 0; i < simulation.number_of_bodies; i++)
+	back_omega_correction:;
+
+	if (simulation.omega_correction == true)
 	{
-		for (int j = 0; j < 5; j++)
+		if (simulation.omega_correction_counter > 0) // already run once
 		{
-			bodies[i].u_me[j] = 0.01;
+			simulation.t_step = simulation_copy.t_step;
+			if (simulation.omega_correction_counter == omega_correction_number_of_iterates)
+			{
+				simulation.write_to_file = true;
+				simulation.omega_correction = false;
+				simulation.keplerian_motion = simulation_copy.keplerian_motion;
+			}
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				if (omega_correction_on_body[i] == true)
+				{
+					omega_correction_lod_after_simulation[i] 
+						= 2.0 * M_PI / norm_vector(bodies[i].omega);
+
+					if (simulation.omega_correction_counter == 1) // defines first step
+					{
+						omega_correction_step[i] = 
+							bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+					}
+					else
+					{
+						double aux = bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+						if (omega_correction_step[i] * aux < 0.0)
+						{
+							omega_correction_step[i] /= -2.1;
+						}
+					}
+					omega_correction_lod[i] += omega_correction_step[i];
+
+					bodies[i] = bodies_copy[i];
+					bodies[i].lod = omega_correction_lod[i];
+
+					initialize_angular_velocity_on_figure_axis_of_solid_frame(&bodies[i]);
+
+				}
+				else
+				{
+					bodies[i] = bodies_copy[i]; // reboot to initial state
+				}
+			}
 		}
+	}
+
+	/* calculate bk, b0, and u */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		/* bk */
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].bk_me = (double *) calloc(bodies[i].elements * 5, sizeof(double));
 		}
-	}
+
+		/* transformation matrices */
+		double Y_i[9], Y_i_trans[9];
+		rotation_matrix_from_quaternion(Y_i, bodies[i].q);
+		transpose_square_matrix(Y_i_trans, Y_i);
+
+		/* deformation components - I/II */
+		double f_cent_i[9];
+		null_matrix(f_cent_i);
+		if (bodies[i].centrifugal == true)
+		{
+			calculate_f_cent(f_cent_i, bodies[i].omega);
+		}
+		double f_tide_i[9];
+		null_matrix(f_tide_i);
+		if (bodies[i].tidal == true)
+		{
+			calculate_f_tide(f_tide_i, i, bodies, 
+				simulation.number_of_bodies, simulation.G);
+		}
+
+		/* deformation from stokes coefficients */
+		double B_stokes_i[9];
+		body_frame_deformation_from_stokes_coefficients(B_stokes_i, bodies[i]);
+		double b_stokes_i[9];
+		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i);
+		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+
+		/* prestress */
+		double b0_i[9];	
+		null_matrix(b0_i);
+		if(bodies[i].prestress == true)
+		{
+			if (bodies[i].deformable == false)
+			{
+				copy_square_matrix(b0_i, b_stokes_i);
+			}
+			else
+			{
+				linear_combination_three_square_matrix(b0_i,
+					(bodies[i].gamma+bodies[i].alpha_0)/bodies[i].alpha_0, b_stokes_i,
+					-1.0/bodies[i].alpha_0, f_cent_i,
+					-1.0/bodies[i].alpha_0, f_tide_i);
+			}
+		}
+		get_main_elements_traceless_symmetric_matrix(bodies[i].b0_me, b0_i);
+
+		/* deformation components - II/II */
+		double f_ps_i[9];
+		null_matrix(f_ps_i);
+		if (bodies[i].prestress == true)
+		{
+			calculate_f_ps(f_ps_i, bodies[i]);
+		}
+		double c_i = calculate_c(bodies[i]);
+
+		/* rheology variables */
+		double u_i[9];
+		null_matrix(u_i);
+		if (bodies[i].point_mass == false && 
+			bodies[i].deformable == true)
+		{
+			linear_combination_four_square_matrix(u_i,
+				-1.0 * c_i, b_stokes_i,
+					   1.0, f_cent_i,
+					   1.0, f_tide_i,
+					   1.0, f_ps_i);
+		}
+		get_main_elements_traceless_symmetric_matrix(bodies[i].u_me, u_i);
+		
+	} // end loop over bodies
 
 	/* calculate first l */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
+		initialize_angular_velocity(&bodies[i]); // correct alignment
 		calculate_l(&bodies[i], simulation.number_of_bodies, simulation.G);
 	}
 
@@ -130,45 +272,43 @@ main(int argc, char *argv[])
 	}
 
 	/* parameters */
-	int		dim_params_per_body_without_elements = 15;
-	int		dim_params = 2 + (dim_params_per_body_without_elements * simulation.number_of_bodies) + (2 * elements_total);
+	int		dim_params_per_body_without_elements = 12;
+	int		dim_params = 4 + (dim_params_per_body_without_elements * simulation.number_of_bodies) + (2 * elements_total);
 	double	params[dim_params];
 	elements_counter = 0; 
 	params[0] = simulation.G;
 	params[1] = (double) simulation.number_of_bodies;
+	params[2] = (double) simulation.keplerian_motion;
+	params[3] = (double) simulation.two_bodies_aprox;
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
-		params[2 + 0 + dim_params_skip] = (double) bodies[i].keplerian;
-		params[2 + 1 + dim_params_skip] = (double) bodies[i].orbit_2body;
-		params[2 + 2 + dim_params_skip] = (double) bodies[i].point_mass;
-		params[2 + 3 + dim_params_skip] = (double) bodies[i].centrifugal;
-		params[2 + 4 + dim_params_skip] = (double) bodies[i].tidal;
-		for (int j = 0; j < 3; j++)
-		{
-			params[2 + 5 + dim_params_skip + j] = bodies[i].omega[j];
-		}
-		params[2 + 8 + dim_params_skip] = bodies[i].mass;
-		params[2 + 9 + dim_params_skip] = bodies[i].I0;
-		params[2 + 10 + dim_params_skip] = bodies[i].gamma;
-		params[2 + 11 + dim_params_skip] = bodies[i].alpha;
-		params[2 + 12 + dim_params_skip] = bodies[i].eta;
-		params[2 + 13 + dim_params_skip] = bodies[i].alpha_0;
-		params[2 + 14 + dim_params_skip] = (double) bodies[i].elements;
+		params[4 + 0 + dim_params_skip] = (double) bodies[i].point_mass;
+		params[4 + 1 + dim_params_skip] = (double) bodies[i].prestress;
+		params[4 + 2 + dim_params_skip] = (double) bodies[i].centrifugal;
+		params[4 + 3 + dim_params_skip] = (double) bodies[i].tidal;
+		params[4 + 4 + dim_params_skip] = (double) bodies[i].deformable;
+		params[4 + 5 + dim_params_skip] = bodies[i].mass;
+		params[4 + 6 + dim_params_skip] = bodies[i].I0;
+		params[4 + 7 + dim_params_skip] = bodies[i].gamma;
+		params[4 + 8 + dim_params_skip] = bodies[i].alpha;
+		params[4 + 9 + dim_params_skip] = bodies[i].eta;
+		params[4 + 10 + dim_params_skip] = bodies[i].alpha_0;
+		params[4 + 11 + dim_params_skip] = (double) bodies[i].elements;
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 15 + dim_params_skip + j] = bodies[i].alpha_elements[j];
+			params[4 + 12 + dim_params_skip + j] = bodies[i].alpha_elements[j];
 		}
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[2 + 16 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
+			params[4 + 13 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
 		}
 		elements_counter += bodies[i].elements;		
 	}
 
 	/* GSL variables */
 	const gsl_odeiv2_step_type * ode_type
-		= gsl_odeiv2_step_rk8pd;
+		= gsl_odeiv2_step_rk8pd; // gsl_odeiv2_step_rk8pd
 	gsl_odeiv2_step * ode_step
     	= gsl_odeiv2_step_alloc (ode_type, dim_state);
   	gsl_odeiv2_control * ode_control
@@ -177,59 +317,37 @@ main(int argc, char *argv[])
     	= gsl_odeiv2_evolve_alloc (dim_state);
 
 	/* create output files */
-	char filename[150];
 	FILE *out[simulation.number_of_bodies + 1];
-	for (int i = 0; i < simulation.number_of_bodies; i++)
+	if (simulation.write_to_file == true)
 	{
-		/* names and opens output files for each body */
-		strcpy(filename, simulation.output_folder);
-		strcat(filename, "results_");
-		strcat(filename, simulation.name);
-		strcat(filename, "_");
-		strcat(filename, bodies[i].name);
-		strcat(filename, ".dat");
-		out[i] = fopen(filename, "w");
-		/* writes output headers */
-		fprintf(out[i], "time(yr)");
-		fprintf(out[i], " x(AU) y(AU) z(AU) vx(Au/yr) vy(Au/yr) vz(Au/yr)");
-		if (bodies[i].point_mass == false)
-		{
-			fprintf(out[i], " omega_x omega_y omega_z");
-			fprintf(out[i], " l_x l_y l_z");
-			fprintf(out[i], " |b|");
-		}
-		fprintf(out[i], "\n");
+		create_output_files(bodies, simulation, out);
 	}
-	/* names and opens general output file */
-	strcpy(filename, simulation.output_folder);
-	strcat(filename, "results_");
-	strcat(filename, simulation.name);
-	strcat(filename, "_");
-	strcat(filename, "full_system");
-	strcat(filename, ".dat");
-	out[simulation.number_of_bodies] = fopen(filename, "w");
-	fprintf(out[simulation.number_of_bodies], "time(yr)");
-	fprintf(out[simulation.number_of_bodies], " x_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " y_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " z_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " |L|");
-	fprintf(out[simulation.number_of_bodies], "\n");
 
 	/* integration loop */
-	int		counter = 0;	
-	double 	t = simulation.t_init;
-	while (t < simulation.t_final)
+	simulation.counter = 0;	
+	simulation.t = simulation.t_init;
+	double	final_time;
+	int	loop_counter = 0;
+	if (simulation.omega_correction == false)
 	{
-		if (fabs(simulation.t_final-t) < simulation.t_step)
+		final_time = simulation.t_final;
+	}
+	else
+	{
+		final_time = simulation.omega_correction_t_final;
+	}
+	while (simulation.t < final_time)
+	{
+		if (fabs(final_time-simulation.t) < simulation.t_step)
 		{
-			simulation.t_step = simulation.t_final - t; // smaller last step
+			simulation.t_step = final_time - simulation.t; // smaller last step
 		}
 
 	  	gsl_odeiv2_system sys = {field_GV, NULL, dim_state, params};
 	
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
-				ode_control, ode_step, &sys, &t, simulation.t_step, y);
+				ode_control, ode_step, &sys, &simulation.t, simulation.t_step, y);
 
 		if (status != GSL_SUCCESS)
 		{
@@ -270,142 +388,46 @@ main(int argc, char *argv[])
 			elements_counter += bodies[i].elements;
 		}
 
-		/* update omega */
-		elements_counter = 0;
+		/* update omega and b */
 		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
-		
+		{		
 			calculate_omega(i, bodies, simulation.number_of_bodies, simulation.G);
-		
-			for (int j = 0; j < 3; j++)
-			{
-				params[2 + 5 + dim_params_skip + j] = bodies[i].omega[j];
-			}
-
-			elements_counter += bodies[i].elements;
-		}
-
-		/* calculate b */
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
 			calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
 		}
 
-		/* writes output */
-		if (t > simulation.t_trans)
+		/* write output */
+		if (simulation.write_to_file == true)
 		{
-			if (counter % simulation.data_skip == 0)
+			if (simulation.t > simulation.t_trans)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
+				if (simulation.counter % simulation.data_skip == 0)
 				{
-					/* state variables */
+					write_output(bodies, simulation, out);
+				}
+				simulation.counter++;
+			}
+		}
 
-					/* time */
-					fprintf (out[i], "%.15e", t);
+		loop_counter++;
 
-					/* position, and velocity */
-					if (bodies[i].keplerian == true)
-					{
-						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
-							bodies[i].x[0], bodies[i].x[1], bodies[i].x[2],
-							bodies[i].x_dot[0], bodies[i].x_dot[1], bodies[i].x_dot[2]);
-					}
-					else
-					{
-						// transform to body 1-centered system
-						double relative_x[3];
-						linear_combination_vector(relative_x,
-							1.0, bodies[i].x,
-							-1.0, bodies[0].x);
-						double relative_x_dot[3];
-						linear_combination_vector(relative_x_dot,
-							1.0, bodies[i].x_dot,
-							-1.0, bodies[0].x_dot);
-
-						fprintf (out[i], " %.15e %.15e %.15e %.15e %.15e %.15e", 
-							relative_x[0], relative_x[1], relative_x[2],
-							relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
-					}
-
-					if (bodies[i].point_mass == false)
-					{
-						/* angular velocity vector */
-						fprintf (out[i], " %.15e %.15e %.15e", 
-							bodies[i].omega[0], bodies[i].omega[1], bodies[i].omega[2]);
-
-						/* angular momentum vector */
-						fprintf (out[i], " %.15e %.15e %.15e", 
-							bodies[i].l[0], bodies[i].l[1], bodies[i].l[2]);
-
-						/* deformation matrix */
-						fprintf (out[i], " %.15e", norm_square_matrix(bodies[i].b));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].b[0], bodies[i].b[1], bodies[i].b[2],
-						// 	bodies[i].b[3], bodies[i].b[4], bodies[i].b[5],
-						// 	bodies[i].b[6], bodies[i].b[7], bodies[i].b[8]);
-
-						/* prestress */
-						// printf (" %.15e", norm_square_matrix(bodies[i].b0));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].b0[0], bodies[i].b0[1], bodies[i].b0[2],
-						// 	bodies[i].b0[3], bodies[i].b0[4], bodies[i].b0[5],
-						// 	bodies[i].b0[6], bodies[i].b0[7], bodies[i].b0[8]);
-
-						/* rheology */
-						// printf (" %.15e", norm_square_matrix(bodies[i].u));
-						// printf (" %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e",
-						// 	bodies[i].u[0], bodies[i].u[1], bodies[i].u[2],
-						// 	bodies[i].u[3], bodies[i].u[4], bodies[i].u[5],
-						// 	bodies[i].u[6], bodies[i].u[7], bodies[i].u[8]);
-					}
-
-					/* next line */
-					fprintf(out[i], "\n");
-
-				} // end loop over bodies
-
-				/* prints on general file */
-
-				/* time */
-				fprintf (out[simulation.number_of_bodies], "%.15e", t);
-
-				/* location of center of mass */
-				double center_of_mass[3];
-				calculate_center_of_mass(center_of_mass, bodies, simulation.number_of_bodies, simulation.G);
-				double relative_center_of_mass[3];
-				linear_combination_vector(relative_center_of_mass,
-					1.0, center_of_mass,
-					-1.0, bodies[0].x);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[0]);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[1]);
-				fprintf (out[simulation.number_of_bodies], " %.15e", relative_center_of_mass[2]);
-
-				/* total angular momentum */
-				double l_total[3];
-				calculate_total_angular_momentum(l_total, bodies, simulation.number_of_bodies, simulation.G);
-				fprintf (out[simulation.number_of_bodies], " %.15e", norm_vector(l_total));
-
-				/* next line */
-				fprintf(out[simulation.number_of_bodies], "\n");
-
-			} // end if (counter % data_skip == 0)
-
-			counter++;
-
-		} // end if (t > t_trans)
-	}
+	} // end while (simulation.t < final_time)
 
 	/* close output files */
-	for (int i = 0; i < simulation.number_of_bodies + 1; i++)
+	if (simulation.write_to_file == true)
 	{
-		fclose(out[i]);
+		close_output_files(simulation, out);
 	}
 
 	/* free GSL variables */
 	gsl_odeiv2_evolve_free (ode_evolve);
 	gsl_odeiv2_control_free (ode_control);
 	gsl_odeiv2_step_free (ode_step);
+
+	if (simulation.omega_correction == true)
+	{
+		simulation.omega_correction_counter++;
+		goto back_omega_correction;
+	}
 
 	/* free Voigt elements */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -421,13 +443,30 @@ main(int argc, char *argv[])
 	/* free array of celestial bodies */
 	free(bodies);
 
+	if (simulation.omega_correction == true)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			if (bodies_copy[i].elements > 0)
+			{
+				free(bodies_copy[i].alpha_elements);
+				free(bodies_copy[i].eta_elements);	
+				free(bodies_copy[i].bk_me);
+			}
+		}
+		free(bodies_copy);
+	}
+
 	/* stop clock */
 	end_time = clock();
 	int time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
 	/* write overview file */
-	write_simulation_overview(time_spent_in_seconds, simulation);
-	
+	if (simulation.write_to_file == true)
+	{
+		write_simulation_overview(time_spent_in_seconds, simulation);
+	}
+
 	return 0;
 }

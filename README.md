@@ -1,11 +1,11 @@
 # tides
 Software under development for numerically investigating the tidal evolution of celestial bodies based on the physical theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
 
-This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and at the Department of Physics of the University of Coimbra (Portugal) with the collaboration of prof. Alexandre Correia.
+This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out by Vitor M. de Oliveira at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and at the Department of Physics of the University of Coimbra (Portugal), under the supervision of prof. Clodoaldo Ragazzo (IME/USP) and with the collaboration of prof. Alexandre Correia (CFisUC).
 
 Author: V. M. de Oliveira
 
-Last update on this file: October 20th 2023
+Last update on this file: November 21th 2023
 
 ## Important notes
 The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 8th and 9th order and fixed stepsize from the GNU Scientific Library.
@@ -59,7 +59,7 @@ There are also some example files which can be run using
 make examples
 ```
 
-This command runs the program with the input files in the folder ``examples``, which contains 2 example files: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass, and the specs for the Earth-Moon-Sun system with all objects being treated as point masses.
+This command runs the program with the input files in the folder ``examples``, which contains 3 example files: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass; the specs for the Earth-Moon-Sun system with all objects being treated as point masses; and the specs for rigid Earth.
 
 ## Main references
 Ragazzo C., Ruiz L. S. Viscoelastic tides: models for use in Celestial Mechanics, _Celestial Mechanics and Dynamical Astronomy_, Springer, v. 128, n.1., p. 19--59, 2017.

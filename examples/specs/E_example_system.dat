@@ -1,0 +1,29 @@
+Name		Earth		Moon
+mass(Msun)	3.00317e-6	3.69464e-8	
+lod(day)	0.9972708 	27.322
+azi(deg)    0.0         0.0
+pol(deg)    4.04695e-5  0.0
+obl(deg)	0.0		    0.0
+psi(deg)	0.0			0.0		
+R(km)		6.3710e+3	1.7371e+3 
+rg			0.3308 		0.3935			
+J2          1.08263e-3  2.038e-4    	
+C22         1.57e-6     2.24e-5    	
+lib(deg)    0.0         0.0        
+ks          0.9383      0.0302
+kf			0.933		0.0302		
+Dt(s)		1.20382e5   1.20382e5  			
+tau(yr)		5.60984e-3 	5.60984e-3 	
+a(AU)					2.56955e-3
+e						0.0000		
+I(deg)					0.0000			
+M(deg)					0.0000  		
+w(deg)					0.0000			
+OMEGA(deg)				0.0000		
+keplerian   no          no        
+orbit_2body no          no
+point_mass  no          yes
+deformable  no          no
+prestress   yes         no       
+centrifugal no          no         
+tidal       no          no

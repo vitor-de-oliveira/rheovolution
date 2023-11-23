@@ -9,11 +9,41 @@ calculate_inertia_tensor(double I[9], const double I0, const double b[9])
 	return 0;
 }
 
+int
+body_frame_deformation_from_stokes_coefficients	(double B[9],
+												 const cltbdy body)
+{
+	for (int i = 0; i < 9; i++)
+	{
+		B[i] = 0.0;
+	}
+
+	double mR2 = body.mass * body.R * body.R;
+
+	B[0] = (body.I0 - (body.rg - body.J2 - 2.0 * body.C22) * mR2) / body.I0;
+	B[4] = (body.I0 - (body.rg - body.J2 + 2.0 * body.C22) * mR2) / body.I0;
+	B[8] = -1.0 * (B[0] + B[4]); // B[8] = (body.I0 - body.rg * mR2)/body.I0;
+
+	return 0;
+}
+
 double
-parameter_gamma(const double G,	const double I0, 
-	const double R, const double kf)
+parameter_gamma(const double G,
+				const double I0, 
+				const double R,
+				const double kf)
 {
 	return 3.0 * I0 * G / (pow(R, 5.0) * kf);
+}
+
+double
+parameter_alpha_0	(const double G,
+					 const double I0, 
+					 const double R,
+					 const double kf,
+					 const double ks)
+{
+	return (3.0 * I0 * G / pow(R, 5.0)) * (1.0 / ks - 1.0 / kf);
 }
 
 double
@@ -63,84 +93,79 @@ calculate_f_tide(double f_tide[9],
 }
 
 int
+calculate_f_ps	(double f_ps[9],
+			 	 const cltbdy body)
+{
+	double b0[9];
+	construct_traceless_symmetric_matrix(b0, body.b0_me);
+	scale_square_matrix(f_ps, body.alpha_0, b0);
+
+	return 0;
+}
+
+int
+calculate_f_rheo(double f_rheo[9],
+			 	 const cltbdy body)
+{
+	double u[9];
+	construct_traceless_symmetric_matrix(u, body.u_me);
+	scale_square_matrix(f_rheo, -1.0, u);
+	if (body.elements > 0)
+	{
+		double bk_me_2d_array[body.elements][5];
+		double bk[body.elements][9];
+		for (int i = 0; i < body.elements; i++)
+		{
+			for (int j = 0; j < 5; j++)
+			{
+				bk_me_2d_array[i][j] = body.bk_me[j + (i*5)];
+			}
+			construct_traceless_symmetric_matrix(bk[i], bk_me_2d_array[i]);
+			linear_combination_square_matrix(f_rheo,
+				1.0, f_rheo,
+				body.alpha, bk[i]);
+		}
+	}
+
+	return 0;
+}
+
+int
 calculate_g	(double g[9], 
 			 const int id,
 			 const cltbdy *bodies,
 			 const int number_of_bodies,
 			 const double G)
 {
-	/* for testing */
-	// null_matrix(g);
-	// return 0;
+	double f_rheo[9], f_ps[9], f_tide[9];
+	null_matrix(f_rheo);
+	null_matrix(f_ps);
+	null_matrix(f_tide);
+	
+	/* f_rheo (rheology) */
+	if ((bodies[id].tidal == true) ||
+		(bodies[id].centrifugal == true))
+	{
+		calculate_f_rheo(f_rheo, bodies[id]);
+	}
 
-	/* construct b0, and u matrices */
-	double b0[9], u[9];
-	construct_traceless_symmetric_matrix(b0, bodies[id].b0_me);
-	construct_traceless_symmetric_matrix(u, bodies[id].u_me);
+	/* f_ps (prestress) */
+	if (bodies[id].prestress == true)
+	{
+		calculate_f_ps(f_ps, bodies[id]);
+	}
 
-	/* prestress contribution */
-	double alpha_0_b0[9];
-	scale_square_matrix(alpha_0_b0, bodies[id].alpha_0, b0);
-
-	/* calculate g without Voigt elements */
-	linear_combination_square_matrix(g,
-		 1.0, alpha_0_b0,
-		-1.0, u);
-
-	/* add tidal force if chosen */
+	/* f_tide (tides) */
 	if (bodies[id].tidal == true)
 	{
-		/* calculate f_tide */
-		double f_tide[9];
 		calculate_f_tide(f_tide, id, bodies, number_of_bodies, G);
-		linear_combination_square_matrix(g,
-			1.0, g,
-			1.0, f_tide);
 	}
 
-	/* add Voigt elements to g */
-	double **bk_me_2d_array, **bk;
-	if (bodies[id].elements > 0)
-	{
-		bk_me_2d_array 	= (double **) malloc(bodies[id].elements * sizeof(double *));
-		bk 				= (double **) malloc(bodies[id].elements * sizeof(double *));
-		for (int i = 0; i < bodies[id].elements; i++)
-		{
-			bk_me_2d_array[i] = (double *) malloc(5 * sizeof(double));
-			for (int j = 0; j < 5; j++)
-			{
-				bk_me_2d_array[i][j] = bodies[id].bk_me[j + (i*5)];
-
-				/* for testing */
-				// printf("bk_me = %f\n",bk_me[i][j]);
-			}
-			bk[i] = (double *) malloc(9 * sizeof(double));
-			construct_traceless_symmetric_matrix(bk[i], bk_me_2d_array[i]);
-
-			/* for testing */
-			// print_square_matrix(bk[i]);
-
-			linear_combination_square_matrix(g,
-							1.0, g,
-				 bodies[id].alpha, bk[i]);
-		}
-	}
-
-	/* for testing */
-	// for (int i  = 0; i < elements; i++)
-	// {
-	// 	printf("\nbk_%d = \n", i+1);
-	// 	print_square_matrix(bk[i]);
-	// }
-
-	/* freeing Voigt elements */
-	if (bodies[id].elements > 0)
-	{
-		for (int i = 0; i < bodies[id].elements; i++) free(bk_me_2d_array[i]);
-		free(bk_me_2d_array);
-		for (int i = 0; i < bodies[id].elements; i++) free(bk[i]);
-		free(bk);
-	}
+	/* calculate g */
+	linear_combination_three_square_matrix(g,
+		1.0, f_rheo,
+		1.0, f_ps,
+		1.0, f_tide);
 
 	return 0;
 }
@@ -170,15 +195,15 @@ calculate_b	(const int id,
 			 const int number_of_bodies,
 			 const double G)
 {
-	/* for testing */
-	// null_matrix(b);
-	// return 0;
-
-	if (bodies[id].point_mass == true) /* if body is a point mass, b equals 0 */
+	/**
+	 * if body is a point mass, b equals 0 
+	 * if body is not deformable, b equals to b0
+	**/
+	if (bodies[id].point_mass == true)
 	{
 		null_matrix(bodies[id].b);
 	}
-	else if (bodies[id].centrifugal == false && bodies[id].tidal == false) /* if body is not deformable, b equals to b0 */
+	else if (bodies[id].deformable == false)
 	{
 		construct_traceless_symmetric_matrix(bodies[id].b, bodies[id].b0_me);
 	}
@@ -206,25 +231,6 @@ calculate_b	(const int id,
 		}
 	}
 
-	/* for testing */
-	// printf("\nb = \n");
-	// print_square_matrix(b);
-	// printf("\ntilde_x = \n");
-	// print_vector(tilde_x);
-	// printf("\nb0 = \n");
-	// print_square_matrix(b0);
-	// printf("\nu = \n");
-	// print_square_matrix(u);
-	// printf("\nG = %f\n", G);
-	// printf("\nm2 = %f\n", m2);
-	// printf("\ngamma = %f\n", gamma);
-	// printf("\nalpha = %f\n", alpha);
-	// printf("\nalpha_0 = %f\n", alpha_0);
-	// exit(42);
-
-	// printf("%d\n", id);
-	// print_CelestialBody(bodies[id]);
-
 	return 0;
 }
 
@@ -246,13 +252,14 @@ calculate_omega	(const int id,
 			 	 const int number_of_bodies,
 			 	 const double G)
 {
-	/* for testing */
-	// scale_vector(omega, 1.0 / I0, l);
-	// return 0;
-
 	if (bodies[id].point_mass == true)
 	{
 		null_vector(bodies[id].omega);
+		return 0;
+	}
+	else if (bodies[id].deformable == false &&
+			 bodies[id].prestress == false)
+	{
 		return 0;
 	}
 
@@ -263,64 +270,92 @@ calculate_omega	(const int id,
 	double 	omega[3], previous_omega[3];
 	copy_vector(omega, bodies[id].omega);
 
-	for (int i = 0; i < number_of_iterates; i++)
-	// while (error > max_error)
-	{
-		/* for testing */
-		// printf("%d\n", id);
-		// print_vector(omega);
+	/* auxiliary variable */
+	double Id[9];
+	identity_matrix(Id);
 
-		/* store omega previous value */
+	for (int i = 0; i < number_of_iterates; i++)
+	// while (error > max_error) // an alternative
+	{
+		/* store previous value of omega */
 		copy_vector(previous_omega, omega);
 
-		/* calculate g */
-		double g[9];
-		calculate_g(g, id, bodies, number_of_bodies, G);
+		double	H[3], DH[9];
 
-		/* calculate c */
-		double c = calculate_c(bodies[id]);
-
-		/* calculate H = 0 */
-		double Id[9];
-		identity_matrix(Id);
-		double aux_H_first_term[9];
-		linear_combination_square_matrix(aux_H_first_term,
-			 1.0, Id,
-			-1.0 / c, g);
-		/* add centrifugal term if chosen */
-		if (bodies[id].centrifugal == true)
+		if (bodies[id].deformable == false)
 		{
+			double b0_i[9];
+			construct_traceless_symmetric_matrix(b0_i, 
+				bodies[id].b0_me);
+
+			/* calculate H = 0 */
+			double aux_H_first_term[9];
 			linear_combination_square_matrix(aux_H_first_term,
-				1.0, aux_H_first_term,
-				2.0 * norm_squared_vector(omega) / (3.0 * c), Id);
+				 1.0, Id,
+				-1.0, b0_i);
+			double H_first_term[3];
+			square_matrix_times_vector(H_first_term, 
+				aux_H_first_term, omega);
+			linear_combination_vector(H, 
+								 1.0, H_first_term,
+				-1.0 / bodies[id].I0, bodies[id].l);
+
+			/* calculate DH */
+			linear_combination_square_matrix(DH,
+				 1.0, Id,
+				-1.0, b0_i);
 		}
-		double H_first_term[3];
-		square_matrix_times_vector(H_first_term, aux_H_first_term, omega);
-		double H[3];
-		linear_combination_vector(H, 
-							1.0, H_first_term,
-			 -1.0 / bodies[id].I0, bodies[id].l);
+		else
+		{
+			/* calculate g */
+			double g[9];
+			calculate_g(g, id, bodies, number_of_bodies, G);
+
+			/* calculate c */
+			double c = calculate_c(bodies[id]);
+
+			/* calculate H = 0 */
+			double aux_H_first_term[9];
+			linear_combination_square_matrix(aux_H_first_term,
+				1.0, Id,
+				-1.0 / c, g);
+
+			/* add centrifugal term in H if chosen */
+			if (bodies[id].centrifugal == true)
+			{
+				linear_combination_square_matrix(aux_H_first_term,
+					1.0, aux_H_first_term,
+					2.0 * norm_squared_vector(omega) / (3.0 * c), Id);
+			}
+			double H_first_term[3];
+			square_matrix_times_vector(H_first_term, 
+				aux_H_first_term, omega);
+			linear_combination_vector(H, 
+								1.0, H_first_term,
+				-1.0 / bodies[id].I0, bodies[id].l);
+
+			/* calculate DH */
+			linear_combination_square_matrix(DH,
+				1.0, Id,
+				-1.0 / c, g);
+
+			/* add centrifugal term to DH if chosen */
+			if (bodies[id].centrifugal == true)
+			{
+				double omega_tensor_omega[9];
+				tensor_product(omega_tensor_omega, omega, omega);
+				double DH_third_term[9];
+				linear_combination_square_matrix(DH_third_term,
+					2.0 * norm_squared_vector(omega) / (3.0 * c), Id,
+					4.0 / (3.0 * c), omega_tensor_omega);
+				linear_combination_square_matrix(DH,
+					1.0, DH,
+					1.0, DH_third_term);
+			}
+		}
+
 		double minus_H[3];
 		scale_vector(minus_H, -1.0, H);
-
-		/* calculate DH */
-		double DH[9];
-		linear_combination_square_matrix(DH,
-			1.0, Id,
-			-1.0 / c, g);
-		/* add centrifugal term if chosen */
-		if (bodies[id].centrifugal == true)
-		{
-			double omega_tensor_omega[9];
-			tensor_product(omega_tensor_omega, omega, omega);
-			double DH_third_term[9];
-			linear_combination_square_matrix(DH_third_term,
-				2.0 * norm_squared_vector(omega) / (3.0 * c), Id,
-				4.0 / (3.0 * c), omega_tensor_omega);
-			linear_combination_square_matrix(DH,
-				1.0, DH,
-				1.0, DH_third_term);
-		}
 
 		/* solving linear equation m*x=b using LU decomposition */
 		gsl_matrix_view m
@@ -340,8 +375,8 @@ calculate_omega	(const int id,
 			1.0, omega_minus_previous_omega,
 			1.0, previous_omega);
 
-		// error 
-		// 	= norm_vector(omega_minus_previous_omega) / norm_vector(previous_omega);
+		// error = norm_vector(omega_minus_previous_omega) / 
+		//			norm_vector(previous_omega);
 		
 		error = norm_vector(omega_minus_previous_omega);
 
@@ -355,16 +390,11 @@ calculate_omega	(const int id,
 	if (error > max_error)
 	{
 		fprintf(stderr, "Error: error higher than the max allowed\n");
-		fprintf(stderr, "for omega calculation.\n");
+		fprintf(stderr, "for omega calculation in body %d.\n", id + 1);
 		exit(99);
 	}
 
 	copy_vector(bodies[id].omega, omega);
-
-	/* for testing */
-	// printf("\nomega = \n");
-	// print_vector(omega);
-	// exit(42);
 
 	return 0;
 }
@@ -481,6 +511,17 @@ calculate_tau_v_and_tau(double tau_v_pair[2], double tau_pair[2],
 	tau_v_pair[1] = tau_v_local_plus;
 	tau_pair[0] = tau_local_minus;
 	tau_pair[1] = tau_local_plus;
+
+	return 0;
+}
+
+int
+calculate_tau_v_and_tau_from_Rek2(double *tau_v, 
+	double *tau, const double Rek2, const double nu,
+	const double kf, const double sigma)
+{
+	*tau = sqrt((kf-Rek2)/(sigma*sigma*(Rek2-kf*(1.0-nu))));
+	*tau_v = nu * (*tau); 
 
 	return 0;
 }

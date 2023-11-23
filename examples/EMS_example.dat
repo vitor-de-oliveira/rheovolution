@@ -2,4 +2,4 @@ name                EMS_example
 input_folder        examples/specs/
 output_folder       examples/
 system_specs        EMS_example_system.dat
-integrator_specs    EMS_example_integrator.dat
+simulation_specs    EMS_example_simulation.dat
