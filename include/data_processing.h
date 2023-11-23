@@ -39,15 +39,15 @@ typedef struct SimulationInfo {
 	char	simulation_specs[100];
 	char	dev_specs[100];
 
-	/* general specs */
+	/* system specs */
 	double	G;							// gravitational parameter
 	char	units[100];					// units used for simulation
-	bool	write_to_file;
-	bool	omega_correction;
-
-	/* system specs */
-	int		system_file_type;
-	int		number_of_bodies;
+	int		system_file_type;			// system file type
+	int		number_of_bodies;			// number of bodies to be used
+	bool	omega_correction;			// corrects initial angular velocity
+	bool	keplerian_motion;			// restricts all orbits to keplerian
+	bool	two_bodies_aprox;			// removes interaction between
+										// orbiting bodies
 
 	/* numerical specs */
 	double	t_init;						// initial time
@@ -66,6 +66,7 @@ typedef struct SimulationInfo {
 	double	t;							// simulation time
 	int		omega_correction_counter;
 	double	omega_correction_t_final;
+	bool	write_to_file;
 
 } siminf;
 

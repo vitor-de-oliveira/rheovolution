@@ -400,34 +400,6 @@ calculate_longitude_of_the_ascending_node   (const double G,
     return Omega;
 }
 
-double
-calculate_obliquity_free_body(const double p[])
-{
-    double e_z[] = {0.0, 0.0, 1.0};
-
-    double obl;
-
-    obl = angle_between_two_vectors(p, e_z);
-
-    return obl;
-}
-
-double
-calculate_obliquity_on_orbit(const double x[],
-                             const double v[],
-					         const double p[])
-{
-    // orbital momentum vector
-    double h[3];
-    cross_product(h, x, v);
-
-    double obl;
-
-    obl = angle_between_two_vectors(p, h);
-
-    return obl;
-}
-
 int
 print_CelestialBody(cltbdy body)
 {
@@ -495,17 +467,14 @@ print_CelestialBody(cltbdy body)
 		printf("%1.5e\n", body.eta_elements[i]);
 	}
 
-    printf("fixed orbit = ");	
-	printf("%d\n", body.keplerian);
-    printf("orbit 2body = ");	
-	printf("%d\n", body.orbit_2body);
-
 	printf("point mass = ");	
 	printf("%d\n", body.point_mass);
 	printf("centrifugal = ");	
 	printf("%d\n", body.centrifugal);
 	printf("tidal = ");	
 	printf("%d\n", body.tidal);
+	printf("prestress = ");	
+	printf("%d\n", body.prestress);
 	
 	printf("x = ");
 	print_vector(body.x);
@@ -537,8 +506,6 @@ print_CelestialBody(cltbdy body)
 		}
 	}
 
-	printf("Y = \n");
-	print_square_matrix(body.Y);
 	printf("q = \n");
 	print_quaternion(body.q);
 
@@ -546,6 +513,42 @@ print_CelestialBody(cltbdy body)
 	print_vector(body.omega);
 	printf("b = \n");
 	print_square_matrix(body.b);
+
+	return 0;
+}
+
+int
+print_state_variables(cltbdy body)
+{
+	printf("x = ");
+	print_vector(body.x);
+	printf("x_dot = ");
+	print_vector(body.x_dot);
+	printf("l = ");
+	print_vector(body.l);
+	double b0[9];
+	construct_traceless_symmetric_matrix(b0, body.b0_me);
+	printf("b0 = \n");
+	print_square_matrix(b0);
+	double u[9];
+	construct_traceless_symmetric_matrix(u, body.u_me);
+	printf("u = \n");
+	print_square_matrix(u);
+	if (body.elements > 0)
+	{
+		double	bk_me_2d_array[body.elements][5];
+		double	bk[9];
+		for (int k = 0; k < body.elements; k++)
+		{
+			for (int l = 0; l < 5; l++)
+			{
+				bk_me_2d_array[k][l] = body.bk_me[l + (k*5)];
+			}
+			construct_traceless_symmetric_matrix(bk, bk_me_2d_array[k]);
+			printf("b_%d = \n", k+1);	
+			print_square_matrix(bk);
+		}
+	}
 
 	return 0;
 }
@@ -915,6 +918,113 @@ calculate_orbital_elements  (cltbdy *body,
 }
 
 int
+initialize_angular_velocity_on_figure_axis_of_solid_frame(cltbdy *body)
+{
+    double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).lod};
+    rotate_vector_with_quaternion((*body).omega,
+        (*body).q, omega_on_body);
+
+    return 0;
+}
+
+
+int
+initialize_angular_velocity(cltbdy *body)
+{
+    double omega_on_body[] = {0.0, 0.0, 0.0};
+    double omega_on_body_spherical[] = 
+        {2.0 * M_PI / (*body).lod, (*body).azi, (*body).pol};
+    spherical_to_cartesian_coordinates(omega_on_body, 
+        omega_on_body_spherical);
+    rotate_vector_with_quaternion((*body).omega,
+        (*body).q, omega_on_body);
+
+    return 0;
+}
+
+int
+calculate_obliquity_free_body_from_angular_velocity(cltbdy *body)
+{
+    double e_z[] = {0.0, 0.0, 1.0};
+
+    body->obl = angle_between_two_vectors(body->omega, e_z);
+
+    return 0;
+}
+
+int
+calculate_obliquity_on_orbit_from_angular_velocity(cltbdy *body)
+{
+    double h[3]; // orbital momentum vector
+    cross_product(h, body->relative_x, body->relative_x_dot);
+
+    body->obl = angle_between_two_vectors(body->omega, h);
+
+    return 0;
+}
+
+int
+calculate_obliquity_free_body_from_figure_axis_of_solid_frame(cltbdy *body)
+{
+    double e_z[] = {0.0, 0.0, 1.0};
+
+    double figure_axis_on_body[] = {0.0, 0.0, 1.0};
+    double figure_axis[3];
+    rotate_vector_with_quaternion(figure_axis,
+        body->q, figure_axis_on_body);
+
+    body->obl = angle_between_two_vectors(figure_axis, e_z);
+
+    return 0;
+}
+
+int
+calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body)
+{
+    double h[3]; // orbital momentum vector
+    cross_product(h, body->relative_x, body->relative_x_dot);
+
+    double figure_axis_on_body[] = {0.0, 0.0, 1.0};
+    double figure_axis[3];
+    rotate_vector_with_quaternion(figure_axis,
+        body->q, figure_axis_on_body);
+
+    body->obl = angle_between_two_vectors(figure_axis, h);
+
+    return 0;
+}
+
+double
+angle_between_spin_axis_and_figure_axis_of_solid_frame(const cltbdy body)
+{
+    double figure_axis_on_body[] = {0.0, 0.0, 1.0};
+    double figure_axis[3];
+    rotate_vector_with_quaternion(figure_axis,
+        body.q, figure_axis_on_body);
+
+	return angle_between_two_vectors(body.omega, figure_axis);
+}
+
+double
+angle_between_spin_axis_and_figure_axis(const cltbdy body)
+{
+	double P[9];
+	calculate_eigenvectors_matrix(P, body.b);
+    double figure_axis_on_body[] = {0.0, 0.0, 1.0};
+    double figure_axis[3];
+    square_matrix_times_vector(figure_axis,
+        P, figure_axis_on_body);
+
+	return angle_between_two_vectors(body.omega, figure_axis);
+}
+
+double
+angle_between_spin_axis_and_angular_momentum(const cltbdy body)
+{
+	return angle_between_two_vectors(body.omega, body.l);
+}
+
+int
 calculate_center_of_mass(double center_of_mass[3],
 				 		 const cltbdy *bodies,
 			 	 		 const int number_of_bodies,
@@ -937,20 +1047,6 @@ calculate_center_of_mass(double center_of_mass[3],
 		1.0 / sum_of_masses, sum_of_masses_times_positions);
 
 	return 0;
-}
-
-int
-initialize_angular_velocity(cltbdy *body)
-{
-    double omega_on_body[] = {0.0, 0.0, 0.0};
-    vector_from_spherical_coordinates(omega_on_body,
-        2.0 * M_PI / (*body).lod,
-        (*body).azi,
-        (*body).pol);
-    rotate_vector_with_quaternion((*body).omega,
-        (*body).q, omega_on_body);
-
-    return 0;
 }
 
 double
@@ -1001,5 +1097,4 @@ largest_time_scale	(const cltbdy *bodies,
     }
 
     return largest;
-
 }

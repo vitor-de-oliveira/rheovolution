@@ -16,7 +16,7 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/dynamical_system.c \
 				$(SRC_DIR)/data_processing.c
 
-.PHONY: run orbit spin plot all example_1 example_2 examples \
+.PHONY: run orbit spin plot all example_1 example_2 example_3 examples \
 		clean clean_slurm input_check
 .SILENT: tides calibration clean clean_slurm
 
@@ -55,7 +55,14 @@ example_2:
 	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
-examples: example_1 example_2
+example_3:
+	$(eval EXAMPLE_NAME := rigid Earth)
+	$(eval EXAMPLE_DIR := examples/E_example.dat)
+	@echo "Running $(EXAMPLE_NAME) example."
+	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME) example."
+
+examples: example_1 example_2 example_3
 
 calibration:
 	$(eval TARGET = CALIBRATION)

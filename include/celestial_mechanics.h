@@ -47,7 +47,7 @@ double
 kepler_equation	(const double e,
                  const double M);
 
-/* potential terms */
+/* gravitational potential terms */
 /* should be calculated using an inertia tensor I[] */
 /* measured in the body's reference frame */
 
@@ -122,16 +122,6 @@ calculate_longitude_of_the_ascending_node   (const double G,
                                              const double x[],
                                              const double v[]);
 
-/* body orientation */
-
-double
-calculate_obliquity_free_body(const double p[]);
-
-double
-calculate_obliquity_on_orbit(const double x[],
-                             const double v[],
-					         const double p[]);
-
 /* struct for celestial bodies (Generalized-Voigt) */
 
 typedef struct CelestialBody {
@@ -177,18 +167,14 @@ typedef struct CelestialBody {
 	double	*alpha_elements;	// elastic modulus for Voigt elements
 	double	*eta_elements;		// viscosity for Voigt elements
 
-	/* orbital options */
-	bool	keplerian;			// sets a fixed Keplerian orbit
-	bool	orbit_2body;		// considers only the gravitational interaction
-								// with the central body
-
 	/* deformation options */
 	bool	point_mass;			// point mass
+	bool	deformable;			// deformable
+	bool	prestress;			// permanent deformation
 	bool	centrifugal;		// centrifugal force
 	bool	tidal;				// tidal force
-	bool	prestress;			// permanent deformation
 
-	/* state variables */
+	/* state variables (inertial frame) */
 	double	x[3];				// position
 	double	x_dot[3];			// velocity
 	double	l[3];				// angular momentum
@@ -197,13 +183,16 @@ typedef struct CelestialBody {
 	double	*bk_me;				// main elements of Voigt elements matrix
 
 	/* body frame */
-	double	Y[9];				// transformation (rotation matrix)
-								// to the body frame
-	double	q[4];				// quaternion for evolving Y 
+	double	q[4];				// quaternion which transforms
+								// from the body to the inertial frame 
 
 	/* non-state variables */
 	double	omega[3];			// angular velocity
 	double	b[9];				// deformation matrix
+
+	/* relative motion (arbitraty frame) */
+	double relative_x[3];
+	double relative_x_dot[3];
 
 } cltbdy;
 
@@ -211,20 +200,54 @@ typedef struct CelestialBody {
 int
 print_CelestialBody(cltbdy body);
 
+/* prints state variables CelestialBody */
+int
+print_state_variables(cltbdy body);
+
 /* all orbital elements from state vectors */
 int
 calculate_orbital_elements  (cltbdy *body, 
                              const cltbdy body_ref,
                              const double G);
 
+/* initialization of angular velocity vector */
+
+int
+initialize_angular_velocity_on_figure_axis_of_solid_frame(cltbdy *body);
+
+int
+initialize_angular_velocity(cltbdy *body);
+
+/* body orientation */
+
+int
+calculate_obliquity_free_body_from_angular_velocity(cltbdy *body);
+
+int
+calculate_obliquity_on_orbit_from_angular_velocity(cltbdy *body);
+
+int
+calculate_obliquity_free_body_from_figure_axis_of_solid_frame(cltbdy *body);
+
+int
+calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body);
+
+double
+angle_between_spin_axis_and_figure_axis_of_solid_frame(const cltbdy body);
+
+double
+angle_between_spin_axis_and_figure_axis(const cltbdy body);
+
+double
+angle_between_spin_axis_and_angular_momentum(const cltbdy body);
+
+/* auxiliary functions */
+
 int
 calculate_center_of_mass(double center_of_mass[3],
 				 		 const cltbdy *bodies,
 			 	 		 const int number_of_bodies,
 			 	 		 const double G);
-
-int
-initialize_angular_velocity(cltbdy *body);
 
 double
 largest_time_scale	(const cltbdy *bodies,

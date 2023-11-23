@@ -14,44 +14,42 @@ field_GV(double t,
 
 	double 	G					= par[0];
 	int		number_of_bodies	= (int) par[1];
+	bool	keplerian_motion	= (bool) par[2];
+	bool	two_bodies_aprox	= (bool) par[3];
 
 	cltbdy 	*bodies;
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
-	int	dim_params_per_body_without_elements = 15;
+	int	dim_params_per_body_without_elements = 12;
 	int	dim_state_per_body_without_elements = 23;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
 		
-		bodies[i].keplerian 			= (bool) par[2 + 0 + dim_params_skip];
-		bodies[i].orbit_2body 			= (bool) par[2 + 1 + dim_params_skip];
-		bodies[i].point_mass 			= (bool) par[2 + 2 + dim_params_skip];
-		bodies[i].centrifugal 			= (bool) par[2 + 3 + dim_params_skip];
-		bodies[i].tidal 				= (bool) par[2 + 4 + dim_params_skip];
-		for (int j = 0; j < 3; j++)
-		{
-			bodies[i].omega[j] 			= par[2 + 5 + dim_params_skip + j];
-		}
-		bodies[i].mass 					= par[2 + 8 + dim_params_skip];
-		bodies[i].I0 					= par[2 + 9 + dim_params_skip];
-		bodies[i].gamma 				= par[2 + 10 + dim_params_skip];
-		bodies[i].alpha 				= par[2 + 11 + dim_params_skip];
-		bodies[i].eta					= par[2 + 12 + dim_params_skip];
-		bodies[i].alpha_0 				= par[2 + 13 + dim_params_skip];
-		bodies[i].elements				= (int) par[2 + 14 + dim_params_skip];
+		bodies[i].point_mass 			= (bool) par[4 + 0 + dim_params_skip];
+		bodies[i].prestress 			= (bool) par[4 + 1 + dim_params_skip];
+		bodies[i].centrifugal 			= (bool) par[4 + 2 + dim_params_skip];
+		bodies[i].tidal 				= (bool) par[4 + 3 + dim_params_skip];
+		bodies[i].deformable			= (bool) par[4 + 4 + dim_params_skip];
+		bodies[i].mass 					= par[4 + 5 + dim_params_skip];
+		bodies[i].I0 					= par[4 + 6 + dim_params_skip];
+		bodies[i].gamma 				= par[4 + 7 + dim_params_skip];
+		bodies[i].alpha 				= par[4 + 8 + dim_params_skip];
+		bodies[i].eta					= par[4 + 9 + dim_params_skip];
+		bodies[i].alpha_0 				= par[4 + 10 + dim_params_skip];
+		bodies[i].elements				= (int) par[4 + 11 + dim_params_skip];
 		if (bodies[i].elements > 0)
 		{
 			bodies[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].alpha_elements[j] 	= par[2 + 15 + dim_params_skip + j];
+				bodies[i].alpha_elements[j] 	= par[4 + 12 + dim_params_skip + j];
 			}
 			bodies[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].eta_elements[j] 	= par[2 + 16 + dim_params_skip + j + bodies[i].elements - 1];
+				bodies[i].eta_elements[j] 	= par[4 + 13 + dim_params_skip + j + bodies[i].elements - 1];
 			}
 		}
 
@@ -131,7 +129,7 @@ field_GV(double t,
 		// x_dot component
 
 		null_vector(component_x_dot[i]);
-		if (bodies[i].keplerian == true)
+		if (keplerian_motion == true)
 		{
 			if (i > 0)
 			{
@@ -149,7 +147,7 @@ field_GV(double t,
 					minus_G_times_total_mass / x_relative_to_ref_norm_cube, relative_to_ref_x);	
 			}
 		}
-		else if (bodies[i].orbit_2body == true)
+		else if (two_bodies_aprox == true)
 		{
 			if (i > 0)
 			{
@@ -281,7 +279,8 @@ field_GV(double t,
 								  0.0, 0.0, 0.0,
 								  0.0, 0.0, 0.0 };
 		commutator(component_b0, omega_hat, b0);
-		get_main_elements_traceless_symmetric_matrix(component_b0_me[i], component_b0);
+		get_main_elements_traceless_symmetric_matrix(component_b0_me[i], 
+			component_b0);
 
 		// u and bk components
 
@@ -322,8 +321,8 @@ field_GV(double t,
 					1.0 / bodies[i].eta_elements[k], lambda);
 
 				double component_bk[] = { 0.0, 0.0, 0.0,
-										0.0, 0.0, 0.0,
-										0.0, 0.0, 0.0 };
+										  0.0, 0.0, 0.0,
+										  0.0, 0.0, 0.0 };
 				linear_combination_three_square_matrix(component_bk,
 					1.0, omega_hat_comm_bk,
 					1.0, minus_bk_over_tau_elements,

@@ -41,10 +41,15 @@ int
 scale_vector(double ax[], const double a, const double x[]);
 
 int
-vector_from_spherical_coordinates   (double x[],
-                                     const double r,
-                                     const double theta,
-                                     const double phi);
+normalize_vector(double x[]);
+
+int
+cartesian_to_spherical_coordinates  (double v_spherical[],
+                                     const double v[]);
+
+int
+spherical_to_cartesian_coordinates  (double v[],
+                                     const double v_spherical[]);
 
 /* vector vector */
 
@@ -135,9 +140,18 @@ linear_combination_square_matrix(double O[], const double a, const double M[],
     const double b, const double N[]);
 
 int
-linear_combination_three_square_matrix(double P[], const double a, const double M[], 
-    const double b, const double N[], const double c, const double O[]);
-    
+linear_combination_three_square_matrix  (double P[],
+                                         const double a, const double M[], 
+                                         const double b, const double N[], 
+                                         const double c, const double O[]);
+
+int
+linear_combination_four_square_matrix	(double Q[], 
+										 const double a, const double M[], 
+    									 const double b, const double N[], 
+										 const double c, const double O[], 
+										 const double d, const double P[]);
+
 int
 commutator(double O[], const double M[], const double N[]);
 
@@ -205,5 +219,9 @@ construct_traceless_symmetric_matrix(double M[9],
 int
 get_main_elements_traceless_symmetric_matrix(double M_main_elements[5], 
 	const double M[9]);
+
+int
+get_elements_diagonal_matrix(double M_elements[3], 
+	const double M_diag[9]);
 
 #endif

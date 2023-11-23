@@ -23,6 +23,7 @@ OMEGA(deg)				0.0000		0.0000
 keplerian   no          no          no
 orbit_2body no          no          no
 point_mass  no          yes         no
+deformable  yes         no          no
+prestress   no          no          no
 centrifugal yes         no          no
 tidal       yes         no          no        
-prestress   no          no          no

@@ -15,7 +15,7 @@ print_vector(const double x[])
 {
 	for (int i = 0; i < DIM_3; i++)
 	{
-		printf("%1.10e ", x[i]);
+		printf("%1.15e ", x[i]);
 	}
 	printf("\n");
 	return 0;
@@ -69,14 +69,47 @@ scale_vector(double ax[], const double a, const double x[])
 }
 
 int
-vector_from_spherical_coordinates   (double x[],
-                                     const double r,
-                                     const double theta,
-                                     const double phi)
+normalize_vector(double x[])
 {
-	x[0] = r * cos(theta) * sin(phi);
-	x[1] = r * sin(theta) * sin(phi);	
-	x[2] = r * cos(phi);
+	scale_vector(x, 1.0 / norm_vector(x), x);
+
+	return 0;
+}
+
+int
+cartesian_to_spherical_coordinates  (double v_spherical[],
+                                     const double v[])
+{
+	double x = v[0];
+	double y = v[1];
+	double z = v[2];
+
+	double r 		= norm_vector(v);
+	double theta 	= atan2(y, x);
+	double phi 		= acos(z/r);
+
+	v_spherical[0] = r;
+	v_spherical[1] = theta;
+	v_spherical[2] = phi;
+
+	return 0;
+}
+
+int
+spherical_to_cartesian_coordinates  (double v[],
+                                     const double v_spherical[])
+{
+	double r 		= v_spherical[0];
+	double theta 	= v_spherical[1];
+	double phi 		= v_spherical[2];
+
+	double x = r * cos(theta) * sin(phi);
+	double y = r * sin(theta) * sin(phi);	
+	double z = r * cos(phi);
+
+	v[0] = x;
+	v[1] = y;
+	v[2] = z;
 
 	return 0;
 }
@@ -121,25 +154,35 @@ cross_product(double z[], const double x[], const double y[])
 double
 angle_between_two_vectors(const double x[], const double y[])
 {
-	double omega;
+	double theta;
 
-	double frac = dot_product(x,y)/(norm_vector(x)*norm_vector(y));
+	double x_local[3], y_local[3];
+	copy_vector(x_local, x);
+	copy_vector(y_local, y);
+
+	/* option which corrects some errors */
+	// normalize_vector(x_local);
+	// normalize_vector(y_local);
+
+	double frac = 
+		dot_product(x_local,y_local) / 
+		(norm_vector(x_local)*norm_vector(y_local));
 
 	// tries to correct numerical errors
 	if (frac > 1.0)
 	{
-		omega = 0.0;
+		theta = 0.0;
 	}
 	else if (frac < -1.0)
 	{
-		omega = M_PI;
+		theta = M_PI;
 	}
 	else
 	{
-		omega = acos(frac);
+		theta = acos(frac);
 	}
 
-	return omega;
+	return theta;
 }
 
 int
@@ -237,7 +280,7 @@ print_square_matrix(const double M[])
 {
 	for (int i = 0; i < DIM_3 * DIM_3; i++)
 	{
-		printf("%1.10e ", M[i]);
+		printf("%1.15e ", M[i]);
 		if ((i+1) % DIM_3 == 0) printf("\n");
 	}
 	return 0;
@@ -270,7 +313,7 @@ double
 trace_square_matrix(const double M[])
 {
 	double trace = 0.0;
-	for (int i = 0; i < DIM_3*DIM_3; i = i + (DIM_3 + 1))
+	for (int i = 0; i < DIM_3*DIM_3; i += (DIM_3 + 1))
 	{
 		trace += M[i];
 	}
@@ -483,8 +526,10 @@ linear_combination_square_matrix(double O[], const double a, const double M[],
 }
 
 int
-linear_combination_three_square_matrix(double P[], const double a, const double M[], 
-    const double b, const double N[], const double c, const double O[])
+linear_combination_three_square_matrix  (double P[],
+                                         const double a, const double M[], 
+                                         const double b, const double N[], 
+                                         const double c, const double O[])
 {
 	double aM[DIM_3*DIM_3];
 	scale_square_matrix(aM, a, M);
@@ -496,6 +541,30 @@ linear_combination_three_square_matrix(double P[], const double a, const double 
 	for (int i = 0; i < DIM_3 * DIM_3; i++)
 	{
 		P[i] = aM[i] + bN[i] + cO[i];
+	}
+	
+	return 0;
+}
+
+int
+linear_combination_four_square_matrix	(double Q[], 
+										 const double a, const double M[], 
+    									 const double b, const double N[], 
+										 const double c, const double O[], 
+										 const double d, const double P[])
+{
+	double aM[DIM_3*DIM_3];
+	scale_square_matrix(aM, a, M);
+	double bN[DIM_3*DIM_3];
+	scale_square_matrix(bN, b, N);
+	double cO[DIM_3*DIM_3];
+	scale_square_matrix(cO, c, O);
+	double dP[DIM_3*DIM_3];
+	scale_square_matrix(dP, d, P);
+
+	for (int i = 0; i < DIM_3 * DIM_3; i++)
+	{
+		Q[i] = aM[i] + bN[i] + cO[i] + dP[i];
 	}
 	
 	return 0;
@@ -548,7 +617,7 @@ print_quaternion(const double q[])
 {
 	for (int i = 0; i < 4; i++)
 	{
-		printf("%1.10e ", q[i]);
+		printf("%1.15e ", q[i]);
 	}
 	printf("\n");
 	return 0;
@@ -808,6 +877,21 @@ get_main_elements_traceless_symmetric_matrix(double M_main_elements[5],
 	M_main_elements[2] = M_13;
 	M_main_elements[3] = M_22;
 	M_main_elements[4] = M_23;
+
+	return 0;
+}
+
+int
+get_elements_diagonal_matrix(double M_elements[3], 
+	const double M_diag[9])
+{
+	double M_11 = M_diag[0];
+	double M_22 = M_diag[4];
+	double M_33 = M_diag[8];
+
+	M_elements[0] = M_11;
+	M_elements[1] = M_22;
+	M_elements[2] = M_33;
 
 	return 0;
 }
