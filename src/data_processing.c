@@ -36,11 +36,12 @@ parse_input(siminf *simulation,
 	char 	first_col[100];
 	char 	second_col[100];
 	char	hold[100];
-	double	second_col_double;
 	bool	system_file_type_received = false;
-	bool	number_of_bodies_received = false;
 	bool	dev_specs_file_received = false;
+	bool	number_of_bodies_received = false;
 	bool	omega_correction_received = false;
+	bool	keplerian_motion_received = false;
+	bool	two_bodies_aprox_received = false;
 
 	/* parse input file */
 	FILE	*in = fopen(input_file, "r");
@@ -99,68 +100,6 @@ parse_input(siminf *simulation,
 			(*simulation).system_file_type = atoi(second_col);
 			system_file_type_received = true;
 		}
-		else if (strcmp(first_col, "number_of_bodies") == 0)
-		{
-			(*simulation).number_of_bodies = atoi(second_col);
-			number_of_bodies_received = true;
-		}
-		else if (strcmp(first_col, "omega_correction") == 0)
-		{
-			if (strcmp(second_col, "yes") == 0)
-			{
-				(*simulation).omega_correction = true;
-				(*simulation).write_to_file = false;
-				(*simulation).keplerian_motion = true;
-			}
-			else if (strcmp(second_col, "no") == 0)
-			{
-				(*simulation).omega_correction = false;
-				(*simulation).write_to_file = true;
-			}
-			else
-			{
-				printf("%s\n", second_col);
-				fprintf(stderr, "Please provide yes or no ");
-				fprintf(stderr, "for omega correction\n");
-				exit(14);
-			}
-		}
-		else if (strcmp(first_col, "keplerian_motion") == 0)
-		{
-			if (strcmp(second_col, "yes") == 0)
-			{
-				(*simulation).keplerian_motion = true;
-			}
-			else if (strcmp(second_col, "no") == 0)
-			{
-				(*simulation).keplerian_motion = false;
-			}
-			else
-			{
-				printf("%s\n", second_col);
-				fprintf(stderr, "Please provide yes or no ");
-				fprintf(stderr, "for keplerian motion\n");
-				exit(14);
-			}
-		}
-		else if (strcmp(first_col, "two_bodies_aprox") == 0)
-		{
-			if (strcmp(second_col, "yes") == 0)
-			{
-				(*simulation).two_bodies_aprox = true;
-			}
-			else if (strcmp(second_col, "no") == 0)
-			{
-				(*simulation).two_bodies_aprox = false;
-			}
-			else
-			{
-				printf("%s\n", second_col);
-				fprintf(stderr, "Please provide yes or no ");
-				fprintf(stderr, "for 2 bodies approximation\n");
-				exit(14);
-			}
-		}
 	}
 	fclose(in);
 
@@ -208,6 +147,136 @@ parse_input(siminf *simulation,
 		(*simulation).system_file_type = 2;
 	}
 
+	/* verification variables for simulation input */
+	int 	number_simulation_inputs = 7;
+	bool	input_simulation_received[number_simulation_inputs];
+	for (int i = 0; i < number_simulation_inputs; i++)
+	{
+		input_simulation_received[i] = false;
+	}
+
+	/* reading simulation specs from user */
+	FILE *in2 = fopen((*simulation).simulation_specs, "r");
+	if	(in2 == NULL)
+	{
+		fprintf(stderr, "Warning: could not read simulation specs file.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
+   	while ((read = getline(&line, &len, in2)) != -1)
+	{
+		sscanf(line, "%s %s", first_col, second_col);
+		if (strcmp(first_col, "t_init(yr)") == 0)
+		{
+			(*simulation).t_init = atof(second_col);
+			input_simulation_received[0] = true;
+		}
+		else if (strcmp(first_col, "t_trans(yr)") == 0)
+		{
+			(*simulation).t_trans = atof(second_col);
+			input_simulation_received[1] = true;
+		}
+		else if (strcmp(first_col, "t_final(yr)") == 0)
+		{
+			(*simulation).t_final = atof(second_col);
+			input_simulation_received[2] = true;
+		}
+		else if (strcmp(first_col, "t_step(yr)") == 0)
+		{
+			(*simulation).t_step = atof(second_col);
+			input_simulation_received[3] = true;
+		}
+		else if (strcmp(first_col, "eps_abs") == 0)
+		{
+			(*simulation).eps_abs = atof(second_col);
+			input_simulation_received[4] = true;
+		}
+		else if (strcmp(first_col, "eps_rel") == 0)
+		{
+			(*simulation).eps_rel = atof(second_col);
+			input_simulation_received[5] = true;
+		}
+		else if (strcmp(first_col, "data_skip") == 0)
+		{
+			(*simulation).data_skip = (int) atof(second_col);
+			input_simulation_received[6] = true;
+		}
+		else if (strcmp(first_col, "number_of_bodies") == 0)
+		{
+			(*simulation).number_of_bodies = atoi(second_col);
+			number_of_bodies_received = true;
+		}
+		else if (strcmp(first_col, "omega_correction") == 0)
+		{
+			if (strcmp(second_col, "yes") == 0)
+			{
+				(*simulation).omega_correction = true;
+			}
+			else if (strcmp(second_col, "no") == 0)
+			{
+				(*simulation).omega_correction = false;
+			}
+			else
+			{
+				printf("%s\n", second_col);
+				fprintf(stderr, "Please provide yes or no ");
+				fprintf(stderr, "for omega correction\n");
+				exit(14);
+			}
+			omega_correction_received = true;
+		}
+		else if (strcmp(first_col, "keplerian_motion") == 0)
+		{
+			if (strcmp(second_col, "yes") == 0)
+			{
+				(*simulation).keplerian_motion = true;
+			}
+			else if (strcmp(second_col, "no") == 0)
+			{
+				(*simulation).keplerian_motion = false;
+			}
+			else
+			{
+				printf("%s\n", second_col);
+				fprintf(stderr, "Please provide yes or no ");
+				fprintf(stderr, "for keplerian motion\n");
+				exit(14);
+			}
+			keplerian_motion_received = true;
+		}
+		else if (strcmp(first_col, "two_bodies_aprox") == 0)
+		{
+			if (strcmp(second_col, "yes") == 0)
+			{
+				(*simulation).two_bodies_aprox = true;
+			}
+			else if (strcmp(second_col, "no") == 0)
+			{
+				(*simulation).two_bodies_aprox = false;
+			}
+			else
+			{
+				printf("%s\n", second_col);
+				fprintf(stderr, "Please provide yes or no ");
+				fprintf(stderr, "for 2 bodies approximation\n");
+				exit(14);
+			}
+			two_bodies_aprox_received = true;
+		}
+	}
+	fclose(in2);
+
+	/* parameter input verification */
+	for (int i = 0; i < number_simulation_inputs; i++)
+	{
+		if(input_simulation_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", (*simulation).simulation_specs);
+			exit(13);
+		}
+	}
+
 	/* check and set number of bodies */
 	FILE *in_col = fopen((*simulation).system_specs, "r");
 	read = getline(&line, &len, in_col);
@@ -238,8 +307,22 @@ parse_input(siminf *simulation,
 	if (omega_correction_received == false)
 	{
 		(*simulation).omega_correction = false;
-		(*simulation).write_to_file = true;
 	}
+
+	/* check and set keplerian motion */
+	if (keplerian_motion_received == false)
+	{
+		(*simulation).keplerian_motion = false;
+	}
+
+	/* check and set two bodies approximation */
+	if (two_bodies_aprox_received == false)
+	{
+		(*simulation).two_bodies_aprox = false;
+	}
+
+	/* always initialize write to file as true */
+	(*simulation).write_to_file = true;
 
 	/* gravitational constant */
 	(*simulation).G = 4.0 * M_PI * M_PI; // AU Msun year
@@ -270,74 +353,6 @@ parse_input(siminf *simulation,
 			}
 		}
 		fclose(in3);
-	}
-
-	/* verification variables for simulation input */
-	int 	number_simulation_inputs = 7;
-	bool	input_simulation_received[number_simulation_inputs];
-	for (int i = 0; i < number_simulation_inputs; i++)
-	{
-		input_simulation_received[i] = false;
-	}
-
-	/* reading simulation specs from user */
-	FILE *in2 = fopen((*simulation).simulation_specs, "r");
-	if	(in2 == NULL)
-	{
-		fprintf(stderr, "Warning: could not read simulation specs file.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-   	while ((read = getline(&line, &len, in2)) != -1)
-	{
-		sscanf(line, "%s %lf", first_col, &second_col_double);
-		if (strcmp(first_col, "t_init(yr)") == 0)
-		{
-			(*simulation).t_init = second_col_double;
-			input_simulation_received[0] = true;
-		}
-		else if (strcmp(first_col, "t_trans(yr)") == 0)
-		{
-			(*simulation).t_trans = second_col_double;
-			input_simulation_received[1] = true;
-		}
-		else if (strcmp(first_col, "t_final(yr)") == 0)
-		{
-			(*simulation).t_final = second_col_double;
-			input_simulation_received[2] = true;
-		}
-		else if (strcmp(first_col, "t_step(yr)") == 0)
-		{
-			(*simulation).t_step = second_col_double;
-			input_simulation_received[3] = true;
-		}
-		else if (strcmp(first_col, "eps_abs") == 0)
-		{
-			(*simulation).eps_abs = second_col_double;
-			input_simulation_received[4] = true;
-		}
-		else if (strcmp(first_col, "eps_rel") == 0)
-		{
-			(*simulation).eps_rel = second_col_double;
-			input_simulation_received[5] = true;
-		}
-		else if (strcmp(first_col, "data_skip") == 0)
-		{
-			(*simulation).data_skip = (int) second_col_double;
-			input_simulation_received[6] = true;
-		}
-	}
-	fclose(in2);
-
-	/* parameter input verification */
-	for (int i = 0; i < number_simulation_inputs; i++)
-	{
-		if(input_simulation_received[i] == false)
-		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", (*simulation).simulation_specs);
-			exit(13);
-		}
 	}
 
 	return 0;

@@ -3,4 +3,3 @@ input_folder        examples/specs/
 output_folder       examples/
 system_specs        EM_example_system.dat
 simulation_specs    EM_example_simulation.dat
-number_of_bodies    2

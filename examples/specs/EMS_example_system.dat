@@ -20,8 +20,6 @@ I(deg)					0.0000		-5.145
 M(deg)					0.0000  	0.0000		
 w(deg)					0.0000		0.0000		
 OMEGA(deg)				0.0000		0.0000
-keplerian   no          no          no
-orbit_2body no          no          no
 point_mass  yes         yes         yes
 deformable  no          no          no
 prestress   no          no          no
