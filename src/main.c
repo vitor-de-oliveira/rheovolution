@@ -95,6 +95,8 @@ main(int argc, char *argv[])
 						simulation.G);
 		simulation.omega_correction_counter = 0;
 		simulation_copy = simulation;
+		simulation.write_to_file = false;
+		simulation.keplerian_motion = true;
 	}
 
 	back_omega_correction:;
@@ -106,8 +108,8 @@ main(int argc, char *argv[])
 			simulation.t_step = simulation_copy.t_step;
 			if (simulation.omega_correction_counter == omega_correction_number_of_iterates)
 			{
-				simulation.write_to_file = true;
 				simulation.omega_correction = false;
+				simulation.write_to_file = true;
 				simulation.keplerian_motion = simulation_copy.keplerian_motion;
 			}
 			for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -374,7 +376,6 @@ main(int argc, char *argv[])
 			}
 			if (bodies[i].elements > 0)
 			{
-				bodies[i].bk_me = (double *) malloc(5 * bodies[i].elements * sizeof(double));
 				for (int j = 0; j < 5 * bodies[i].elements; j++)
 				{
 					bodies[i].bk_me[j] = y[19 + dim_state_skip + j];

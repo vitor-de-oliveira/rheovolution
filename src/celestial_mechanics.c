@@ -469,12 +469,14 @@ print_CelestialBody(cltbdy body)
 
 	printf("point mass = ");	
 	printf("%d\n", body.point_mass);
+	printf("deformable = ");	
+	printf("%d\n", body.deformable);
+	printf("prestress = ");	
+	printf("%d\n", body.prestress);
 	printf("centrifugal = ");	
 	printf("%d\n", body.centrifugal);
 	printf("tidal = ");	
 	printf("%d\n", body.tidal);
-	printf("prestress = ");	
-	printf("%d\n", body.prestress);
 	
 	printf("x = ");
 	print_vector(body.x);

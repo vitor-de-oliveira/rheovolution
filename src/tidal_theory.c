@@ -75,14 +75,14 @@ calculate_f_tide(double f_tide[9],
 			tensor_product(x_tensor_x, relative_x, relative_x);
 			double Id[9];
 			identity_matrix(Id);
-			double scaled_id[9];
-			scale_square_matrix(scaled_id, 
+			double scaled_Id[9];
+			scale_square_matrix(scaled_Id, 
 				norm_squared_vector(relative_x) / 3.0, Id);
 			double x_norm_fifth = pow(norm_vector(relative_x), 5.0);
 			double f_tide_component[9];
 			linear_combination_square_matrix(f_tide_component, 
 				 3.0 * G * bodies[i].mass / x_norm_fifth, x_tensor_x,
-				-3.0 * G * bodies[i].mass / x_norm_fifth, scaled_id);
+				-3.0 * G * bodies[i].mass / x_norm_fifth, scaled_Id);
 			linear_combination_square_matrix(f_tide, 
 				1.0, f_tide,
 				1.0, f_tide_component);
@@ -143,8 +143,7 @@ calculate_g	(double g[9],
 	null_matrix(f_tide);
 	
 	/* f_rheo (rheology) */
-	if ((bodies[id].tidal == true) ||
-		(bodies[id].centrifugal == true))
+	if (bodies[id].deformable == true)
 	{
 		calculate_f_rheo(f_rheo, bodies[id]);
 	}
@@ -252,13 +251,10 @@ calculate_omega	(const int id,
 			 	 const int number_of_bodies,
 			 	 const double G)
 {
+	/**
+	 * if body is a point mass, omega is constant
+	**/
 	if (bodies[id].point_mass == true)
-	{
-		null_vector(bodies[id].omega);
-		return 0;
-	}
-	else if (bodies[id].deformable == false &&
-			 bodies[id].prestress == false)
 	{
 		return 0;
 	}

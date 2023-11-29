@@ -44,12 +44,12 @@ field_GV(double t,
 			bodies[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].alpha_elements[j] 	= par[4 + 12 + dim_params_skip + j];
+				bodies[i].alpha_elements[j] = par[4 + 12 + dim_params_skip + j];
 			}
 			bodies[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].eta_elements[j] 	= par[4 + 13 + dim_params_skip + j + bodies[i].elements - 1];
+				bodies[i].eta_elements[j] = par[4 + 13 + dim_params_skip + j + bodies[i].elements - 1];
 			}
 		}
 
