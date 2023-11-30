@@ -957,7 +957,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				fprintf(stderr, "Error: there is at least one missing input ");
 				fprintf(stderr, "from %s.\n", simulation.system_specs);
 				fprintf(stderr, "Exiting the program now.\n");
-				// fprintf(stderr, "Missing input number %d\n", i); // for testing
+				// fprintf(stderr, "Missing input number %d\n", i); // debugging
 				exit(14);
 			}
 		}
@@ -979,6 +979,28 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				fprintf(stderr, "from %s.\n", simulation.system_specs);
 				fprintf(stderr, "Exiting the program now.\n");
 				exit(14);
+			}
+		}
+
+		/* hierarchy (just to be safe) */
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			if ((*bodies)[i].deformable == false &&
+				(*bodies)[i].prestress == false)
+			{
+				(*bodies)[i].point_mass = true;
+			}
+			if ((*bodies)[i].point_mass == true)
+			{
+				(*bodies)[i].deformable = false;
+				(*bodies)[i].prestress = false;
+				(*bodies)[i].centrifugal = false;
+				(*bodies)[i].tidal = false;
+			}
+			else if ((*bodies)[i].deformable == false)
+			{
+				(*bodies)[i].centrifugal = false;
+				(*bodies)[i].tidal = false;
 			}
 		}
 
