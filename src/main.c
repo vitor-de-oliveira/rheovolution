@@ -215,8 +215,7 @@ main(int argc, char *argv[])
 		/* rheology variables */
 		double u_i[9];
 		null_matrix(u_i);
-		if (bodies[i].point_mass == false && 
-			bodies[i].deformable == true)
+		if (bodies[i].deformable == true)
 		{
 			linear_combination_four_square_matrix(u_i,
 				-1.0 * c_i, b_stokes_i,
