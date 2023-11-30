@@ -1,6 +1,8 @@
-/* Calibration of the Maxwell rheology parameters for the Earth 
- * based on the semi-major axis growth in the Earth--Moon system 
- * and plots of k2 */
+/**
+ * Code designed to use additional functions in tidal_theory lib
+ * to calibrate the Love number k2 in various situations
+ * and plot this paramter as a function of perturbing frequency
+*/
 
 #include <math.h>
 #include <stdbool.h>

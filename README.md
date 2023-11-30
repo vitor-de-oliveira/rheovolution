@@ -62,7 +62,11 @@ make examples
 This command runs the program with the input files in the folder ``examples``, which contains 3 example files: the specs for the Earth-Moon system with no obliquity, zero orbital eccentricity, and the Moon being treated as a point mass; the specs for the Earth-Moon-Sun system with all objects being treated as point masses; and the specs for rigid Earth.
 
 ## Main references
-Ragazzo C., Ruiz L. S. Viscoelastic tides: models for use in Celestial Mechanics, _Celestial Mechanics and Dynamical Astronomy_, Springer, v. 128, n.1., p. 19--59, 2017.
+Ragazzo, C., & Ruiz, L. S. (2015). Dynamics of an isolated, viscoelastic, self-gravitating body. _Celestial Mechanics and Dynamical Astronomy_, 122, 303-332.
+
+Ragazzo, C., & Ruiz, L. S. (2017). Viscoelastic tides: models for use in Celestial Mechanics. _Celestial Mechanics and Dynamical Astronomy_, 128, 19-59.
+
+Ragazzo, C., Boué, G., Gevorgyan, Y., & Ruiz, L. S. (2022). Librations of a body composed of a deformable mantle and a fluid core. _Celestial Mechanics and Dynamical Astronomy_, 134(2), 10.
 
 ## Disclaimer
 We are not offering any license yet, but it will be done under a General Public License in the future. Users are allowed to view and fork this repository under the Terms of Service on GitHub.
