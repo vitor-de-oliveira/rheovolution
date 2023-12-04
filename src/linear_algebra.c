@@ -780,45 +780,46 @@ rotation_matrix_from_quaternion(double R[9], const double q[4])
 	// I am defining everything by hand for now
 	// should be a way to get here from standard operations
 
-	// R[0] = q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3];
-	// R[1] = 2.0 * (q[1]*q[2] - q[0]*q[3]);
-	// R[2] = 2.0 * (q[1]*q[3] + q[0]*q[2]);
-	// R[3] = 2.0 * (q[1]*q[2] + q[0]*q[3]);
-	// R[4] = q[0]*q[0] - q[1]*q[1] + q[2]*q[2] - q[3]*q[3];
-	// R[5] = 2.0 * (q[2]*q[3] - q[0]*q[1]);
-	// R[6] = 2.0 * (q[1]*q[3] - q[0]*q[2]);
-	// R[7] = 2.0 * (q[2]*q[3] + q[0]*q[1]);
-	// R[8] = q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3];
+	R[0] = q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3];
+	R[1] = 2.0 * (q[1]*q[2] - q[0]*q[3]);
+	R[2] = 2.0 * (q[1]*q[3] + q[0]*q[2]);
+	R[3] = 2.0 * (q[1]*q[2] + q[0]*q[3]);
+	R[4] = q[0]*q[0] - q[1]*q[1] + q[2]*q[2] - q[3]*q[3];
+	R[5] = 2.0 * (q[2]*q[3] - q[0]*q[1]);
+	R[6] = 2.0 * (q[1]*q[3] - q[0]*q[2]);
+	R[7] = 2.0 * (q[2]*q[3] + q[0]*q[1]);
+	R[8] = q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3];
 
 	// from wikipedia
-	double a = q[0];
-	double b = q[1];
-	double c = q[2];
-	double d = q[3];
+	// it normalizes the quaternion whilst converting
+	// double a = q[0];
+	// double b = q[1];
+	// double c = q[2];
+	// double d = q[3];
 
-	double s = 2.0 / (a*a + b*b + c*c + d*d);
-	double bs = b * s;
-	double cs = c * s;
-	double ds = d * s;
-	double ab = a * bs;
-	double ac = a * cs;
-	double ad = a * ds;
-	double bb = b * bs;
-	double bc = b * cs;
-	double bd = b * ds;
-	double cc = c * cs;
-	double cd = c * ds;
-	double dd = d * ds;
+	// double s = 2.0 / (a*a + b*b + c*c + d*d);
+	// double bs = b * s;
+	// double cs = c * s;
+	// double ds = d * s;
+	// double ab = a * bs;
+	// double ac = a * cs;
+	// double ad = a * ds;
+	// double bb = b * bs;
+	// double bc = b * cs;
+	// double bd = b * ds;
+	// double cc = c * cs;
+	// double cd = c * ds;
+	// double dd = d * ds;
 
-	R[0] = 1.0 - cc - dd;
-	R[1] = bc - ad;
-	R[2] = bd + ac;
-	R[3] = bc + ad;
-	R[4] = 1.0 - bb - dd;
-	R[5] = cd - ab;
-	R[6] = bd - ac;
-	R[7] = cd + ab;
-	R[8] = 1.0 - bb - cc;
+	// R[0] = 1.0 - cc - dd;
+	// R[1] = bc - ad;
+	// R[2] = bd + ac;
+	// R[3] = bc + ad;
+	// R[4] = 1.0 - bb - dd;
+	// R[5] = cd - ab;
+	// R[6] = bd - ac;
+	// R[7] = cd + ab;
+	// R[8] = 1.0 - bb - cc;
 
 	return 0;
 }

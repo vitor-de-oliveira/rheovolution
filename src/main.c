@@ -384,7 +384,8 @@ main(int argc, char *argv[])
 			{
 				bodies[i].q[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
 			}
-
+			normalize_quaternion(bodies[i].q);
+			
 			elements_counter += bodies[i].elements;
 		}
 
