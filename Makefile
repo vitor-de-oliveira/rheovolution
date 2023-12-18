@@ -8,7 +8,8 @@ TARGET = TIDES
 
 CC = cc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
-		 -march=native -Wall -Werror -Wpedantic
+		 -march=native -Wall -Werror -Wpedantic \
+#		 -fsanitize=address
 
 DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/celestial_mechanics.c \

@@ -60,6 +60,15 @@ calculate_J2(const double m, const double R, const double I[9]);
 double
 calculate_C22(const double m, const double R, const double I[9]);
 
+double
+calculate_S22(const double m, const double R, const double I[9]);
+
+double
+calculate_C21(const double m, const double R, const double I[9]);
+
+double
+calculate_S21(const double m, const double R, const double I[9]);
+
 /* orbital elements from state vectors */
 /* taken from text based on Vallado, 2007 */
 /* Fundamentals of Astrodynamics and Applications */
@@ -136,11 +145,14 @@ typedef struct CelestialBody {
 	double	azi;				// azimuthal angle of angular velocity (deg)
 	double	pol;				// polar angle of angular velocity (deg)
 
+	double	I0;					// mean moment of inertia
 	double	rg;		    		// moment of inertia factor
 	double	J2;		    		// gravity field coefficient
 	double	C22;        		// gravity field coefficient
-	double	I0;					// mean moment of inertia
-	
+	double	S22;        		// gravity field coefficient
+	double	C21;        		// gravity field coefficient
+	double	S21;        		// gravity field coefficient
+
 	double 	obl;	    		// obliquity (deg)
 	double	psi;	    		// longitude of the ascending node 
 								// of the body equator or precession angle (deg)	
@@ -213,7 +225,7 @@ calculate_orbital_elements  (cltbdy *body,
 /* initialization of angular velocity vector */
 
 int
-initialize_angular_velocity_on_figure_axis_of_solid_frame(cltbdy *body);
+initialize_angular_velocity_on_figure_axis_of_tisserand_frame(cltbdy *body);
 
 int
 initialize_angular_velocity(cltbdy *body);

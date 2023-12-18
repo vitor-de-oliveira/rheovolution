@@ -62,14 +62,18 @@ main(int argc, char *argv[])
 
 	/* correction for the angular velocity's initial value */
 	int		omega_correction_number_of_iterates = 20;
-	bool	omega_correction_on_body[simulation.number_of_bodies];
-	double	omega_correction_step[simulation.number_of_bodies];
-	double 	omega_correction_lod[simulation.number_of_bodies];
-	double	omega_correction_lod_after_simulation[simulation.number_of_bodies];
+	int		*omega_correction_on_body = *(&omega_correction_on_body);
+	double	*omega_correction_step = *(&omega_correction_step);
+	double 	*omega_correction_lod = *(&omega_correction_lod);
+	double	*omega_correction_lod_after_simulation = *(&omega_correction_lod_after_simulation);
 	siminf	simulation_copy = *(&simulation_copy);
 	cltbdy	*bodies_copy = *(&bodies_copy);
 	if (simulation.omega_correction == true)
 	{
+		omega_correction_on_body = (int *) malloc(simulation.number_of_bodies * sizeof(int));
+		omega_correction_step = (double *) malloc(simulation.number_of_bodies * sizeof(double));
+		omega_correction_lod = (double *) malloc(simulation.number_of_bodies * sizeof(double));
+		omega_correction_lod_after_simulation = (double *) malloc(simulation.number_of_bodies * sizeof(double));
 		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
@@ -81,11 +85,11 @@ main(int argc, char *argv[])
 			bodies_copy[i] = bodies[i];
 			if (bodies[i].point_mass == false)
 			{
-				omega_correction_on_body[i] = true;
+				omega_correction_on_body[i] = 1;
 			}
 			else
 			{
-				omega_correction_on_body[i] = false;
+				omega_correction_on_body[i] = 0;
 			}
 			omega_correction_lod[i] = bodies[i].lod;
 		}
@@ -114,7 +118,7 @@ main(int argc, char *argv[])
 			}
 			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				if (omega_correction_on_body[i] == true)
+				if (omega_correction_on_body[i] == 1)
 				{
 					omega_correction_lod_after_simulation[i] 
 						= 2.0 * M_PI / norm_vector(bodies[i].omega);
@@ -137,8 +141,6 @@ main(int argc, char *argv[])
 					bodies[i] = bodies_copy[i];
 					bodies[i].lod = omega_correction_lod[i];
 
-					initialize_angular_velocity_on_figure_axis_of_solid_frame(&bodies[i]);
-
 				}
 				else
 				{
@@ -148,88 +150,10 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* calculate bk, b0, and u */
+	/* initialize l and angular velocity */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		/* bk */
-		if (bodies[i].elements > 0)
-		{
-			bodies[i].bk_me = (double *) calloc(bodies[i].elements * 5, sizeof(double));
-		}
-
-		/* transformation matrices */
-		double Y_i[9], Y_i_trans[9];
-		rotation_matrix_from_quaternion(Y_i, bodies[i].q);
-		transpose_square_matrix(Y_i_trans, Y_i);
-
-		/* deformation components - I/II */
-		double f_cent_i[9];
-		null_matrix(f_cent_i);
-		if (bodies[i].centrifugal == true)
-		{
-			calculate_f_cent(f_cent_i, bodies[i].omega);
-		}
-		double f_tide_i[9];
-		null_matrix(f_tide_i);
-		if (bodies[i].tidal == true)
-		{
-			calculate_f_tide(f_tide_i, i, bodies, 
-				simulation.number_of_bodies, simulation.G);
-		}
-
-		/* deformation from stokes coefficients */
-		double B_stokes_i[9];
-		body_frame_deformation_from_stokes_coefficients(B_stokes_i, bodies[i]);
-		double b_stokes_i[9];
-		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i);
-		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
-
-		/* prestress */
-		double b0_i[9];	
-		null_matrix(b0_i);
-		if(bodies[i].prestress == true)
-		{
-			if (bodies[i].deformable == false)
-			{
-				copy_square_matrix(b0_i, b_stokes_i);
-			}
-			else
-			{
-				linear_combination_three_square_matrix(b0_i,
-					(bodies[i].gamma+bodies[i].alpha_0)/bodies[i].alpha_0, b_stokes_i,
-					-1.0/bodies[i].alpha_0, f_cent_i,
-					-1.0/bodies[i].alpha_0, f_tide_i);
-			}
-		}
-		get_main_elements_traceless_symmetric_matrix(bodies[i].b0_me, b0_i);
-
-		/* deformation components - II/II */
-		double f_ps_i[9];
-		null_matrix(f_ps_i);
-		if (bodies[i].prestress == true)
-		{
-			calculate_f_ps(f_ps_i, bodies[i]);
-		}
-		double c_i = calculate_c(bodies[i]);
-
-		/* rheology variables */
-		double u_i[9];
-		null_matrix(u_i);
-		if (bodies[i].deformable == true)
-		{
-			linear_combination_four_square_matrix(u_i,
-				-1.0 * c_i, b_stokes_i,
-					   1.0, f_cent_i,
-					   1.0, f_tide_i,
-					   1.0, f_ps_i);
-		}
-		get_main_elements_traceless_symmetric_matrix(bodies[i].u_me, u_i);
-		
-	} // end loop over bodies
-
-	/* calculate first l */
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
+		initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&bodies[i]);
 		calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
 		initialize_angular_velocity(&bodies[i]); // correct alignment
 		calculate_l(&bodies[i], simulation.number_of_bodies, simulation.G);
@@ -446,6 +370,10 @@ main(int argc, char *argv[])
 
 	if (simulation.omega_correction == true)
 	{
+		free(omega_correction_on_body);
+		free(omega_correction_step);
+		free(omega_correction_lod);
+		free(omega_correction_lod_after_simulation);
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			if (bodies_copy[i].elements > 0)

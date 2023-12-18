@@ -598,10 +598,18 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		// // exit(99);
 
 	} // end if (simulation.system_file_type == 1)
-	else if (simulation.system_file_type == 2) /* convert input if necessary */
+	else if (simulation.system_file_type == 2)
 	{
 		/* allocate memory for bodies */
 		*bodies = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
+
+		/* pre-initializing some parameters */
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].S22 = 0.0;
+			(*bodies)[i].C21 = 0.0;
+			(*bodies)[i].S21 = 0.0;
+		}
 
 		/* auxiliary variables for reading input */
 		char 	*line = NULL;
@@ -711,6 +719,30 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					(*bodies)[i].C22 = atof(token);
 				}
 				input_par_received[7] = true;
+			}
+			else if (strcmp(token, "C21") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].C21 = atof(token);
+				}
+			}
+			else if (strcmp(token, "S21") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].S21 = atof(token);
+				}
+			}
+			else if (strcmp(token, "S22") == 0)
+			{
+				for (int i = 0; i < simulation.number_of_bodies; i++)
+				{
+					token = strtok(NULL, tok_del);
+					(*bodies)[i].S22 = atof(token);
+				}
 			}
 			else if (strcmp(token, "lib(deg)") == 0)
 			{
@@ -1055,7 +1087,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 		}
 		
-		/* calculating state variables */
+		/* calculating 4 sets of variables */
 		
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
@@ -1126,9 +1158,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					full_rotation_orbit_quaternion, velocity_in_plane);
 			}
 
-			/* 2nd set of variables - omega, body frame variables and b0_diag */
-			// b0_diag not implemented yet. 
-			// at the moment, it is being dealt with by the main
+			/* 2nd set of variables - omega and q */
 			double qr_3_psi[4];
 			rotation_quaternion_z(qr_3_psi, psi);
 			double qr_1_theta[4];
@@ -1148,7 +1178,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 
 			copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
-			initialize_angular_velocity_on_figure_axis_of_solid_frame(&(*bodies)[i]);
+			initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&(*bodies)[i]);
 
 			/* 3rd set of variables - I0 */
 			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
@@ -1173,7 +1203,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				}
 			}
 
-			/* prestress */
+			/* prestress parameters */
 			if ((*bodies)[i].prestress == true)
 			{
 				(*bodies)[i].alpha_0 = parameter_alpha_0(simulation.G, (*bodies)[i].I0, R, kf, ks);
@@ -1185,9 +1215,123 @@ fill_in_bodies_data	(cltbdy	**bodies,
 
 		} // end loop over bodies
 
-		/* for testing */
-		// for (int i = 0; i < number_of_bodies; i++)
+		/* calculate b0, and initialize bk and u */
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			/* transformation matrices */
+			double Y_i[9], Y_i_trans[9];
+			rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
+			transpose_square_matrix(Y_i_trans, Y_i);
+
+			/* deformation from stokes coefficients */
+			double B_stokes_i[9];
+			body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
+			double B_stokes_i_diag[9];
+			calculate_diagonalized_square_matrix(B_stokes_i_diag, B_stokes_i);
+			double b_stokes_i[9];
+			square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i_diag);
+			square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+
+			/* update gravity field coefficients to */
+			/* the frame of principal inertia moments */
+			double Iner_diag[9];
+			calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_i_diag);
+			(*bodies)[i].rg = calculate_rg((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].J2 = calculate_J2((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+
+			/* still implementing / testing */
+			// double A = Iner_diag[0];
+			// double C = Iner_diag[8];
+
+			// double ks = (3.0 * simulation.G * (C-A)) / 
+			// 	(pow(norm_vector((*bodies)[i].omega), 2.0) *
+			// 	 pow((*bodies)[i].R, 5.0));
+			// printf("ks = %1.5e\n", ks);
+			// printf("Body %d: %s\n", i+1, (*bodies)[i].name);
+			// printf("I0 = %1.5e\n", (*bodies)[i].I0);
+			// printf("ang_vel = %1.5e\n", norm_vector((*bodies)[i].omega));
+			// printf("C = %1.5e\n", C);
+			// printf("A = %1.5e\n", A);
+			// double first_term_alpha_0 = ((*bodies)[i].I0*norm_vector((*bodies)[i].omega)*norm_vector((*bodies)[i].omega))/
+			// 	(C-A);
+			// printf("1st term alpha 0 = %1.5e\n", first_term_alpha_0);
+			// printf("gamma = %1.5e\n", (*bodies)[i].gamma);
+			// printf("alpha_0 = %1.5e\n", first_term_alpha_0-(*bodies)[i].gamma);
+
+			/* prestress */
+			double b0_i[9];	
+			null_matrix(b0_i);
+			if((*bodies)[i].prestress == true)
+			{
+				if ((*bodies)[i].deformable == false)
+				{
+					copy_square_matrix(b0_i, b_stokes_i);
+				}
+				else
+				{
+					double f_cent_static_i[9];
+					double mean_omega = norm_vector((*bodies)[i].omega);
+					calculate_f_cent_static(f_cent_static_i, mean_omega);
+					double f_tide_static_i[9];
+					null_matrix(f_tide_static_i); // no permanent tide
+					linear_combination_three_square_matrix(b0_i,
+						((*bodies)[i].gamma+(*bodies)[i].alpha_0)/(*bodies)[i].alpha_0, b_stokes_i,
+						-1.0/(*bodies)[i].alpha_0, f_cent_static_i,
+						-1.0/(*bodies)[i].alpha_0, f_tide_static_i);
+				}
+			}
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].b0_me, b0_i);
+
+			/* initialize bk at equilibrium */
+			if ((*bodies)[i].elements > 0)
+			{
+				(*bodies)[i].bk_me = (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
+			}
+
+			/* initialize u */
+			double f_cent_i[9];
+			null_matrix(f_cent_i);
+			if ((*bodies)[i].centrifugal == true)
+			{
+				calculate_f_cent(f_cent_i, (*bodies)[i].omega);
+			}
+			double f_tide_i[9];
+			null_matrix(f_tide_i);
+			if ((*bodies)[i].tidal == true)
+			{
+				calculate_f_tide(f_tide_i, i, (*bodies), 
+					simulation.number_of_bodies, simulation.G);
+			}
+			double f_ps_i[9];
+			null_matrix(f_ps_i);
+			if ((*bodies)[i].prestress == true)
+			{
+				calculate_f_ps(f_ps_i, (*bodies)[i]);
+			}
+			double c_i = calculate_c((*bodies)[i]);
+			double u_i[9];
+			null_matrix(u_i);
+			if ((*bodies)[i].deformable == true)
+			{
+				linear_combination_four_square_matrix(u_i,
+					-1.0 * c_i, b_stokes_i,
+					 1.0, f_cent_i,
+					 1.0, f_tide_i,
+					 1.0, f_ps_i);
+			}
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].u_me, u_i);
+			
+		} // end loop over bodies
+
+		/* for debugging */
+		// for (int i = 0; i < simulation.number_of_bodies; i++)
+		// {
 		// 	print_CelestialBody((*bodies)[i]);
+		// }
 		// exit(99);
 
 	} // end else if (simulation.system_file_type == 2)
@@ -1298,18 +1442,7 @@ write_output(const cltbdy *bodies,
 			/* quaternion */
 			fprintf (out[i], " %.15e %.15e %.15e %.15e", 
 				bodies[i].q[0], bodies[i].q[1], bodies[i].q[2], bodies[i].q[3]);
-		
-			/* for testing */
-			// double b_diag[9];
-			// calculate_diagonalized_square_matrix(b_diag, bodies[i].b);
-			// double I_diag[9];
-			// calculate_inertia_tensor(I_diag, bodies[i].I0, b_diag);
-			// printf("rg = %1.5e\n", 
-			// 	calculate_rg(bodies[i].mass, bodies[i].R, I_diag));
-			// printf("J2 = %1.5e\n", 
-			// 	calculate_J2(bodies[i].mass, bodies[i].R, I_diag));
-			// printf("C22 = %1.5e\n", 
-			// 	calculate_C22(bodies[i].mass, bodies[i].R, I_diag));
+
 		}
 
 		/* next line */

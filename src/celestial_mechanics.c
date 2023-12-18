@@ -128,6 +128,42 @@ calculate_C22(const double m, const double R, const double I[9])
 }
 
 double
+calculate_S22(const double m, const double R, const double I[9])
+{
+	double S22;
+
+	double I_12 = I[1];
+
+	S22 = -1.0 * I_12 / (2.0 * m * R * R);
+
+	return S22;
+}
+
+double
+calculate_C21(const double m, const double R, const double I[9])
+{
+	double C21;
+
+	double I_13 = I[2];
+
+	C21 = -1.0 * I_13 / (m * R * R);
+
+	return C21;
+}
+
+double
+calculate_S21(const double m, const double R, const double I[9])
+{
+	double S21;
+
+	double I_23 = I[5];
+
+	S21 = -1.0 * I_23 / (m * R * R);
+
+	return S21;
+}
+
+double
 calculate_semi_major_axis   (const double G,
                              const double m1,
                              const double m2,
@@ -413,14 +449,20 @@ print_CelestialBody(cltbdy body)
 	printf("lod = ");	
 	printf("%1.5e\n", body.lod);
 
+	printf("I0 = ");	
+	printf("%1.5e\n", body.I0);
 	printf("rg = ");	
 	printf("%1.5e\n", body.rg);
 	printf("J2 = ");	
 	printf("%1.5e\n", body.J2);
 	printf("C22 = ");	
 	printf("%1.5e\n", body.C22);
-	printf("I0 = ");	
-	printf("%1.5e\n", body.I0);
+	printf("S22 = ");	
+	printf("%1.5e\n", body.S22);
+	printf("C21 = ");	
+	printf("%1.5e\n", body.C21);
+	printf("S21 = ");	
+	printf("%1.5e\n", body.S21);
 
 	printf("obl = ");
 	printf("%1.5e\n", body.obl);
@@ -920,7 +962,7 @@ calculate_orbital_elements  (cltbdy *body,
 }
 
 int
-initialize_angular_velocity_on_figure_axis_of_solid_frame(cltbdy *body)
+initialize_angular_velocity_on_figure_axis_of_tisserand_frame(cltbdy *body)
 {
     double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).lod};
     rotate_vector_with_quaternion((*body).omega,
@@ -929,13 +971,14 @@ initialize_angular_velocity_on_figure_axis_of_solid_frame(cltbdy *body)
     return 0;
 }
 
-
 int
 initialize_angular_velocity(cltbdy *body)
 {
     double omega_on_body[] = {0.0, 0.0, 0.0};
     double omega_on_body_spherical[] = 
-        {2.0 * M_PI / (*body).lod, (*body).azi, (*body).pol};
+        {(2.0 * M_PI / (*body).lod) / cos((*body).pol), 
+         (*body).azi,
+         (*body).pol};
     spherical_to_cartesian_coordinates(omega_on_body, 
         omega_on_body_spherical);
     rotate_vector_with_quaternion((*body).omega,

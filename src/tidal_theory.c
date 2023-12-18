@@ -13,16 +13,17 @@ int
 body_frame_deformation_from_stokes_coefficients	(double B[9],
 												 const cltbdy body)
 {
-	for (int i = 0; i < 9; i++)
-	{
-		B[i] = 0.0;
-	}
+	double div = 3.0 * body.rg - 2.0 * body.J2;
 
-	double mR2 = body.mass * body.R * body.R;
-
-	B[0] = (body.I0 - (body.rg - body.J2 - 2.0 * body.C22) * mR2) / body.I0;
-	B[4] = (body.I0 - (body.rg - body.J2 + 2.0 * body.C22) * mR2) / body.I0;
-	B[8] = -1.0 * (B[0] + B[4]); // B[8] = (body.I0 - body.rg * mR2)/body.I0;
+	B[0] = (body.J2 + 6.0 * body.C22) / div;
+	B[1] = (6.0 * body.S22) / div;
+	B[2] = (3.0 * body.C21) / div;
+	B[3] = B[1];
+	B[4] = (body.J2 - 6.0 * body.C22) / div;
+	B[5] = (3.0 * body.S21) / div;
+	B[6] = B[2];
+	B[7] = B[5];
+	B[8] = -1.0 * (B[0] + B[4]); // B[8] = (-2.0 * body.J2) / div
 
 	return 0;
 }
@@ -184,6 +185,18 @@ calculate_f_cent(double f_cent[9], const double omega[3])
 	linear_combination_square_matrix(f_cent,
 		-1.0, omega_hat_squared,
 		trace_omega_hat_squared / 3.0, Id);
+
+	return 0;
+}
+
+int
+calculate_f_cent_static(double f_cent_static[9], const double mean_omega)
+{
+	double a = (mean_omega * mean_omega) / 3.0;
+	double M[] = {1.0, 0.0, 0.0,
+				  0.0, 1.0, 0.0,
+				  0.0, 0.0, -2.0};
+	scale_square_matrix(f_cent_static, a, M);
 
 	return 0;
 }
