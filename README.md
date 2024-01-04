@@ -1,23 +1,21 @@
 # tides
-Software under development for numerically investigating the tidal evolution of celestial bodies based on the physical theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
+Software for numerically investigating the tidal evolution of celestial bodies based on the physical theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
 
 This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out by Vitor M. de Oliveira at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and at the Department of Physics of the University of Coimbra (Portugal), under the supervision of prof. Clodoaldo Ragazzo (IME/USP) and with the collaboration of prof. Alexandre Correia (CFisUC).
 
 Author: V. M. de Oliveira
 
-Last update on this file: November 21th 2023
+Last update on this file: January 4th 2024
 
 ## Important notes
-The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 8th and 9th order and fixed stepsize from the GNU Scientific Library.
-
-Up to this point, the simulation assumes that there is no prestress and that the angular velocity of each body is parallel to its biggest moment of inertia.
+The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 7th and 8th order with fixed stepsize from the GNU Scientific Library (GSL). It was developed and tested within the Linux enviroment (Ubuntu).
 
 ## How to compile
 ```makefile
 make
 ```
 
-This command will compile the code using the compiler at ``cc``. If one wants to use another compiler, set the environment variable ``CC`` alongside the command.
+This command will compile the code using the compiler at ``cc``. If the user wants to use another compiler, they need to set the environment variable ``CC`` alongside the command.
 
 ## How to run
 ```makefile
@@ -46,7 +44,7 @@ make plot INPUT=configuration_file.dat
 ```
 
 ## All
-If one wants to run the code and calculate all of the additional features, it is possible to do so by typing
+If the user wants to run the code and calculate all of the additional features with one command, it can be done by typing
 
 ```makefile
 make all INPUT=configuration_file.dat

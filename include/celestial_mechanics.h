@@ -194,7 +194,7 @@ typedef struct CelestialBody {
 	double	u_me[5];			// main elements of u matrix
 	double	*bk_me;				// main elements of Voigt elements matrix
 
-	/* body frame */
+	/* rotation quaternion (body frame) */
 	double	q[4];				// quaternion which transforms
 								// from the body to the inertial frame 
 
