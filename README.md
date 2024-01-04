@@ -5,6 +5,8 @@ This work is part of a postdoctoral project from the São Paulo Research Foundat
 
 Author: V. M. de Oliveira
 
+Contact: vitormo@ime.usp.br
+
 Last update on this file: January 4th 2024
 
 ## Important notes
