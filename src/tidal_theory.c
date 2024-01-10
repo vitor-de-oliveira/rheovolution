@@ -548,3 +548,430 @@ calculate_k2(double *re, double *im, const double sigma,
 
 	return 0;
 }
+
+/***** Implementing gV ******/
+
+double*
+convert_parameters_gV_summations_C_and_D(int m,
+								  		 double sigma,
+								 		 double alpha_elements[],
+								 		 double eta_elements[])
+{
+	double C = 0.0, D = 0.0;
+	for (int i = 0; i < m + 1; i++)
+	{
+		double denominator 
+			= alpha_elements[i] * alpha_elements[i]
+			+ (sigma * eta_elements[i]) * (sigma * eta_elements[i]);
+		C += alpha_elements[i] / denominator;
+		D += eta_elements[i] / denominator;
+	}
+
+	double *C_and_D = (double *) malloc (2 * sizeof(double));
+	C_and_D[0] = C;
+	C_and_D[1] = D;
+
+	return C_and_D;
+}
+
+double
+convert_parameters_gV_components_g (double sigma,
+									double tau_b,
+								 	double gamma,
+								 	double alpha,
+								 	double eta,
+									double C_sigma,
+								 	double D_sigma)
+{
+	double g = (1.0 + sigma * sigma * eta * D_sigma) * tau_b
+				- eta / alpha - eta / gamma - eta * C_sigma;
+
+	return g;
+}
+
+int
+rosenbrock_f (const gsl_vector * x, void *params,
+              gsl_vector * f)
+{
+  double a = ((struct rparams *) params)->a;
+  double b = ((struct rparams *) params)->b;
+
+  const double x0 = gsl_vector_get (x, 0);
+  const double x1 = gsl_vector_get (x, 1);
+
+  const double y0 = a * (1 - x0);
+  const double y1 = b * (x1 - x0 * x0);
+
+  gsl_vector_set (f, 0, y0);
+  gsl_vector_set (f, 1, y1);
+
+  return GSL_SUCCESS;
+}
+
+int
+convert_parameters_gV_f (const gsl_vector * x, void *params,
+              gsl_vector * f)
+{
+	double gamma = ((struct gV_conversion_params *) params)->gamma;
+	int m = ((struct gV_conversion_params *) params)->m;
+	double *sigma = ((struct gV_conversion_params *) params)->sigma;
+	double *tau_a = ((struct gV_conversion_params *) params)->tau_a;
+	double *tau_b = ((struct gV_conversion_params *) params)->tau_b;
+
+	double alpha = gsl_vector_get (x, 0);
+	double eta = gsl_vector_get (x, 1);
+
+	double *alpha_elements;
+	double *eta_elements;
+
+	double *C = (double *) malloc((m + 1) * sizeof(double));
+	double *D = (double *) malloc((m + 1) * sizeof(double));
+
+	if (m > 0)
+	{
+		alpha_elements = (double *) malloc(m * sizeof(double));
+		eta_elements = (double *) malloc(m * sizeof(double));
+
+		for (int i = 0; i < 2 * m; i = i + 2)
+		{
+			alpha_elements[i] = gsl_vector_get (x, i);
+			eta_elements[i] = gsl_vector_get (x, i+1);
+		}
+
+		for (int i = 0; i < m + 1; i++)
+		{
+			double *C_and_D;
+			
+			C_and_D = convert_parameters_gV_summations_C_and_D(m,
+					sigma[i], alpha_elements, eta_elements);
+
+			C[i] = C_and_D[0];
+			D[i] = C_and_D[1];
+
+			free(C_and_D);
+		}
+	}
+	else
+	{
+		C[0] = 0.0;
+		D[0] = 0.0;
+	}
+
+	for (int i = 0; i < 2 * (m + 1); i = i + 2)
+	{
+		double component_f = 
+			(1.0 + sigma[i] * sigma[i] * eta * D[i]) * tau_a[i]
+				- eta / alpha - eta * C[i];
+
+		double component_g = 
+			(1.0 + sigma[i] * sigma[i] * eta * D[i]) * tau_b[i]
+				- eta / alpha - eta / gamma - eta * C[i];
+
+		gsl_vector_set (f, i, component_f);
+		gsl_vector_set (f, i + (m + 1), component_g);
+	}
+
+	if (m > 0)
+	{
+		free(alpha_elements);
+		free(eta_elements);
+	}
+	free(C);
+	free(D);
+
+	return GSL_SUCCESS;
+}
+
+double*
+convert_parameters_gV_partial_derivatives_C_D_alpha_k_eta_k	(int m,
+															 double sigma,
+															 double alpha_k,
+															 double eta_k)
+{
+	double del_C_del_alpha_k;
+	double del_C_del_eta_k;
+	double del_D_del_alpha_k;
+	double del_D_del_eta_k;
+
+	double denominator 
+		= pow(sigma * sigma * eta_k * eta_k + alpha_k * alpha_k, 2.0);
+	double numerator_1 
+		= sigma * sigma * eta_k * eta_k - alpha_k * alpha_k;
+	double numerator_2 
+		= - 2.0 * sigma * sigma * alpha_k * eta_k;
+	double numerator_3 
+		= - 2.0 * alpha_k * eta_k;
+	double numerator_4 
+		= -1.0 * numerator_1;
+
+	del_C_del_alpha_k = numerator_1 / denominator;
+	del_C_del_eta_k = numerator_2 / denominator;
+	del_D_del_alpha_k = numerator_3 / denominator;
+	del_D_del_eta_k = numerator_4 / denominator;
+
+	double *derivatives_C_D_alphak_etak = (double *) malloc (4 * sizeof(double));
+	derivatives_C_D_alphak_etak[0] = del_C_del_alpha_k;
+	derivatives_C_D_alphak_etak[1] = del_C_del_eta_k;
+	derivatives_C_D_alphak_etak[2] = del_D_del_alpha_k;
+	derivatives_C_D_alphak_etak[3] = del_D_del_eta_k;
+
+	return derivatives_C_D_alphak_etak;
+}
+
+int
+rosenbrock_df (const gsl_vector * x, void *params,
+               gsl_matrix * J)
+{
+  const double a = ((struct rparams *) params)->a;
+  const double b = ((struct rparams *) params)->b;
+
+  const double x0 = gsl_vector_get (x, 0);
+
+  const double df00 = -a;
+  const double df01 = 0;
+  const double df10 = -2 * b  * x0;
+  const double df11 = b;
+
+  gsl_matrix_set (J, 0, 0, df00);
+  gsl_matrix_set (J, 0, 1, df01);
+  gsl_matrix_set (J, 1, 0, df10);
+  gsl_matrix_set (J, 1, 1, df11);
+
+  return GSL_SUCCESS;
+}
+
+int
+convert_parameters_gV_df (const gsl_vector * x, void *params,
+               gsl_matrix * J)
+{
+	double gamma = ((struct gV_conversion_params *) params)->gamma;
+	int m = ((struct gV_conversion_params *) params)->m;
+	double *sigma = ((struct gV_conversion_params *) params)->sigma;
+	double *tau_a = ((struct gV_conversion_params *) params)->tau_a;
+	double *tau_b = ((struct gV_conversion_params *) params)->tau_b;
+
+	double alpha = gsl_vector_get (x, 0);
+	double eta = gsl_vector_get (x, 1);
+
+	double *C = (double *) malloc((m + 1) * sizeof(double));
+	double *D = (double *) malloc((m + 1) * sizeof(double));
+
+	double *alpha_elements;
+	double *eta_elements;
+
+	double **del_C_del_alpha_k, **del_C_del_eta_k;
+	double **del_D_del_alpha_k, **del_D_del_eta_k;
+
+	if (m > 0)
+	{
+		alpha_elements = (double *) malloc(m * sizeof(double));
+		eta_elements = (double *) malloc(m * sizeof(double));
+
+		for (int i = 0; i < 2 * m; i = i + 2)
+		{
+			alpha_elements[i] = gsl_vector_get (x, i);
+			eta_elements[i] = gsl_vector_get (x, i+1);
+		}
+
+		for (int i = 0; i < m + 1; i++)
+		{
+			double *C_and_D;
+			
+			C_and_D = convert_parameters_gV_summations_C_and_D(m,
+					sigma[i], alpha_elements, eta_elements);
+
+			C[i] = C_and_D[0];
+			D[i] = C_and_D[1];
+
+			free(C_and_D);
+		}
+
+		del_C_del_alpha_k = (double **) malloc((m + 1) * sizeof(double *));
+		del_C_del_eta_k = (double **) malloc((m + 1) * sizeof(double *));
+		del_D_del_alpha_k = (double **) malloc((m + 1) * sizeof(double *));
+		del_D_del_eta_k = (double **) malloc((m + 1) * sizeof(double *));
+		for (int i = 0; i < m + 1; i++)
+		{
+			del_C_del_alpha_k[i] = (double *) malloc(m * sizeof(double));
+			del_C_del_eta_k[i] = (double *) malloc(m * sizeof(double));
+			del_D_del_alpha_k[i] = (double *) malloc(m * sizeof(double));
+			del_D_del_eta_k[i] = (double *) malloc(m * sizeof(double));
+		}
+
+
+		for (int i = 0; i < m + 1; i++)
+		{
+			for (int j = 0; j < m; j++)
+			{
+				double *partial_C_D_alpha_k_eta_k;
+
+				partial_C_D_alpha_k_eta_k 
+					= convert_parameters_gV_partial_derivatives_C_D_alpha_k_eta_k(m,
+						sigma[i], alpha_elements[j], eta_elements[j]);
+
+				del_C_del_alpha_k[i][j]	= partial_C_D_alpha_k_eta_k[0];
+				del_C_del_eta_k[i][j] 	= partial_C_D_alpha_k_eta_k[1];
+				del_D_del_alpha_k[i][j] = partial_C_D_alpha_k_eta_k[2];
+				del_D_del_eta_k[i][j] 	= partial_C_D_alpha_k_eta_k[3];
+
+				free(partial_C_D_alpha_k_eta_k);
+			}
+		}
+
+	}
+	else
+	{
+		C[0] = 0.0;
+		D[0] = 0.0;
+	}
+
+	for (int i = 0; i < 2 * (m + 1); i = i + 2)
+	{
+		double component_del_f_del_alpha
+			= eta / (alpha * alpha);
+
+		double component_del_f_del_eta
+			= sigma[i] * sigma[i] * D[i] * tau_a[i]
+				- 1.0 / alpha - C[i];
+
+		double component_del_g_del_alpha
+			= component_del_f_del_alpha;
+
+		double component_del_g_del_eta
+			= sigma[i] * sigma[i] * D[i] * tau_b[i]
+				- 1.0 / alpha - 1.0 / gamma - C[i];		
+
+		gsl_matrix_set (J, i, 0, component_del_f_del_alpha);
+		gsl_matrix_set (J, i, 1, component_del_f_del_eta);
+		gsl_matrix_set (J, i + (m + 1), 0, component_del_g_del_alpha);
+		gsl_matrix_set (J, i + (m + 1), 1, component_del_g_del_eta);
+
+		if (m > 0)
+		{
+			for (int j = 0; j < 2 * m; j = j + 2)
+			{
+				double component_del_f_del_alpha_k
+					= sigma[i] * sigma[i] * eta * tau_a[i] 
+						* del_D_del_alpha_k[i][j]
+						- eta * del_C_del_alpha_k[i][j];
+
+				double component_del_f_del_eta_k
+					= sigma[i] * sigma[i] * eta * tau_a[i] 
+						* del_D_del_eta_k[i][j]
+						- eta * del_C_del_eta_k[i][j];
+
+				double component_del_g_del_alpha_k
+					= sigma[i] * sigma[i] * eta * tau_b[i] 
+						* del_D_del_alpha_k[i][j]
+						- eta * del_C_del_alpha_k[i][j];
+
+				double component_del_g_del_eta_k
+					= sigma[i] * sigma[i] * eta * tau_b[i]
+						* del_D_del_eta_k[i][j]
+						- eta * del_C_del_eta_k[i][j];
+
+				gsl_matrix_set (J, i, 2 + j, component_del_f_del_alpha_k);
+				gsl_matrix_set (J, i, 2 + j + 1, component_del_f_del_eta_k);
+				gsl_matrix_set (J, i + (m + 1), 2 + j, component_del_g_del_alpha_k);
+				gsl_matrix_set (J, i + (m + 1), 2 + j + 1, component_del_g_del_eta_k);
+
+			}
+		}
+	}
+
+	if (m > 0)
+	{
+		free(alpha_elements);
+		free(eta_elements);
+		for (int i = 0; i < m + 1; i++)
+		{
+			free(del_C_del_alpha_k[i]);
+			free(del_C_del_eta_k[i]);
+			free(del_D_del_alpha_k[i]);
+			free(del_D_del_eta_k[i]);		
+		}
+		free(del_C_del_alpha_k);
+		free(del_C_del_eta_k);
+		free(del_D_del_alpha_k);
+		free(del_D_del_eta_k);
+	}
+	free(C);
+	free(D);
+
+	return GSL_SUCCESS;
+}
+
+int
+rosenbrock_fdf (const gsl_vector * x, void *params,
+                gsl_vector * f, gsl_matrix * J)
+{
+  rosenbrock_f (x, params, f);
+  rosenbrock_df (x, params, J);
+
+  return GSL_SUCCESS;
+}
+
+int
+print_state (size_t iter, gsl_multiroot_fdfsolver * s)
+{
+	printf ("iter = %3lu x = % .3f % .3f "
+			"f(x) = % .3e % .3e\n",
+			iter,
+			gsl_vector_get (s->x, 0),
+			gsl_vector_get (s->x, 1),
+			gsl_vector_get (s->f, 0),
+			gsl_vector_get (s->f, 1));
+
+	return 0;
+}
+
+int
+convert_parameters_gV()
+{
+	const gsl_multiroot_fdfsolver_type *T;
+	gsl_multiroot_fdfsolver *s;
+
+	int status;
+	size_t iter = 0;
+
+	const size_t n = 2;
+	struct rparams p = {1.0, 10.0};
+	gsl_multiroot_function_fdf f = {&rosenbrock_f,
+									&rosenbrock_df,
+									&rosenbrock_fdf,
+									n, &p};
+
+	double x_init[2] = {-10.0, -5.0};
+	gsl_vector *x = gsl_vector_alloc (n);
+
+	gsl_vector_set (x, 0, x_init[0]);
+	gsl_vector_set (x, 1, x_init[1]);
+
+	T = gsl_multiroot_fdfsolver_gnewton;
+	s = gsl_multiroot_fdfsolver_alloc (T, n);
+	gsl_multiroot_fdfsolver_set (s, &f, x);
+
+	print_state (iter, s);
+
+	do
+		{
+		iter++;
+
+		status = gsl_multiroot_fdfsolver_iterate (s);
+
+		print_state (iter, s);
+
+		if (status)
+			break;
+
+		status = gsl_multiroot_test_residual (s->f, 1e-7);
+		}
+	while (status == GSL_CONTINUE && iter < 1000);
+
+	printf ("status = %s\n", gsl_strerror (status));
+
+	gsl_multiroot_fdfsolver_free (s);
+	gsl_vector_free (x);
+
+	return 0;
+}

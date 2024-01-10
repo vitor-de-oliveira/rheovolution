@@ -6,6 +6,7 @@
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_linalg.h>
+#include <gsl/gsl_multiroots.h>
 
 #include "linear_algebra.h"
 #include "celestial_mechanics.h"
@@ -109,5 +110,42 @@ calculate_tau_v_and_tau_from_Rek2(double *tau_v,
 int
 calculate_k2(double *re, double *im, const double sigma, 
 	const double kf, const double tau_v, const double tau);
+
+
+/***** Implementing gV ******/
+
+struct rparams
+{
+	double a;
+	double b;
+};
+
+struct gV_conversion_params
+{
+	double gamma;
+	int	m;
+	double *sigma;
+	double *tau_a;
+	double *tau_b;
+};
+
+
+int
+rosenbrock_f (const gsl_vector * x, void *params,
+              gsl_vector * f);
+
+int
+rosenbrock_df (const gsl_vector * x, void *params,
+               gsl_matrix * J);
+
+int
+rosenbrock_fdf (const gsl_vector * x, void *params,
+                gsl_vector * f, gsl_matrix * J);
+
+int
+print_state (size_t iter, gsl_multiroot_fdfsolver * s);
+
+int
+convert_parameters_gV();
 
 #endif

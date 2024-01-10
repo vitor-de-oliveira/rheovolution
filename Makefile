@@ -67,6 +67,11 @@ examples: example_1 example_2 example_3
 
 calibration:
 	$(eval TARGET = CALIBRATION)
+ifeq ($(CC),icc)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+					-march=native -Wall -Werror -diag-disable=10441)
+	./$(TARGET)
+endif
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/calibration.c $(DEPENDENCIES) $(LIBS)
 	./$(TARGET)
 
