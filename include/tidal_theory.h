@@ -111,41 +111,70 @@ int
 calculate_k2(double *re, double *im, const double sigma, 
 	const double kf, const double tau_v, const double tau);
 
-
 /***** Implementing gV ******/
-
-struct rparams
-{
-	double a;
-	double b;
-};
 
 struct gV_conversion_params
 {
-	double gamma;
-	int	m;
+	double  gamma;
+	int		m;
 	double *sigma;
 	double *tau_a;
 	double *tau_b;
 };
 
+double*
+convert_parameters_gV_summations_C_and_D(int m,
+								  		 double sigma,
+								 		 double alpha_elements[],
+								 		 double eta_elements[]);
 
 int
-rosenbrock_f (const gsl_vector * x, void *params,
-              gsl_vector * f);
+convert_parameters_gV_f	(const gsl_vector * x,
+						 void *params,
+            			 gsl_vector * f);
+
+double*
+convert_parameters_gV_partial_derivatives_C_D_alpha_k_eta_k	(int m,
+															 double sigma,
+															 double alpha_k,
+															 double eta_k);
 
 int
-rosenbrock_df (const gsl_vector * x, void *params,
-               gsl_matrix * J);
+convert_parameters_gV_df(const gsl_vector * x, 
+						 void *params,
+               			 gsl_matrix * J);
 
 int
-rosenbrock_fdf (const gsl_vector * x, void *params,
-                gsl_vector * f, gsl_matrix * J);
+convert_parameters_gV_fdf 	(const gsl_vector * x, 
+							 void *params,
+                			 gsl_vector * f,
+							 gsl_matrix * J);
 
 int
-print_state (size_t iter, gsl_multiroot_fdfsolver * s);
+print_state_f (size_t iter,
+			   gsl_multiroot_fsolver * s);
 
 int
-convert_parameters_gV();
+print_state_fdf (size_t iter,
+			 	 gsl_multiroot_fdfsolver * s);
+
+int
+convert_parameters_gV	(double *alpha,
+						 double *eta,
+						 double alpha_k[],
+						 double eta_k[],
+						 double gamma,
+						 int 	m,
+						 double sigma[],
+						 double tau_a[],
+						 double tau_b[]);
+
+int
+calculate_tau_a_tau_b	(double *tau_a,
+						 double *tau_b,
+						 double k0,
+						 double sigma,
+						 double Re_k2,
+						 double Im_k2);
 
 #endif
