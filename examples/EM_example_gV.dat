@@ -1,0 +1,8 @@
+name                EM_example_gV
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        EM_example_gV_system.dat
+integration_specs   EM_example_gV_integration.dat
+rheology_model      gen_Voigt
+number_of_bodies    2
+omega_correction    no

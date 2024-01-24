@@ -101,7 +101,7 @@ main(int argc, char *argv[])
 	// double omega_z = (2.0 * M_PI) / (0.9972708 / 365.25);
 	// double kf = 0.933;
 
-	// /* calibration */
+	/* calibration */
 	// double rate = 2.54014310646e-13; // 3.8 cm/yr in AU/yr
 	// double Imk2;
 	// Imk2 = calibrate_Imk2(rate, a, m1, m2, I0, R, omega_z, G);
@@ -115,6 +115,14 @@ main(int argc, char *argv[])
 	// 	tau_v_pair[1], tau_v_pair[1] * (365.25 * 24.0 * 60.0 * 60.0));
 	// printf("tau_minus = %1.15e tau_v_minus = %1.15e = %1.15e s\n", tau_pair[0],
 	// 	tau_v_pair[0], tau_v_pair[0] * (365.25 * 24.0 * 60.0 * 60.0));
+
+
+	// double M = m1 + m2;
+	// double n = sqrt((G * M) / pow(a, 3.0));
+	// double omega_SD = 2.0 * (omega_z - n); // Semi-diurnal
+	// double real, imag;
+	// calculate_k2(&real, &imag, omega_SD, kf, tau_v_pair[1], tau_pair[1]);
+	// printf("real = %1.5e imag = %1.15e\n", real, imag);
 
 	/* Love number as a function of frequency */
 	// for (double sigma_loop = 1e-10; sigma_loop < 1e20; sigma_loop *= 1.01)
@@ -189,6 +197,16 @@ main(int argc, char *argv[])
 
 	double k0 = 0.933;
 
+	// my calibration for semi-diurnal freq
+	double sigma_SD = 4434.21;
+	double Im_k2_SD = -2.54638e-2;
+	double Re_k2_SD = 0.299584;
+
+	double tau_a_SD, tau_b_SD;
+	
+	tau_a_SD = 5.60984e-3 - 3.81469e-3;
+	tau_b_SD = 5.60984e-3;
+
 	// M2(L) from Table 1 on Ragazzo 2017
 	double sigma_M2L 	= (2.0 * M_PI) / (12.421 / (365.25 * 24.0));
 	double Im_k2_M2L 	= -0.02496;
@@ -200,14 +218,29 @@ main(int argc, char *argv[])
 		sigma_M2L, Re_k2_M2L, Im_k2_M2L);
 
 	// Chandler Wobble approx from Fig. 10 Ragazzo 2022
-	double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
-	double Im_k2_CW 	= -0.003; // taken by eye from plot
-	double Re_k2_CW 	= 0.358;
+	// double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
+	// double Im_k2_CW 	= -0.002; // taken by eye from plot
+	// double Re_k2_CW 	= 0.358;
+	
+	// double tau_a_CW, tau_b_CW;
+
+	// calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
+	// 	sigma_CW, Re_k2_CW, Im_k2_CW);
+
+	// Chandler Wobble from Chen 2023
+	double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
+	double Im_k2_CW 	= -0.00226238; // taken by eye from plot
+	double Re_k2_CW 	= 0.35010616;
 	
 	double tau_a_CW, tau_b_CW;
 
 	calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
 		sigma_CW, Re_k2_CW, Im_k2_CW);
+	
+	// printf ("tau_a_CW = %1.5e\n", tau_a_CW);
+	// printf ("tau_b_CW = %1.5e\n", tau_b_CW);
+	// printf ("tau_e_CW / tau_CW  = %1.5e\n", tau_a_CW / tau_b_CW);
+	// exit(12);
 
 	//  N2(L) from Table 1 on Ragazzo 2017
 	double sigma_N2L = (2.0 * M_PI) / (12.658 / (365.25 * 24.0));
@@ -219,7 +252,7 @@ main(int argc, char *argv[])
 	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
 		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
 
-	// converting gV
+	/*** converting gV ***/
 
 	gvrheo gV;
 
@@ -235,11 +268,16 @@ main(int argc, char *argv[])
 
 	/* burgers model */
 	int	   m = 1;
-	double sigma[] = {sigma_M2L, sigma_CW};
-	double tau_a[] = {tau_a_M2L, tau_a_CW};
-	double tau_b[] = {tau_b_M2L, tau_b_CW};
-	double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
-	double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
+	// double sigma[] = {sigma_M2L, sigma_CW};
+	// double tau_a[] = {tau_a_M2L, tau_a_CW};
+	// double tau_b[] = {tau_b_M2L, tau_b_CW};
+	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
+	double sigma[] = {sigma_SD, sigma_CW};
+	double tau_a[] = {tau_a_SD, tau_a_CW};
+	double tau_b[] = {tau_b_SD, tau_b_CW};
+	double Re_k2[] = {Re_k2_SD, Re_k2_CW};
+	double Im_k2[] = {Im_k2_SD, Im_k2_CW};
 
 	/* two elements model */
 	// int	  m = 2;
@@ -263,6 +301,15 @@ main(int argc, char *argv[])
 
 	convert_parameters_gV(&gV);
 
+	printf ("gamma = %1.10e\n", gV.gamma);
+	printf ("alpha = %1.10e\n", gV.alpha);
+	printf ("eta = %1.10e\n", gV.eta);
+	for (int i = 0; i < gV.m; i++)
+	{
+		printf ("alpha_%d = %1.10e\n", i+1, gV.alpha_k[i]);
+		printf ("eta_%d = %1.10e\n", i+1, gV.eta_k[i]);
+	}
+
 	FILE *out_1 = fopen("tests/test_calibration_k2_reference_points.dat", "w");
 	for (int i = 0; i < gV.m + 1; i++)
 	{
@@ -272,7 +319,7 @@ main(int argc, char *argv[])
 	}
 	fclose(out_1);
 
-	/* Love number as a function of frequency */
+	// /* Love number as a function of frequency */
 	FILE *out_2 = fopen("tests/test_calibration_k2_plot.dat", "w");
 	for (double sigma_loop = 1e-10; sigma_loop < 1e10; sigma_loop *= 1.01)
 	{

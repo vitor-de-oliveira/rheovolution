@@ -23,7 +23,7 @@ count_columns(const char *s)
 	}
      
     return columns;
-}
+} 
 
 int
 parse_input(siminf *simulation,
@@ -36,7 +36,7 @@ parse_input(siminf *simulation,
 	char 	first_col[100];
 	char 	second_col[100];
 	char	hold[100];
-	bool	system_file_type_received = false;
+	bool	rheology_model_received = false;
 	bool	dev_specs_file_received = false;
 	bool	number_of_bodies_received = false;
 	bool	omega_correction_received = false;
@@ -53,168 +53,79 @@ parse_input(siminf *simulation,
 	}
 	else
 	{
-		strcpy((*simulation).main_input, input_file);
+		strcpy(simulation->main_input, input_file);
 	}
    	while ((read = getline(&line, &len, in)) != -1)
 	{
 		sscanf(line, "%s %s", first_col, second_col);
 		if (strcmp(first_col, "name") == 0)
 		{
-			strcpy((*simulation).name, second_col);
+			strcpy(simulation->name, second_col);
 		}
 		else if (strcmp(first_col, "input_folder") == 0)
 		{
-			strcpy((*simulation).input_folder, second_col);
+			strcpy(simulation->input_folder, second_col);
 		}
 		else if (strcmp(first_col, "output_folder") == 0)
 		{
-			strcpy((*simulation).output_folder, second_col);
-			strcat((*simulation).output_folder, "output_");
-			strcpy(hold, (*simulation).name);
-			strcat((*simulation).output_folder, hold);
-			strcat((*simulation).output_folder, "/");
+			strcpy(simulation->output_folder, second_col);
+			strcat(simulation->output_folder, "output_");
+			strcpy(hold, simulation->name);
+			strcat(simulation->output_folder, hold);
+			strcat(simulation->output_folder, "/");
 			// create output folder if it does not exist
 			struct stat st = {0};
-			if (stat((*simulation).output_folder, &st) == -1) {
-				mkdir((*simulation).output_folder, 0700);
+			if (stat(simulation->output_folder, &st) == -1) {
+				mkdir(simulation->output_folder, 0700);
 			}
 		}
 		else if (strcmp(first_col, "system_specs") == 0)
 		{
-			strcpy((*simulation).system_specs, (*simulation).input_folder);
-			strcat((*simulation).system_specs, second_col);
+			strcpy(simulation->system_specs, simulation->input_folder);
+			strcat(simulation->system_specs, second_col);
 		}
-		else if (strcmp(first_col, "simulation_specs") == 0)
+		else if (strcmp(first_col, "integration_specs") == 0)
 		{
-			strcpy((*simulation).simulation_specs, (*simulation).input_folder);
-			strcat((*simulation).simulation_specs, second_col);
+			strcpy(simulation->integration_specs, simulation->input_folder);
+			strcat(simulation->integration_specs, second_col);
 		}
 		else if (strcmp(first_col, "dev_specs") == 0)
 		{
-			strcpy((*simulation).dev_specs, (*simulation).input_folder);
-			strcat((*simulation).dev_specs, second_col);
+			strcpy(simulation->dev_specs, simulation->input_folder);
+			strcat(simulation->dev_specs, second_col);
 			dev_specs_file_received = true;
 		}
-		else if (strcmp(first_col, "system_file_type") == 0)
+		else if (strcmp(first_col, "rheology_model") == 0)
 		{
-			(*simulation).system_file_type = atoi(second_col);
-			system_file_type_received = true;
-		}
-	}
-	fclose(in);
-
-	/* verify if any of the given files does not exist */
-	FILE *in_system = fopen((*simulation).system_specs, "r");
-	if (in_system == NULL)
-	{
-		fprintf(stderr, "Warning: could not read system specs.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-	fclose(in_system);
-	FILE *in_simulation = fopen((*simulation).simulation_specs, "r");
-	if (in_simulation == NULL)
-	{
-		fprintf(stderr, "Warning: could not read simulation specs.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-	fclose(in_simulation);
-	if (dev_specs_file_received == true)
-	{
-		FILE *in_dev = fopen((*simulation).dev_specs, "r");
-		if (in_simulation == NULL)
-		{
-			fprintf(stderr, "Warning: could not read simulation specs.\n");
-			fprintf(stderr, "Exiting the program now.\n");
-			exit(13);
-		}
-		fclose(in_dev);	
-	}
-
-	/* check and set file type */
-	if (system_file_type_received == true)
-	{
-		if ((*simulation).system_file_type != 1 && (*simulation).system_file_type != 2)
-		{
-			fprintf(stderr, "Error: Type of system file should be either 1 or 2.\n");
-			fprintf(stderr, "Exiting the program now.\n");
-			exit(15);
-		}
-	}
-	else
-	{
-		(*simulation).system_file_type = 2;
-	}
-
-	/* verification variables for simulation input */
-	int 	number_simulation_inputs = 7;
-	bool	input_simulation_received[number_simulation_inputs];
-	for (int i = 0; i < number_simulation_inputs; i++)
-	{
-		input_simulation_received[i] = false;
-	}
-
-	/* reading simulation specs from user */
-	FILE *in2 = fopen((*simulation).simulation_specs, "r");
-	if	(in2 == NULL)
-	{
-		fprintf(stderr, "Warning: could not read simulation specs file.\n");
-		fprintf(stderr, "Exiting the program now.\n");
-		exit(13);
-	}
-   	while ((read = getline(&line, &len, in2)) != -1)
-	{
-		sscanf(line, "%s %s", first_col, second_col);
-		if (strcmp(first_col, "t_init(yr)") == 0)
-		{
-			(*simulation).t_init = atof(second_col);
-			input_simulation_received[0] = true;
-		}
-		else if (strcmp(first_col, "t_trans(yr)") == 0)
-		{
-			(*simulation).t_trans = atof(second_col);
-			input_simulation_received[1] = true;
-		}
-		else if (strcmp(first_col, "t_final(yr)") == 0)
-		{
-			(*simulation).t_final = atof(second_col);
-			input_simulation_received[2] = true;
-		}
-		else if (strcmp(first_col, "t_step(yr)") == 0)
-		{
-			(*simulation).t_step = atof(second_col);
-			input_simulation_received[3] = true;
-		}
-		else if (strcmp(first_col, "eps_abs") == 0)
-		{
-			(*simulation).eps_abs = atof(second_col);
-			input_simulation_received[4] = true;
-		}
-		else if (strcmp(first_col, "eps_rel") == 0)
-		{
-			(*simulation).eps_rel = atof(second_col);
-			input_simulation_received[5] = true;
-		}
-		else if (strcmp(first_col, "data_skip") == 0)
-		{
-			(*simulation).data_skip = (int) atof(second_col);
-			input_simulation_received[6] = true;
+			if (strcmp(second_col, "Maxwell") == 0 ||
+				strcmp(second_col, "gen_Voigt") == 0)
+			{
+				strcpy(simulation->rheology_model, second_col);
+				rheology_model_received = true;
+			}
+			else
+			{
+				printf("%s\n", second_col);
+				fprintf(stderr, "Please provide Maxwell or gen_Voigt ");
+				fprintf(stderr, "for the rheology model\n");
+				exit(14);
+			}
+			rheology_model_received = true;
 		}
 		else if (strcmp(first_col, "number_of_bodies") == 0)
 		{
-			(*simulation).number_of_bodies = atoi(second_col);
+			simulation->number_of_bodies = atoi(second_col);
 			number_of_bodies_received = true;
 		}
 		else if (strcmp(first_col, "omega_correction") == 0)
 		{
 			if (strcmp(second_col, "yes") == 0)
 			{
-				(*simulation).omega_correction = true;
+				simulation->omega_correction = true;
 			}
 			else if (strcmp(second_col, "no") == 0)
 			{
-				(*simulation).omega_correction = false;
+				simulation->omega_correction = false;
 			}
 			else
 			{
@@ -229,11 +140,11 @@ parse_input(siminf *simulation,
 		{
 			if (strcmp(second_col, "yes") == 0)
 			{
-				(*simulation).keplerian_motion = true;
+				simulation->keplerian_motion = true;
 			}
 			else if (strcmp(second_col, "no") == 0)
 			{
-				(*simulation).keplerian_motion = false;
+				simulation->keplerian_motion = false;
 			}
 			else
 			{
@@ -248,11 +159,11 @@ parse_input(siminf *simulation,
 		{
 			if (strcmp(second_col, "yes") == 0)
 			{
-				(*simulation).two_bodies_aprox = true;
+				simulation->two_bodies_aprox = true;
 			}
 			else if (strcmp(second_col, "no") == 0)
 			{
-				(*simulation).two_bodies_aprox = false;
+				simulation->two_bodies_aprox = false;
 			}
 			else
 			{
@@ -264,34 +175,52 @@ parse_input(siminf *simulation,
 			two_bodies_aprox_received = true;
 		}
 	}
-	fclose(in2);
+	fclose(in);
 
-	/* parameter input verification */
-	for (int i = 0; i < number_simulation_inputs; i++)
+	/* verify if any of the given files does not exist */
+	FILE *in_system = fopen(simulation->system_specs, "r");
+	if (in_system == NULL)
 	{
-		if(input_simulation_received[i] == false)
+		fprintf(stderr, "Warning: could not read system specs.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
+	fclose(in_system);
+	FILE *in_integration = fopen(simulation->integration_specs, "r");
+	if (in_integration == NULL)
+	{
+		fprintf(stderr, "Warning: could not read integration specs.\n");
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(13);
+	}
+	fclose(in_integration);
+	if (dev_specs_file_received == true)
+	{
+		FILE *in_dev = fopen(simulation->dev_specs, "r");
+		if (in_dev == NULL)
 		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", (*simulation).simulation_specs);
+			fprintf(stderr, "Warning: could not read dev specs.\n");
+			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
+		fclose(in_dev);	
 	}
 
 	/* check and set number of bodies */
-	FILE *in_col = fopen((*simulation).system_specs, "r");
+	FILE *in_col = fopen(simulation->system_specs, "r");
 	read = getline(&line, &len, in_col);
 	int col_num = count_columns(line);
 	fclose(in_col);
 	if (number_of_bodies_received == true)
 	{
-		if (col_num < (*simulation).number_of_bodies)
+		if (col_num < simulation->number_of_bodies)
 		{
 			fprintf(stderr, "Warning: number of bodies cannot\n");
 			fprintf(stderr, "exceed number of columns in system file.\n");
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
-		else if ((*simulation).number_of_bodies < 1)
+		else if (simulation->number_of_bodies < 1)
 		{
 			fprintf(stderr, "Warning: Number of bodies should be greater than 0.\n");
 			fprintf(stderr, "Exiting the program now.\n");
@@ -300,38 +229,108 @@ parse_input(siminf *simulation,
 	}
 	else
 	{
-		(*simulation).number_of_bodies = col_num - 1;
+		simulation->number_of_bodies = col_num - 1;
+	}
+
+	/* check rheology model */
+	if (rheology_model_received == false)
+	{
+		fprintf(stderr, "Error: did not receive rheology model ");
+		fprintf(stderr, "from %s.\n", simulation->main_input);
+		exit(13);
 	}
 
 	/* check and set omega correction */
 	if (omega_correction_received == false)
 	{
-		(*simulation).omega_correction = false;
+		simulation->omega_correction = false;
 	}
 
 	/* check and set keplerian motion */
 	if (keplerian_motion_received == false)
 	{
-		(*simulation).keplerian_motion = false;
+		simulation->keplerian_motion = false;
 	}
 
 	/* check and set two bodies approximation */
 	if (two_bodies_aprox_received == false)
 	{
-		(*simulation).two_bodies_aprox = false;
+		simulation->two_bodies_aprox = false;
+	}
+
+	/* verification variables for integration input */
+	int 	number_integration_inputs = 7;
+	bool	input_integration_received[number_integration_inputs];
+	for (int i = 0; i < number_integration_inputs; i++)
+	{
+		input_integration_received[i] = false;
+	}
+
+	/* reading integration specs from user */
+	FILE *in2 = fopen(simulation->integration_specs, "r");
+   	while ((read = getline(&line, &len, in2)) != -1)
+	{
+		sscanf(line, "%s %s", first_col, second_col);
+		if (strcmp(first_col, "t_init(yr)") == 0)
+		{
+			simulation->t_init = atof(second_col);
+			input_integration_received[0] = true;
+		}
+		else if (strcmp(first_col, "t_trans(yr)") == 0)
+		{
+			simulation->t_trans = atof(second_col);
+			input_integration_received[1] = true;
+		}
+		else if (strcmp(first_col, "t_final(yr)") == 0)
+		{
+			simulation->t_final = atof(second_col);
+			input_integration_received[2] = true;
+		}
+		else if (strcmp(first_col, "t_step(yr)") == 0)
+		{
+			simulation->t_step = atof(second_col);
+			input_integration_received[3] = true;
+		}
+		else if (strcmp(first_col, "eps_abs") == 0)
+		{
+			simulation->eps_abs = atof(second_col);
+			input_integration_received[4] = true;
+		}
+		else if (strcmp(first_col, "eps_rel") == 0)
+		{
+			simulation->eps_rel = atof(second_col);
+			input_integration_received[5] = true;
+		}
+		else if (strcmp(first_col, "data_skip") == 0)
+		{
+			simulation->data_skip = (int) atof(second_col);
+			input_integration_received[6] = true;
+		}
+	}
+	fclose(in2);
+
+	/* parameter input verification */
+	for (int i = 0; i < number_integration_inputs; i++)
+	{
+		if(input_integration_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", simulation->integration_specs);
+			exit(13);
+		}
 	}
 
 	/* always initialize write to file as true */
-	(*simulation).write_to_file = true;
+	simulation->write_to_file = true;
 
 	/* gravitational constant */
-	(*simulation).G = 4.0 * M_PI * M_PI; // AU Msun year
+	simulation->G = 4.0 * M_PI * M_PI; // AU Msun year
 
 	/* simulation units */
-	strcpy((*simulation).units, "AU_Msun_year");
+	strcpy(simulation->units, "AU_Msun_year");
 
 	/* read dev file */
-	FILE *in3 = fopen((*simulation).dev_specs, "r");
+	FILE *in3 = fopen(simulation->dev_specs, "r");
 	if	(in3 != NULL)
 	{
 		while ((read = getline(&line, &len, in3)) != -1)
@@ -342,13 +341,13 @@ parse_input(siminf *simulation,
 			{
 				if (strcmp(second_col, "SI") == 0)
 				{
-					(*simulation).G = 6.6743e-11; // SI
-					strcpy((*simulation).units, second_col);
+					simulation->G = 6.6743e-11; // SI
+					strcpy(simulation->units, second_col);
 				}
 				else if (strcmp(second_col, "G_unity") == 0)
 				{
-					(*simulation).G = 1.0; // non-dimensional
-					strcpy((*simulation).units, second_col);
+					simulation->G = 1.0; // non-dimensional
+					strcpy(simulation->units, second_col);
 				}
 			}
 		}
@@ -362,979 +361,1000 @@ int
 fill_in_bodies_data	(cltbdy	**bodies,
 				 	 const siminf simulation)
 {
-	if (simulation.system_file_type == 1)
+	/* allocate memory for bodies */
+	*bodies = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
+
+	/* pre-initializing some parameters */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{	
+		(*bodies)[i].S22 = 0.0;
+		(*bodies)[i].C21 = 0.0;
+		(*bodies)[i].S21 = 0.0;
+	}
+
+	/* auxiliary variables for reading input */
+	char 	*line = NULL;
+	size_t 	len = 0;
+	ssize_t read;
+
+	/* verification variables for input */
+	int 	number_par_inputs = 17;
+	bool	input_par_received[number_par_inputs];
+	for (int i = 0; i < number_par_inputs; i++)
 	{
-		fprintf(stderr, "Error: simulation.system_file_type == 1 ");
-		fprintf(stderr, "not implemented yet.\n");
-		exit(22);
-
-		// /* orbital parameters given by user */
-		// double 	e = 0.0, a = 0.0;
-		// /* state variables given by user*/
-		// double 	b0_diag[] = {0.0, 0.0, 0.0};
-		// /* non-state variables given by user */
-		// double 	omega[3];
-		// omega[0] = omega[0];
-		// omega[1] = omega[1];
-		// omega[2] = omega[2];
-		// /* system parameters given by user */
-		// int		elements = 0; // number of Voigt elements
-		// double  m1 = 0.0, m2 = 0.0;
-		// double	I0 = I0, R = R, kf = kf;
-		// double	alpha = 0.0, eta = 0.0, alpha_0 = 0.0;
-		// /* Voigt elements for Maxwell generalized rheology */
-		// double	*alpha_elements = *(&alpha_elements);
-		// double	*eta_elements = *(&eta_elements);
-		// /* position and velocity */
-		// double	tilde_x[3];
-		// tilde_x[0] = tilde_x[0];
-		// tilde_x[1] = tilde_x[1];
-		// tilde_x[2] = tilde_x[2];
-		// double 	tilde_x_dot[3];
-		// tilde_x_dot[0] = tilde_x_dot[0];
-		// tilde_x_dot[1] = tilde_x_dot[1];
-		// tilde_x_dot[2] = tilde_x_dot[2];
-		// /* deformation settings */
-		// // bool	centrifugal = false;
-		// // bool	tidal = false;
-
-		// /* auxiliary variables for fscanf */
-		// char 	var_name[100];
-		// double 	var_value;
-
-		// // Warning for dev
-		// fprintf(stderr, "Deformable settings not implemented");
-		// fprintf(stderr, " yet for this type of file!\n");
-		// exit(29);
-
-		// /* verification variables for system input */
-		// int 	number_system_inputs = 17;
-		// bool	input_system_received[number_system_inputs];
-		// for (int i = 0; i < number_system_inputs; i++)
-		// {
-		// 	input_system_received[i] = false;
-		// }
-
-		// /* reading system specs from user */
-		// FILE *in1 = fopen(simulation.system_specs, "r");
-		// if	(in1 == NULL)
-		// {
-		// 	fprintf(stderr, "Warning: could not read system specs file.\n");
-		// 	fprintf(stderr, "Exiting the program now.\n");
-		// 	exit(13);
-		// }
-		// while(fscanf(in1, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
-		// {
-		// 	if (strcmp(var_name, "e") == 0)
-		// 	{
-		// 		e = var_value;
-		// 		input_system_received[0] = true;
-		// 	}					
-		// 	else if (strcmp(var_name, "a") == 0)
-		// 	{
-		// 		a = var_value;
-		// 		input_system_received[1] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "m1") == 0)
-		// 	{
-		// 		m1 = var_value;
-		// 		input_system_received[2] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "m2") == 0)
-		// 	{
-		// 		m2 = var_value;
-		// 		input_system_received[3] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "I0") == 0)
-		// 	{
-		// 		I0 = var_value;
-		// 		input_system_received[4] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "R") == 0)
-		// 	{
-		// 		R = var_value;
-		// 		input_system_received[5] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "kf") == 0)
-		// 	{
-		// 		kf = var_value;
-		// 		input_system_received[6] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "b0_x") == 0)
-		// 	{
-		// 		b0_diag[0] = var_value;
-		// 		input_system_received[7] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "b0_y") == 0)
-		// 	{
-		// 		b0_diag[1] = var_value;
-		// 		input_system_received[8] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "b0_z") == 0)
-		// 	{
-		// 		b0_diag[2] = var_value;
-		// 		input_system_received[9] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "omega_x") == 0)
-		// 	{
-		// 		omega[0] = var_value;
-		// 		input_system_received[10] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "omega_y") == 0)
-		// 	{
-		// 		omega[1] = var_value;
-		// 		input_system_received[11] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "omega_z") == 0)
-		// 	{
-		// 		omega[2] = var_value;
-		// 		input_system_received[12] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "alpha_0") == 0)
-		// 	{
-		// 		alpha_0 = var_value;
-		// 		input_system_received[13] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "alpha") == 0)
-		// 	{
-		// 		alpha = var_value;
-		// 		input_system_received[14] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "eta") == 0)
-		// 	{
-		// 		eta = var_value;
-		// 		input_system_received[15] = true;
-		// 	}
-		// 	else if (strcmp(var_name, "elements") == 0)
-		// 	{
-		// 		elements = (int) var_value;
-		// 		input_system_received[16] = true;
-		// 	}
-		// }
-		// fclose(in1);
-
-		// /* system input verification */
-		// for (int i = 0; i < number_system_inputs; i++)
-		// {
-		// 	if(input_system_received[i] == false)
-		// 	{
-		// 		fprintf(stderr, "Error: there is at least one missing input ");
-		// 		fprintf(stderr, "from %s.\n", simulation.system_specs);
-		// 		exit(13);
-		// 	}
-		// }
-		// if (fabs(alpha) < 1e-14 || fabs(eta) < 1e-14)
-		// {
-		// 	fprintf(stderr, "Error: nor alpha nor eta should be zero.\n");
-		// 	exit(13);
-		// }
-
-		// /* setting up Voigt elements */
-		// if (elements > 0)
-		// {
-		// 	alpha_elements 	= (double *) malloc(elements * sizeof(double));
-		// 	eta_elements 	= (double *) malloc(elements * sizeof(double));
-
-		// 	char name_element_alpha[20], name_element_eta[20];
-		// 	bool element_alpha_found[elements];
-		// 	bool element_eta_found[elements];
-		// 	for (int i = 0; i < elements; i++)
-		// 	{
-		// 		element_alpha_found[i] = false;
-		// 		element_eta_found[i] = false;
-		// 	}
-
-		// 	FILE *in1_elements = fopen(simulation.system_specs, "r");
-		// 	while(fscanf(in1_elements, " %99[^' '] = %lf[^\n]", var_name, &var_value) != EOF)
-		// 	{
-		// 		for (int i = 0; i < elements; i++)
-		// 		{
-		// 			sprintf(name_element_alpha, "alpha_%d", i+1);
-		// 			sprintf(name_element_eta, "eta_%d", i+1);
-		// 			if (strcmp(var_name, name_element_alpha) == 0)
-		// 			{
-		// 				alpha_elements[i] = var_value;
-		// 				element_alpha_found[i] = true;
-		// 			}
-		// 			else if (strcmp(var_name, name_element_eta) == 0)
-		// 			{
-		// 				eta_elements[i] = var_value;
-		// 				element_eta_found[i] = true;
-		// 			}
-		// 		}
-		// 	}
-		// 	fclose(in1_elements);
-		// 	for (int i = 0; i < elements; i++)
-		// 	{
-		// 		if (element_alpha_found[i] == false || 
-		// 			element_eta_found[i] == false)
-		// 		{
-		// 			fprintf(stderr, "Error: parameters missing for Voigt elements.\n");
-		// 			exit(10);
-		// 		}
-		// 		if (alpha_elements[i] < 1e-13 || eta_elements[i] < 1e-13)
-		// 		{
-		// 			fprintf(stderr, "Warning: nor alpha nor eta should be zero.\n");
-		// 			exit(13);
-		// 		}
-		// 	}
-		// }
-
-		// /* position and velocity at periapsis given by Murray */
-		// tilde_x[0] 		= a * (1.0 - e);
-		// tilde_x[1] 		= 0.0;
-		// tilde_x[2] 		= 0.0;	
-		// tilde_x_dot[0]	= 0.0;
-		// tilde_x_dot[1] 	= ((2.0 * M_PI) / kepler_period(m1, m2, simulation.G, a)) 
-		// 					* a * sqrt((1.0 + e)/(1.0 - e));
-		// tilde_x_dot[2] 	= 0.0;
-
-		// /* for testing */
-		// // print_vector(tilde_x);
-		// // print_vector(tilde_x_dot);
-		// // e = calculate_eccentricity(G, m1, m2, tilde_x, tilde_x_dot);
-		// // a = calculate_semi_major_axis(G, m1, m2, tilde_x, tilde_x_dot);
-		// // printf("e = %e a = %e\n", e, a);
-		// // exit(99);
-
-	} // end if (simulation.system_file_type == 1)
-	else if (simulation.system_file_type == 2)
+		input_par_received[i] = false;
+	}
+	/* verification variables for names and deformable settings */
+	bool	input_name_received = false;
+	int 	number_deformable_inputs = 5; 
+	bool	input_deformable_received[number_deformable_inputs];
+	for (int i = 0; i < number_deformable_inputs; i++)
 	{
-		/* allocate memory for bodies */
-		*bodies = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
+		input_deformable_received[i] = false;
+	}
+	/* verification variables for rheology */
+	int 	number_maxwell_inputs = 4;
+	bool	input_maxwell_received[number_maxwell_inputs];
+	for (int i = 0; i < number_maxwell_inputs; i++)
+	{
+		input_maxwell_received[i] = false;
+	}
+	int 	number_gV_inputs = 4;
+	bool	input_gV_received[number_gV_inputs];
+	for (int i = 0; i < number_gV_inputs; i++)
+	{
+		input_gV_received[i] = false;
+	}
 
-		/* pre-initializing some parameters */
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
-			(*bodies)[i].S22 = 0.0;
-			(*bodies)[i].C21 = 0.0;
-			(*bodies)[i].S21 = 0.0;
-		}
-
-		/* auxiliary variables for reading input */
-		char 	*line = NULL;
-		size_t 	len = 0;
-		ssize_t read;
-
-		/* verification variables for input */
-		int 	number_par_inputs = 21;
-		bool	input_par_received[number_par_inputs];
-		for (int i = 0; i < number_par_inputs; i++)
+	/* reading input parameters */
+	FILE 	*in1 = fopen(simulation.system_specs, "r");
+	while ((read = getline(&line, &len, in1)) != -1)
+	{
+		const char tok_del[6] = " \t\n";	// token delimiter
+		char *token = strtok(line, tok_del);
+		if(token == NULL) break;	// in case there is a newline
+		if (strcmp(token, "Name") == 0)
 		{
-			input_par_received[i] = false;
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				strcpy((*bodies)[i].name, token);
+			}
+			input_name_received = true;
 		}
-		/* verification variables for names, orbit and deformable settings */
-		bool	input_name_received = false;
-		int 	number_deformable_inputs = 5; 
-		bool	input_deformable_received[number_deformable_inputs];
-		for (int i = 0; i < number_deformable_inputs; i++)
+		else if (strcmp(token, "mass(Msun)") == 0)
 		{
-			input_deformable_received[i] = false;
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].mass = atof(token);
+			}
+			input_par_received[0] = true;
 		}
-
-		/* reading input parameters */
-		FILE 	*in1 = fopen(simulation.system_specs, "r");
-		while ((read = getline(&line, &len, in1)) != -1)
+		else if (strcmp(token, "lod(day)") == 0)
 		{
-			const char tok_del[6] = " \t\n";	// token delimiter
-			char *token = strtok(line, tok_del);
-			if(token == NULL) break;	// in case there is a newline
-			if (strcmp(token, "Name") == 0)
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					strcpy((*bodies)[i].name, token);
-				}
-				input_name_received = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].lod = atof(token);
 			}
-			else if (strcmp(token, "mass(Msun)") == 0)
+			input_par_received[1] = true;
+		}
+		else if (strcmp(token, "obl(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].mass = atof(token);
-				}
-				input_par_received[0] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].obl = atof(token);
 			}
-			else if (strcmp(token, "lod(day)") == 0)
+			input_par_received[2] = true;
+		}
+		else if (strcmp(token, "psi(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].lod = atof(token);
-				}
-				input_par_received[1] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].psi = atof(token);
 			}
-			else if (strcmp(token, "obl(deg)") == 0)
+			input_par_received[3] = true;
+		}
+		else if (strcmp(token, "R(km)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].obl = atof(token);
-				}
-				input_par_received[2] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].R = atof(token);
 			}
-			else if (strcmp(token, "psi(deg)") == 0)
+			input_par_received[4] = true;
+		}
+		else if (strcmp(token, "rg") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].psi = atof(token);
-				}
-				input_par_received[3] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].rg = atof(token);
 			}
-			else if (strcmp(token, "R(km)") == 0)
+			input_par_received[5] = true;
+		}
+		else if (strcmp(token, "J2") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].R = atof(token);
-				}
-				input_par_received[4] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].J2 = atof(token);
 			}
-			else if (strcmp(token, "rg") == 0)
+			input_par_received[6] = true;
+		}
+		else if (strcmp(token, "C22") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].rg = atof(token);
-				}
-				input_par_received[5] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].C22 = atof(token);
 			}
-			else if (strcmp(token, "J2") == 0)
+			input_par_received[7] = true;
+		}
+		else if (strcmp(token, "C21") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].J2 = atof(token);
-				}
-				input_par_received[6] = true;
-			}
-			else if (strcmp(token, "C22") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].C22 = atof(token);
-				}
-				input_par_received[7] = true;
-			}
-			else if (strcmp(token, "C21") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].C21 = atof(token);
-				}
-			}
-			else if (strcmp(token, "S21") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].S21 = atof(token);
-				}
-			}
-			else if (strcmp(token, "S22") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].S22 = atof(token);
-				}
-			}
-			else if (strcmp(token, "lib(deg)") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].lib = atof(token);
-				}
-				input_par_received[8] = true;
-			}
-			else if (strcmp(token, "kf") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].kf = atof(token);
-				}
-				input_par_received[9] = true;
-			}
-			else if (strcmp(token, "Dt(s)") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].Dt = atof(token);
-				}
-				input_par_received[10] = true;
-			}
-			else if (strcmp(token, "tau(yr)") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].tau = atof(token);
-				}
-				input_par_received[11] = true;
-			}
-			else if (strcmp(token, "a(AU)") == 0)
-			{
-				(*bodies)[0].a = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].a = atof(token);
-				}
-				input_par_received[12] = true;
-			}
-			else if (strcmp(token, "e") == 0)
-			{
-				(*bodies)[0].e = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].e = atof(token);
-				}
-				input_par_received[13] = true;
-			}
-			else if (strcmp(token, "I(deg)") == 0)
-			{
-				(*bodies)[0].I = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].I = atof(token);
-				}
-				input_par_received[14] = true;
-			}
-			else if (strcmp(token, "M(deg)") == 0)
-			{
-				(*bodies)[0].M = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].M = atof(token);
-				}
-				input_par_received[15] = true;
-			}
-			else if (strcmp(token, "w(deg)") == 0)
-			{
-				(*bodies)[0].w = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].w = atof(token);
-				}
-				input_par_received[16] = true;
-			}
-			else if (strcmp(token, "OMEGA(deg)") == 0)
-			{
-				(*bodies)[0].Omega = NAN;
-				for (int i = 1; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].Omega = atof(token);
-				}
-				input_par_received[17] = true;
-			}
-			else if (strcmp(token, "ks") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].ks = atof(token);
-				}
-				input_par_received[18] = true;
-			}
-			else if (strcmp(token, "azi(deg)") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].azi = atof(token);
-				}
-				input_par_received[19] = true;
-			}
-			else if (strcmp(token, "pol(deg)") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					(*bodies)[i].pol = atof(token);
-				}
-				input_par_received[20] = true;
-			}
-			else if (strcmp(token, "centrifugal") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					if (strcmp(token, "yes") == 0)
-					{
-						(*bodies)[i].centrifugal = true;
-					}
-					else if (strcmp(token, "no") == 0)
-					{
-						(*bodies)[i].centrifugal = false;
-					}
-					else
-					{
-						printf("%s\n", token);
-						fprintf(stderr, "Please provide yes or no ");
-						fprintf(stderr, "for centrifugal variable\n");
-						exit(14);
-					}
-				}
-				input_deformable_received[0] = true;
-			}
-			else if (strcmp(token, "tidal") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					if (strcmp(token, "yes") == 0)
-					{
-						(*bodies)[i].tidal = true;
-					}
-					else if (strcmp(token, "no") == 0)
-					{
-						(*bodies)[i].tidal = false;
-					}
-					else
-					{
-						fprintf(stderr, "Please provide yes or no ");
-						fprintf(stderr, "for tidal variable\n");
-						exit(14);
-					}
-				}
-				input_deformable_received[1] = true;
-			}
-			else if (strcmp(token, "point_mass") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					if (strcmp(token, "yes") == 0)
-					{
-						(*bodies)[i].point_mass = true;
-					}
-					else if (strcmp(token, "no") == 0)
-					{
-						(*bodies)[i].point_mass = false;
-					}
-					else
-					{
-						fprintf(stderr, "Please provide yes or no ");
-						fprintf(stderr, "for point mass variable\n");
-						exit(14);
-					}
-				}
-				input_deformable_received[2] = true;
-			}
-			else if (strcmp(token, "prestress") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					if (strcmp(token, "yes") == 0)
-					{
-						(*bodies)[i].prestress = true;
-					}
-					else if (strcmp(token, "no") == 0)
-					{
-						(*bodies)[i].prestress = false;
-					}
-					else
-					{
-						fprintf(stderr, "Please provide yes or no ");
-						fprintf(stderr, "for prestress variable\n");
-						exit(14);
-					}
-				}
-				input_deformable_received[3] = true;
-			}
-			else if (strcmp(token, "deformable") == 0)
-			{
-				for (int i = 0; i < simulation.number_of_bodies; i++)
-				{
-					token = strtok(NULL, tok_del);
-					if (strcmp(token, "yes") == 0)
-					{
-						(*bodies)[i].deformable = true;
-					}
-					else if (strcmp(token, "no") == 0)
-					{
-						(*bodies)[i].deformable = false;
-					}
-					else
-					{
-						fprintf(stderr, "Please provide yes or no ");
-						fprintf(stderr, "for deformable variable\n");
-						exit(14);
-					}
-				}
-				input_deformable_received[4] = true;
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].C21 = atof(token);
 			}
 		}
-		fclose(in1);
-
-		/* parameter input verification */
-		for (int i = 0; i < number_par_inputs; i++)
+		else if (strcmp(token, "S21") == 0)
 		{
-			if(input_par_received[i] == false)
+			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				fprintf(stderr, "Error: there is at least one missing input ");
-				fprintf(stderr, "from %s.\n", simulation.system_specs);
-				fprintf(stderr, "Exiting the program now.\n");
-				// fprintf(stderr, "Missing input number %d\n", i); // debugging
-				exit(14);
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].S21 = atof(token);
 			}
 		}
-		/* name  input verification */
-		if (input_name_received == false)
+		else if (strcmp(token, "S22") == 0)
 		{
-			fprintf(stderr, "Error: could not read body names ");
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].S22 = atof(token);
+			}
+		}
+		else if (strcmp(token, "lib(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].lib = atof(token);
+			}
+			input_par_received[8] = true;
+		}
+		else if (strcmp(token, "a(AU)") == 0)
+		{
+			(*bodies)[0].a = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].a = atof(token);
+			}
+			input_par_received[9] = true;
+		}
+		else if (strcmp(token, "e") == 0)
+		{
+			(*bodies)[0].e = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].e = atof(token);
+			}
+			input_par_received[10] = true;
+		}
+		else if (strcmp(token, "I(deg)") == 0)
+		{
+			(*bodies)[0].I = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].I = atof(token);
+			}
+			input_par_received[11] = true;
+		}
+		else if (strcmp(token, "M(deg)") == 0)
+		{
+			(*bodies)[0].M = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].M = atof(token);
+			}
+			input_par_received[12] = true;
+		}
+		else if (strcmp(token, "w(deg)") == 0)
+		{
+			(*bodies)[0].w = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].w = atof(token);
+			}
+			input_par_received[13] = true;
+		}
+		else if (strcmp(token, "OMEGA(deg)") == 0)
+		{
+			(*bodies)[0].Omega = NAN;
+			for (int i = 1; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].Omega = atof(token);
+			}
+			input_par_received[14] = true;
+		}
+		else if (strcmp(token, "azi(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].azi = atof(token);
+			}
+			input_par_received[15] = true;
+		}
+		else if (strcmp(token, "pol(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].pol = atof(token);
+			}
+			input_par_received[16] = true;
+		}
+		else if (strcmp(token, "centrifugal") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].centrifugal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].centrifugal = false;
+				}
+				else
+				{
+					printf("%s\n", token);
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for centrifugal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[0] = true;
+		}
+		else if (strcmp(token, "tidal") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].tidal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].tidal = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for tidal variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[1] = true;
+		}
+		else if (strcmp(token, "point_mass") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].point_mass = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].point_mass = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for point mass variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[2] = true;
+		}
+		else if (strcmp(token, "prestress") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].prestress = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].prestress = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for prestress variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[3] = true;
+		}
+		else if (strcmp(token, "deformable") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].deformable = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].deformable = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for deformable variable\n");
+					exit(14);
+				}
+			}
+			input_deformable_received[4] = true;
+		}
+		else if (strcmp(token, "kf") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].kf = atof(token);
+			}
+			input_maxwell_received[0] = true;
+		}
+		else if (strcmp(token, "ks") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].ks = atof(token);
+			}
+			input_maxwell_received[1] = true;
+		}
+		else if (strcmp(token, "Dt(s)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].Dt = atof(token);
+			}
+			input_maxwell_received[2] = true;
+		}
+		else if (strcmp(token, "tau(yr)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].tau = atof(token);
+			}
+			input_maxwell_received[3] = true;
+		}
+		else if (strcmp(token, "gamma") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].gamma = atof(token);
+			}
+			input_gV_received[0] = true;
+		}
+		else if (strcmp(token, "alpha") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].alpha = atof(token);
+			}
+			input_gV_received[1] = true;
+		}
+		else if (strcmp(token, "eta") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].eta = atof(token);
+			}
+			input_gV_received[2] = true;
+		}
+		else if (strcmp(token, "elements") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].elements = atoi(token);
+			}
+			input_gV_received[3] = true;
+		}
+	}
+	fclose(in1);
+
+	/* parameter input verification */
+	for (int i = 0; i < number_par_inputs; i++)
+	{
+		if(input_par_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "from %s.\n", simulation.system_specs);
+			fprintf(stderr, "Exiting the program now.\n");
+			// fprintf(stderr, "Missing input number %d\n", i); // debugging
+			exit(14);
+		}
+	}
+	/* name input verification */
+	if (input_name_received == false)
+	{
+		fprintf(stderr, "Error: could not read body names ");
+		fprintf(stderr, "from %s.\n", simulation.system_specs);
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(14);
+	}
+	/* deformable variables input verification */
+	for (int i = 0; i < number_deformable_inputs; i++)
+	{
+		if(input_deformable_received[i] == false)
+		{
+			fprintf(stderr, "Error: there is at least one missing input ");
+			fprintf(stderr, "for the deformation variables ");
 			fprintf(stderr, "from %s.\n", simulation.system_specs);
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(14);
 		}
-		/* deformable variables input verification */
-		for (int i = 0; i < number_deformable_inputs; i++)
+	}
+	/* Maxwell rheology input verification */
+	if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+	{
+		for (int i = 0; i < number_maxwell_inputs; i++)
 		{
-			if(input_deformable_received[i] == false)
+			if(input_maxwell_received[i] == false)
 			{
 				fprintf(stderr, "Error: there is at least one missing input ");
-				fprintf(stderr, "for the deformation variables ");
+				fprintf(stderr, "for the Maxwell rheology variables ");
+				fprintf(stderr, "from %s.\n", simulation.system_specs);
+				fprintf(stderr, "Exiting the program now.\n");
+				exit(14);
+			}
+		}
+	}
+	
+	/* Generalised Voigt rheology input verification and setting of elements */
+	if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+	{
+		for (int i = 0; i < number_gV_inputs; i++)
+		{
+			if(input_gV_received[i] == false)
+			{
+				fprintf(stderr, "Error: there is at least one missing input ");
+				fprintf(stderr, "for the generalised Voigt rheology variables ");
 				fprintf(stderr, "from %s.\n", simulation.system_specs);
 				fprintf(stderr, "Exiting the program now.\n");
 				exit(14);
 			}
 		}
 
-		/* hierarchy (just to be safe) */
+		int elements_max = 0;
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
-			if ((*bodies)[i].deformable == false &&
-				(*bodies)[i].prestress == false)
+			if ((*bodies)[i].elements > 0)
 			{
-				(*bodies)[i].point_mass = true;
+				(*bodies)[i].alpha_elements 
+					= (double *) malloc((*bodies)[i].elements * sizeof(double));
+				(*bodies)[i].eta_elements 	
+					= (double *) malloc((*bodies)[i].elements * sizeof(double));
 			}
-			if ((*bodies)[i].point_mass == true)
+			if ((*bodies)[i].elements > elements_max)
 			{
-				(*bodies)[i].deformable = false;
-				(*bodies)[i].prestress = false;
-				(*bodies)[i].centrifugal = false;
-				(*bodies)[i].tidal = false;
-			}
-			else if ((*bodies)[i].deformable == false)
-			{
-				(*bodies)[i].centrifugal = false;
-				(*bodies)[i].tidal = false;
+				elements_max = (*bodies)[i].elements;
 			}
 		}
 
-		/* converting units */
-
-		double deg_to_rad = M_PI / 180.0;
-		for (int i = 0; i < simulation.number_of_bodies; i++)
+		/* verification for input variables */
+		bool **input_element_alpha_received, **input_element_eta_received;
+		if (elements_max > 0)
 		{
-			(*bodies)[i].azi *= deg_to_rad;
-			(*bodies)[i].pol *= deg_to_rad;
-			(*bodies)[i].obl *= deg_to_rad;
-			(*bodies)[i].psi *= deg_to_rad;
-			(*bodies)[i].lib *= deg_to_rad;
-			(*bodies)[i].I *= deg_to_rad;
-			(*bodies)[i].M *= deg_to_rad;
-			(*bodies)[i].w *= deg_to_rad;
-			(*bodies)[i].Omega *= deg_to_rad;
-		}
-
-		if (strcmp(simulation.units, "SI") == 0)
-		{
-			/* conversion units to SI */
-			double Msun_to_kg = 1988500.0e24;
-			double day_to_s = 24.0 * 60.0 * 60.0;
-			double km_to_m = 1e3;
-			double year_to_s = 365.25 * day_to_s;
-			double AU_to_m = 1.495978707e11;
-
-			/* variables in SI*/
+			input_element_alpha_received = malloc(simulation.number_of_bodies * sizeof(bool*));
+			input_element_eta_received	 = malloc(simulation.number_of_bodies * sizeof(bool*));
 			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
-				(*bodies)[i].mass *= Msun_to_kg;
-				(*bodies)[i].R *= km_to_m;
-				(*bodies)[i].lod *= day_to_s;
-				(*bodies)[i].tau *= year_to_s;
-				(*bodies)[i].a *= AU_to_m;
+				if ((*bodies)[i].elements > 0)
+				{
+					input_element_alpha_received[i] = malloc((*bodies)[i].elements * sizeof(bool));
+					input_element_eta_received[i] 	= malloc((*bodies)[i].elements * sizeof(bool));
+					for (int j = 0; j < (*bodies)[i].elements; j++)
+					{
+						input_element_alpha_received[i][j] = false;
+						input_element_eta_received[i][j] = false;
+					}
+				}
 			}
+
+			char name_element_alpha[20], name_element_eta[20];
+			FILE *in1_elements = fopen(simulation.system_specs, "r");
+			while ((read = getline(&line, &len, in1_elements)) != -1)
+			{
+				const char tok_del[6] = " \t\n";	// token delimiter
+				char *token = strtok(line, tok_del);
+				if(token == NULL) break;	// in case there is a newline
+				for (int j = 0; j < elements_max; j++)
+				{
+					sprintf(name_element_alpha, "alpha_%d", j+1);
+					sprintf(name_element_eta, "eta_%d", j+1);
+					if (strcmp(token, name_element_alpha) == 0)
+					{
+						for (int i = 0; i < simulation.number_of_bodies; i++)
+						{
+							token = strtok(NULL, tok_del);
+							if (j < (*bodies)[i].elements)
+							{
+								(*bodies)[i].alpha_elements[j] = atof(token);
+							}
+							if ((*bodies)[i].elements > 0)
+							{
+								input_element_alpha_received[i][j] = true;
+							}
+						}
+					}
+					else if (strcmp(token, name_element_eta) == 0)
+					{
+						for (int i = 0; i < simulation.number_of_bodies; i++)
+						{
+							token = strtok(NULL, tok_del);
+							if (j < (*bodies)[i].elements)
+							{
+								(*bodies)[i].eta_elements[j] = atof(token);
+							}
+							if ((*bodies)[i].elements > 0)
+							{
+								input_element_eta_received[i][j] = true;
+							}
+						}
+					}
+				}
+			}
+			fclose(in1_elements);
+
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				if ((*bodies)[i].elements > 0)
+				{
+					for (int j = 0; j < (*bodies)[i].elements; j++)
+					{
+						if (input_element_alpha_received[i][j] == false ||
+							input_element_eta_received[i][j] == false)
+						{
+							fprintf(stderr, "Error: there are missing parameters ");
+							fprintf(stderr, "for the generalised Voigt rheology ");
+							fprintf(stderr, "from %s.\n", simulation.system_specs);
+							fprintf(stderr, "Exiting the program now.\n");
+							exit(15);				
+						}
+					}
+					free(input_element_alpha_received[i]);
+					free(input_element_eta_received[i]);
+				}
+			}
+			free(input_element_alpha_received);
+			free(input_element_eta_received);
+		}
+	}
+
+	/* hierarchy conditions (just to be safe) */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if ((*bodies)[i].deformable == false &&
+			(*bodies)[i].prestress == false)
+		{
+			(*bodies)[i].point_mass = true;
+		}
+		if ((*bodies)[i].point_mass == true)
+		{
+			(*bodies)[i].deformable = false;
+			(*bodies)[i].prestress = false;
+			(*bodies)[i].centrifugal = false;
+			(*bodies)[i].tidal = false;
+		}
+		else if ((*bodies)[i].deformable == false)
+		{
+			(*bodies)[i].centrifugal = false;
+			(*bodies)[i].tidal = false;
+		}
+	}
+
+	/* verifying validity of some given input */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if ((*bodies)[i].deformable == true)
+		{
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				if (fabs((*bodies)[i].kf) < 1e-10)
+				{	
+					fprintf(stderr, "Warning: kf cannot be zero.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+				if (fabs((*bodies)[i].tau) < 1e-10)
+				{	
+					fprintf(stderr, "Warning: tau cannot be zero.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+				if ((*bodies)[i].tau < (*bodies)[i].Dt)
+				{	
+					fprintf(stderr, "Warning: tau cannot be lower than Dt.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+				if (fabs((*bodies)[i].tau-(*bodies)[i].Dt) < 1e-10)
+				{	
+					fprintf(stderr, "Warning: tau cannot be equal to Dt.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+			}
+			if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{
+				if (fabs((*bodies)[i].gamma) < 1e-10)
+				{	
+					fprintf(stderr, "Warning: gamma cannot be zero.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+				if (fabs((*bodies)[i].eta) < 1e-10)
+				{	
+					fprintf(stderr, "Warning: eta cannot be zero.\n");
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(16);
+				}
+				for (int j = 0; j < (*bodies)[i].elements; j++)
+				{
+					if (fabs((*bodies)[i].eta_elements[j]) < 1e-10)
+					{	
+						fprintf(stderr, "Warning: all eta elements have ");
+						fprintf(stderr, "to be greater than zero.\n");
+						fprintf(stderr, "Exiting the program now.\n");
+						exit(16);
+					}	
+				}
+			}
+		}
+	}
+
+	/* converting units */
+
+	double deg_to_rad = M_PI / 180.0;
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		(*bodies)[i].azi *= deg_to_rad;
+		(*bodies)[i].pol *= deg_to_rad;
+		(*bodies)[i].obl *= deg_to_rad;
+		(*bodies)[i].psi *= deg_to_rad;
+		(*bodies)[i].lib *= deg_to_rad;
+		(*bodies)[i].I *= deg_to_rad;
+		(*bodies)[i].M *= deg_to_rad;
+		(*bodies)[i].w *= deg_to_rad;
+		(*bodies)[i].Omega *= deg_to_rad;
+	}
+
+	if (strcmp(simulation.units, "SI") == 0)
+	{
+		/* conversion units to SI */
+		double Msun_to_kg = 1988500.0e24;
+		double day_to_s = 24.0 * 60.0 * 60.0;
+		double km_to_m = 1e3;
+		double year_to_s = 365.25 * day_to_s;
+		double AU_to_m = 1.495978707e11;
+
+		/* variables in SI*/
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].mass *= Msun_to_kg;
+			(*bodies)[i].R *= km_to_m;
+			(*bodies)[i].lod *= day_to_s;
+			(*bodies)[i].tau *= year_to_s;
+			(*bodies)[i].a *= AU_to_m;
+		}
+	}
+	else
+	{
+		/* conversion units to AU Msun year */
+		double km_to_AU = 1.0 / 1.495978707e8;
+		double day_to_year = 1.0 / 365.25;
+		double s_to_year = day_to_year / (24.0 * 60.0 * 60.0);
+
+		/* variables in AU Msun year*/
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].R *= km_to_AU;
+			(*bodies)[i].lod *= day_to_year;
+			(*bodies)[i].Dt *= s_to_year;
+		}
+	}
+	
+	/* calculating 4 sets of variables */
+	
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		double	m = (*bodies)[i].mass;
+		double	R = (*bodies)[i].R;
+
+		double	rg = (*bodies)[i].rg;
+		double	J2 = (*bodies)[i].J2;
+
+		double  theta = (*bodies)[i].obl;
+		double	psi = (*bodies)[i].psi;
+		double	phi = (*bodies)[i].lib;
+
+		double	a = (*bodies)[i].a;
+		double	e = (*bodies)[i].e;
+		double	I = (*bodies)[i].I;
+		double	M = (*bodies)[i].M;
+		double	w = (*bodies)[i].w;
+		double	Omega = (*bodies)[i].Omega;
+
+		double	ks = (*bodies)[i].ks;
+		double	kf = (*bodies)[i].kf;
+		double	Dt = (*bodies)[i].Dt;
+		double	tau = (*bodies)[i].tau;
+		
+		/* 1st set of variables - x and x_dot */
+		double qr_1_I[4];
+		double qr_3_Omega[4];
+
+		if (i == 0)
+		{
+			null_vector((*bodies)[i].x);
+			null_vector((*bodies)[i].x_dot);
+			identity_quaternion(qr_1_I);		// for 2nd set of variables
+			identity_quaternion(qr_3_Omega);	// for 2nd set of variables
 		}
 		else
 		{
-			/* conversion units to AU Msun year */
-			double km_to_AU = 1.0 / 1.495978707e8;
-			double day_to_year = 1.0 / 365.25;
-			double s_to_year = day_to_year / (24.0 * 60.0 * 60.0);
+			double T = 
+			kepler_period((*bodies)[0].mass, m, simulation.G, a);
+			double n = (2.0 * M_PI) / T;
 
-			/* variables in AU Msun year*/
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				(*bodies)[i].R *= km_to_AU;
-				(*bodies)[i].lod *= day_to_year;
-				(*bodies)[i].Dt *= s_to_year;
-			}
-		}
-		
-		/* calculating 4 sets of variables */
-		
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			double	m = (*bodies)[i].mass;
-			double	R = (*bodies)[i].R;
+			double E = kepler_equation(e, M);
+			double r = a * (1.0 - e * cos(E));
+			double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
 
-			double	rg = (*bodies)[i].rg;
-			double	J2 = (*bodies)[i].J2;
+			double position_in_plane[] 
+				= {r * cos(f), r * sin(f), 0.0};
+			double velocity_in_plane[] 
+				= {-1.0 * n * a / sqrt(1.0 - e * e) * sin(f), 
+					n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
+					0.0};
 
-			double  theta = (*bodies)[i].obl;
-			double	psi = (*bodies)[i].psi;
-			double	phi = (*bodies)[i].lib;
+			double qr_3_w[9];
+			rotation_quaternion_z(qr_3_w, w);
+			rotation_quaternion_x(qr_1_I, I);
+			rotation_quaternion_z(qr_3_Omega, Omega);
 
-			double	a = (*bodies)[i].a;
-			double	e = (*bodies)[i].e;
-			double	I = (*bodies)[i].I;
-			double	M = (*bodies)[i].M;
-			double	w = (*bodies)[i].w;
-			double	Omega = (*bodies)[i].Omega;
-
-			double	ks = (*bodies)[i].ks;
-			double	kf = (*bodies)[i].kf;
-			double	Dt = (*bodies)[i].Dt;
-			double	tau = (*bodies)[i].tau;
-			
-			/* 1st set of variables - x and x_dot */
-			double qr_1_I[4];
-			double qr_3_Omega[4];
-
-			if (i == 0)
-			{
-				null_vector((*bodies)[i].x);
-				null_vector((*bodies)[i].x_dot);
-				identity_quaternion(qr_1_I);		// for 2nd set of variables
-				identity_quaternion(qr_3_Omega);	// for 2nd set of variables
-			}
-			else
-			{
-				double T = 
-				kepler_period((*bodies)[0].mass, m, simulation.G, a);
-				double n = (2.0 * M_PI) / T;
-
-				double E = kepler_equation(e, M);
-				double r = a * (1.0 - e * cos(E));
-				double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
-
-				double position_in_plane[] 
-					= {r * cos(f), r * sin(f), 0.0};
-				double velocity_in_plane[] 
-					= {-1.0 * n * a / sqrt(1.0 - e * e) * sin(f), 
-						n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
-						0.0};
-
-				double qr_3_w[9];
-				rotation_quaternion_z(qr_3_w, w);
-				rotation_quaternion_x(qr_1_I, I);
-				rotation_quaternion_z(qr_3_Omega, Omega);
-
-				double full_rotation_orbit_quaternion[4];
-				quaternion_times_quaternion(full_rotation_orbit_quaternion,
-					qr_3_Omega, qr_1_I);
-				quaternion_times_quaternion(full_rotation_orbit_quaternion,
-					full_rotation_orbit_quaternion, qr_3_w);
-
-				rotate_vector_with_quaternion((*bodies)[i].x, 
-					full_rotation_orbit_quaternion, position_in_plane);
-				rotate_vector_with_quaternion((*bodies)[i].x_dot, 
-					full_rotation_orbit_quaternion, velocity_in_plane);
-			}
-
-			/* 2nd set of variables - omega and q */
-			double qr_3_psi[4];
-			rotation_quaternion_z(qr_3_psi, psi);
-			double qr_1_theta[4];
-			rotation_quaternion_x(qr_1_theta, theta);
-			double qr_3_phi[4];
-			rotation_quaternion_z(qr_3_phi, phi);
-
-			double full_rotation_body_quaternion[4];
-			quaternion_times_quaternion(full_rotation_body_quaternion,
+			double full_rotation_orbit_quaternion[4];
+			quaternion_times_quaternion(full_rotation_orbit_quaternion,
 				qr_3_Omega, qr_1_I);
-			quaternion_times_quaternion(full_rotation_body_quaternion,
-				full_rotation_body_quaternion, qr_3_psi);
-			quaternion_times_quaternion(full_rotation_body_quaternion,
-				full_rotation_body_quaternion, qr_1_theta);
-			quaternion_times_quaternion(full_rotation_body_quaternion,
-				full_rotation_body_quaternion, qr_3_phi);
+			quaternion_times_quaternion(full_rotation_orbit_quaternion,
+				full_rotation_orbit_quaternion, qr_3_w);
 
-			copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
+			rotate_vector_with_quaternion((*bodies)[i].x, 
+				full_rotation_orbit_quaternion, position_in_plane);
+			rotate_vector_with_quaternion((*bodies)[i].x_dot, 
+				full_rotation_orbit_quaternion, velocity_in_plane);
+		}
 
-			initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&(*bodies)[i]);
+		/* 2nd set of variables - omega and q */
+		double qr_3_psi[4];
+		rotation_quaternion_z(qr_3_psi, psi);
+		double qr_1_theta[4];
+		rotation_quaternion_x(qr_1_theta, theta);
+		double qr_3_phi[4];
+		rotation_quaternion_z(qr_3_phi, phi);
 
-			/* 3rd set of variables - I0 */
-			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		double full_rotation_body_quaternion[4];
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			qr_3_Omega, qr_1_I);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_3_psi);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_1_theta);
+		quaternion_times_quaternion(full_rotation_body_quaternion,
+			full_rotation_body_quaternion, qr_3_phi);
 
-			/* 4th set of variables - gamma, alpha and eta */
-			(*bodies)[i].gamma = parameter_gamma(simulation.G, (*bodies)[i].I0, R, kf);
-			(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
-			(*bodies)[i].eta = (*bodies)[i].gamma * Dt;
+		copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
-			/* Kelvin-Voigt elements */
+		initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&(*bodies)[i]);
+
+		/* 3rd set of variables - I0 */
+		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+
+		/* Kelvin-Voigt elements */
+		if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+		{
 			(*bodies)[i].elements = 0;
+		}
 
-			if ((*bodies)[i].elements > 0)
+		/* 4th set of variables - gamma, alpha and eta */
+		if ((*bodies)[i].deformable == true)
+		{
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
-				(*bodies)[i].alpha_elements = (double *) malloc((*bodies)[i].elements * sizeof(double));
-				(*bodies)[i].eta_elements = (double *) malloc((*bodies)[i].elements * sizeof(double));
-				
+				(*bodies)[i].gamma = parameter_gamma(simulation.G, (*bodies)[i].I0, R, kf);
+				(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
+				(*bodies)[i].eta   = (*bodies)[i].gamma * Dt;
+			}	
+		}
+		else
+		{
+			(*bodies)[i].kf  = NAN;
+			(*bodies)[i].tau = NAN;
+			(*bodies)[i].Dt  = NAN;
+
+			(*bodies)[i].gamma = 1.0;
+			(*bodies)[i].alpha = 0.0;
+			(*bodies)[i].eta   = 1.0;
+
+			if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{
 				for (int j = 0; j < (*bodies)[i].elements; j++)
 				{
-					(*bodies)[i].alpha_elements[j] = 1.0;
-					(*bodies)[i].eta_elements[j] = 1.0;
+					(*bodies)[i].alpha_elements[j] = 0.0;
+					(*bodies)[i].eta_elements[j]   = 1.0;
 				}
 			}
+		}
 
-			/* prestress parameters */
-			if ((*bodies)[i].prestress == true)
+		/* prestress parameters */
+		if ((*bodies)[i].prestress == true)
+		{
+			(*bodies)[i].alpha_0 = parameter_alpha_0(simulation.G, (*bodies)[i].I0, R, kf, ks);
+		}
+		else
+		{
+			(*bodies)[i].alpha_0 = 0.0;
+		}
+
+	} // end loop over bodies
+
+	/* calculate b0, and initialize bk and u */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		/* transformation matrices */
+		double Y_i[9], Y_i_trans[9];
+		rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
+		transpose_square_matrix(Y_i_trans, Y_i);
+
+		/* deformation from stokes coefficients */
+		double B_stokes_i[9];
+		body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
+		double B_stokes_i_diag[9];
+		calculate_diagonalized_square_matrix(B_stokes_i_diag, B_stokes_i);
+		double b_stokes_i[9];
+		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i_diag);
+		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+
+		/* update gravity field coefficients to */
+		/* the frame of principal inertia moments */
+		double Iner_diag[9];
+		calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_i_diag);
+		(*bodies)[i].rg = calculate_rg((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].J2 = calculate_J2((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+
+		/* still implementing / testing */
+		// double A = Iner_diag[0];
+		// double C = Iner_diag[8];
+
+		// double ks = (3.0 * simulation.G * (C-A)) / 
+		// 	(pow(norm_vector((*bodies)[i].omega), 2.0) *
+		// 	 pow((*bodies)[i].R, 5.0));
+		// printf("ks = %1.5e\n", ks);
+		// printf("Body %d: %s\n", i+1, (*bodies)[i].name);
+		// printf("I0 = %1.5e\n", (*bodies)[i].I0);
+		// printf("ang_vel = %1.5e\n", norm_vector((*bodies)[i].omega));
+		// printf("C = %1.5e\n", C);
+		// printf("A = %1.5e\n", A);
+		// double first_term_alpha_0 = ((*bodies)[i].I0*norm_vector((*bodies)[i].omega)*norm_vector((*bodies)[i].omega))/
+		// 	(C-A);
+		// printf("1st term alpha 0 = %1.5e\n", first_term_alpha_0);
+		// printf("gamma = %1.5e\n", (*bodies)[i].gamma);
+		// printf("alpha_0 = %1.5e\n", first_term_alpha_0-(*bodies)[i].gamma);
+
+		/* prestress */
+		double b0_i[9];	
+		null_matrix(b0_i);
+		if((*bodies)[i].prestress == true)
+		{
+			if ((*bodies)[i].deformable == false)
 			{
-				(*bodies)[i].alpha_0 = parameter_alpha_0(simulation.G, (*bodies)[i].I0, R, kf, ks);
+				copy_square_matrix(b0_i, b_stokes_i);
 			}
 			else
 			{
-				(*bodies)[i].alpha_0 = 0.0;
+				double f_cent_static_i[9];
+				double mean_omega = norm_vector((*bodies)[i].omega);
+				calculate_f_cent_static(f_cent_static_i, mean_omega);
+				double f_tide_static_i[9];
+				null_matrix(f_tide_static_i); // no permanent tide
+				linear_combination_three_square_matrix(b0_i,
+					((*bodies)[i].gamma+(*bodies)[i].alpha_0)/(*bodies)[i].alpha_0, b_stokes_i,
+					-1.0/(*bodies)[i].alpha_0, f_cent_static_i,
+					-1.0/(*bodies)[i].alpha_0, f_tide_static_i);
 			}
+		}
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].b0_me, b0_i);
 
-		} // end loop over bodies
-
-		/* calculate b0, and initialize bk and u */
-		for (int i = 0; i < simulation.number_of_bodies; i++)
+		/* initialize bk at equilibrium */
+		if ((*bodies)[i].elements > 0)
 		{
-			/* transformation matrices */
-			double Y_i[9], Y_i_trans[9];
-			rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
-			transpose_square_matrix(Y_i_trans, Y_i);
+			(*bodies)[i].bk_me = (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
+		}
 
-			/* deformation from stokes coefficients */
-			double B_stokes_i[9];
-			body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
-			double B_stokes_i_diag[9];
-			calculate_diagonalized_square_matrix(B_stokes_i_diag, B_stokes_i);
-			double b_stokes_i[9];
-			square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i_diag);
-			square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+		/* initialize u */
+		double f_cent_i[9];
+		null_matrix(f_cent_i);
+		if ((*bodies)[i].centrifugal == true)
+		{
+			calculate_f_cent(f_cent_i, (*bodies)[i].omega);
+		}
+		double f_tide_i[9];
+		null_matrix(f_tide_i);
+		if ((*bodies)[i].tidal == true)
+		{
+			calculate_f_tide(f_tide_i, i, (*bodies), 
+				simulation.number_of_bodies, simulation.G);
+		}
+		double f_ps_i[9];
+		null_matrix(f_ps_i);
+		if ((*bodies)[i].prestress == true)
+		{
+			calculate_f_ps(f_ps_i, (*bodies)[i]);
+		}
+		double c_i = calculate_c((*bodies)[i]);
+		double u_i[9];
+		null_matrix(u_i);
+		if ((*bodies)[i].deformable == true)
+		{
+			linear_combination_four_square_matrix(u_i,
+				-1.0 * c_i, b_stokes_i,
+					1.0, f_cent_i,
+					1.0, f_tide_i,
+					1.0, f_ps_i);
+		}
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].u_me, u_i);
+		
+	} // end loop over bodies
 
-			/* update gravity field coefficients to */
-			/* the frame of principal inertia moments */
-			double Iner_diag[9];
-			calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_i_diag);
-			(*bodies)[i].rg = calculate_rg((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].J2 = calculate_J2((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-
-			/* still implementing / testing */
-			// double A = Iner_diag[0];
-			// double C = Iner_diag[8];
-
-			// double ks = (3.0 * simulation.G * (C-A)) / 
-			// 	(pow(norm_vector((*bodies)[i].omega), 2.0) *
-			// 	 pow((*bodies)[i].R, 5.0));
-			// printf("ks = %1.5e\n", ks);
-			// printf("Body %d: %s\n", i+1, (*bodies)[i].name);
-			// printf("I0 = %1.5e\n", (*bodies)[i].I0);
-			// printf("ang_vel = %1.5e\n", norm_vector((*bodies)[i].omega));
-			// printf("C = %1.5e\n", C);
-			// printf("A = %1.5e\n", A);
-			// double first_term_alpha_0 = ((*bodies)[i].I0*norm_vector((*bodies)[i].omega)*norm_vector((*bodies)[i].omega))/
-			// 	(C-A);
-			// printf("1st term alpha 0 = %1.5e\n", first_term_alpha_0);
-			// printf("gamma = %1.5e\n", (*bodies)[i].gamma);
-			// printf("alpha_0 = %1.5e\n", first_term_alpha_0-(*bodies)[i].gamma);
-
-			/* prestress */
-			double b0_i[9];	
-			null_matrix(b0_i);
-			if((*bodies)[i].prestress == true)
-			{
-				if ((*bodies)[i].deformable == false)
-				{
-					copy_square_matrix(b0_i, b_stokes_i);
-				}
-				else
-				{
-					double f_cent_static_i[9];
-					double mean_omega = norm_vector((*bodies)[i].omega);
-					calculate_f_cent_static(f_cent_static_i, mean_omega);
-					double f_tide_static_i[9];
-					null_matrix(f_tide_static_i); // no permanent tide
-					linear_combination_three_square_matrix(b0_i,
-						((*bodies)[i].gamma+(*bodies)[i].alpha_0)/(*bodies)[i].alpha_0, b_stokes_i,
-						-1.0/(*bodies)[i].alpha_0, f_cent_static_i,
-						-1.0/(*bodies)[i].alpha_0, f_tide_static_i);
-				}
-			}
-			get_main_elements_traceless_symmetric_matrix((*bodies)[i].b0_me, b0_i);
-
-			/* initialize bk at equilibrium */
-			if ((*bodies)[i].elements > 0)
-			{
-				(*bodies)[i].bk_me = (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
-			}
-
-			/* initialize u */
-			double f_cent_i[9];
-			null_matrix(f_cent_i);
-			if ((*bodies)[i].centrifugal == true)
-			{
-				calculate_f_cent(f_cent_i, (*bodies)[i].omega);
-			}
-			double f_tide_i[9];
-			null_matrix(f_tide_i);
-			if ((*bodies)[i].tidal == true)
-			{
-				calculate_f_tide(f_tide_i, i, (*bodies), 
-					simulation.number_of_bodies, simulation.G);
-			}
-			double f_ps_i[9];
-			null_matrix(f_ps_i);
-			if ((*bodies)[i].prestress == true)
-			{
-				calculate_f_ps(f_ps_i, (*bodies)[i]);
-			}
-			double c_i = calculate_c((*bodies)[i]);
-			double u_i[9];
-			null_matrix(u_i);
-			if ((*bodies)[i].deformable == true)
-			{
-				linear_combination_four_square_matrix(u_i,
-					-1.0 * c_i, b_stokes_i,
-					 1.0, f_cent_i,
-					 1.0, f_tide_i,
-					 1.0, f_ps_i);
-			}
-			get_main_elements_traceless_symmetric_matrix((*bodies)[i].u_me, u_i);
-			
-		} // end loop over bodies
-
-		/* for debugging */
-		// for (int i = 0; i < simulation.number_of_bodies; i++)
-		// {
-		// 	print_CelestialBody((*bodies)[i]);
-		// }
-		// exit(99);
-
-	} // end else if (simulation.system_file_type == 2)
+	/* for debugging */
+	// for (int i = 0; i < simulation.number_of_bodies; i++)
+	// {
+	// 	print_CelestialBody((*bodies)[i]);
+	// }
+	// exit(99);
 
 	return 0;
 }
@@ -1538,7 +1558,7 @@ write_simulation_overview	(const int time_spent_in_seconds,
 	fprintf(in1_copy, "\n\n");
 	fclose(in1_copy);
 	fclose(in1_to_copy);
-	FILE *in2_to_copy = fopen(simulation.simulation_specs, "r");
+	FILE *in2_to_copy = fopen(simulation.integration_specs, "r");
 	FILE *in2_copy = fopen(filename, "a");
 	char ch2 = fgetc(in2_to_copy);
     while(ch2 != EOF)
