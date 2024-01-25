@@ -982,7 +982,65 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		}
 	}
 
-	/* verifying validity of some given input */
+	/* converting units */
+
+	double deg_to_rad = M_PI / 180.0;
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		(*bodies)[i].azi *= deg_to_rad;
+		(*bodies)[i].pol *= deg_to_rad;
+		(*bodies)[i].obl *= deg_to_rad;
+		(*bodies)[i].psi *= deg_to_rad;
+		(*bodies)[i].lib *= deg_to_rad;
+		(*bodies)[i].I *= deg_to_rad;
+		(*bodies)[i].M *= deg_to_rad;
+		(*bodies)[i].w *= deg_to_rad;
+		(*bodies)[i].Omega *= deg_to_rad;
+	}
+
+	if (strcmp(simulation.units, "SI") == 0)
+	{
+		/* conversion units to SI */
+		double Msun_to_kg = 1988500.0e24;
+		double day_to_s = 24.0 * 60.0 * 60.0;
+		double km_to_m = 1e3;
+		double year_to_s = 365.25 * day_to_s;
+		double AU_to_m = 1.495978707e11;
+
+		/* variables in SI*/
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].mass *= Msun_to_kg;
+			(*bodies)[i].R *= km_to_m;
+			(*bodies)[i].lod *= day_to_s;
+			(*bodies)[i].a *= AU_to_m;
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				(*bodies)[i].tau *= year_to_s;
+			}
+		}
+	}
+	else
+	{
+		/* conversion units to AU Msun year */
+		double km_to_AU = 1.0 / 1.495978707e8;
+		double day_to_year = 1.0 / 365.25;
+		double s_to_year = day_to_year / (24.0 * 60.0 * 60.0);
+
+		/* variables in AU Msun year*/
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].R *= km_to_AU;
+			(*bodies)[i].lod *= day_to_year;
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				(*bodies)[i].Dt *= s_to_year;
+			}
+		}
+	}
+
+	/* verifying the validity of some given input */
+
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if ((*bodies)[i].deformable == true)
@@ -1039,57 +1097,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					}	
 				}
 			}
-		}
-	}
-
-	/* converting units */
-
-	double deg_to_rad = M_PI / 180.0;
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		(*bodies)[i].azi *= deg_to_rad;
-		(*bodies)[i].pol *= deg_to_rad;
-		(*bodies)[i].obl *= deg_to_rad;
-		(*bodies)[i].psi *= deg_to_rad;
-		(*bodies)[i].lib *= deg_to_rad;
-		(*bodies)[i].I *= deg_to_rad;
-		(*bodies)[i].M *= deg_to_rad;
-		(*bodies)[i].w *= deg_to_rad;
-		(*bodies)[i].Omega *= deg_to_rad;
-	}
-
-	if (strcmp(simulation.units, "SI") == 0)
-	{
-		/* conversion units to SI */
-		double Msun_to_kg = 1988500.0e24;
-		double day_to_s = 24.0 * 60.0 * 60.0;
-		double km_to_m = 1e3;
-		double year_to_s = 365.25 * day_to_s;
-		double AU_to_m = 1.495978707e11;
-
-		/* variables in SI*/
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			(*bodies)[i].mass *= Msun_to_kg;
-			(*bodies)[i].R *= km_to_m;
-			(*bodies)[i].lod *= day_to_s;
-			(*bodies)[i].tau *= year_to_s;
-			(*bodies)[i].a *= AU_to_m;
-		}
-	}
-	else
-	{
-		/* conversion units to AU Msun year */
-		double km_to_AU = 1.0 / 1.495978707e8;
-		double day_to_year = 1.0 / 365.25;
-		double s_to_year = day_to_year / (24.0 * 60.0 * 60.0);
-
-		/* variables in AU Msun year*/
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			(*bodies)[i].R *= km_to_AU;
-			(*bodies)[i].lod *= day_to_year;
-			(*bodies)[i].Dt *= s_to_year;
 		}
 	}
 	
