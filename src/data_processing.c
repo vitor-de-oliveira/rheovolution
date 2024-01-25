@@ -1191,7 +1191,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 
 		copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
-		initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&(*bodies)[i]);
+		initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
 
 		/* 3rd set of variables - I0 */
 		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;

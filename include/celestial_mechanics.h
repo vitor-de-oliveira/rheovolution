@@ -225,7 +225,7 @@ calculate_orbital_elements  (cltbdy *body,
 /* initialization of angular velocity vector */
 
 int
-initialize_angular_velocity_on_figure_axis_of_tisserand_frame(cltbdy *body);
+initialize_angular_velocity_on_z_axis(cltbdy *body);
 
 int
 initialize_angular_velocity(cltbdy *body);
