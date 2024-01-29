@@ -175,7 +175,7 @@ typedef struct CelestialBody {
 	double	alpha;				// elastic modulus
 	double	eta;				// viscosity
 	double	alpha_0;			// prestress elastic modulus
-	int		elements;			// number of voigt elements
+	int		elements;			// number of Voigt elements
 	double	*alpha_elements;	// elastic modulus for Voigt elements
 	double	*eta_elements;		// viscosity for Voigt elements
 
@@ -225,7 +225,7 @@ calculate_orbital_elements  (cltbdy *body,
 /* initialization of angular velocity vector */
 
 int
-initialize_angular_velocity_on_figure_axis_of_tisserand_frame(cltbdy *body);
+initialize_angular_velocity_on_z_axis(cltbdy *body);
 
 int
 initialize_angular_velocity(cltbdy *body);

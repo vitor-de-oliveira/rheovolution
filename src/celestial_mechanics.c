@@ -962,7 +962,7 @@ calculate_orbital_elements  (cltbdy *body,
 }
 
 int
-initialize_angular_velocity_on_figure_axis_of_tisserand_frame(cltbdy *body)
+initialize_angular_velocity_on_z_axis(cltbdy *body)
 {
     double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).lod};
     rotate_vector_with_quaternion((*body).omega,
@@ -976,7 +976,7 @@ initialize_angular_velocity(cltbdy *body)
 {
     double omega_on_body[] = {0.0, 0.0, 0.0};
     double omega_on_body_spherical[] = 
-        {(2.0 * M_PI / (*body).lod) / cos((*body).pol), 
+        {2.0 * M_PI / (*body).lod, 
          (*body).azi,
          (*body).pol};
     spherical_to_cartesian_coordinates(omega_on_body, 

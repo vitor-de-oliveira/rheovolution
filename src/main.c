@@ -153,7 +153,7 @@ main(int argc, char *argv[])
 	/* initialize l and angular velocity */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		initialize_angular_velocity_on_figure_axis_of_tisserand_frame(&bodies[i]);
+		initialize_angular_velocity_on_z_axis(&bodies[i]);
 		calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
 		initialize_angular_velocity(&bodies[i]); // correct alignment
 		calculate_l(&bodies[i], simulation.number_of_bodies, simulation.G);
@@ -277,6 +277,8 @@ main(int argc, char *argv[])
 		if (status != GSL_SUCCESS)
 		{
 			fprintf(stderr, "Error: GSL odeiv2 status = %d\n", status);
+			fprintf(stderr, "at time t = %1.5e\n", simulation.t);
+			fprintf(stderr, "Hint: try a lower time step.\n");
 			break;
 		}
 

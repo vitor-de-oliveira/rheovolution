@@ -36,13 +36,13 @@ typedef struct SimulationInfo {
 	char	input_folder[100];
 	char	output_folder[100];
 	char	system_specs[100];
-	char	simulation_specs[100];
+	char	integration_specs[100];
 	char	dev_specs[100];
 
-	/* system specs */
+	/* general specs */
 	double	G;							// gravitational parameter
 	char	units[100];					// units used for simulation
-	int		system_file_type;			// system file type
+	char	rheology_model[100];		// system file type
 	int		number_of_bodies;			// number of bodies to be used
 	bool	omega_correction;			// corrects initial angular velocity
 	bool	keplerian_motion;			// restricts all orbits to keplerian
