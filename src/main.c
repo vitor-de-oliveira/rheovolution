@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 		}
 		else if (strcmp(argv[2], "plot") == 0)
 		{
-			/* plot everything */
+			/* plot everything using Gnuplot */
 			plot_output_comma_orbit_and_spin(bodies, simulation);
 			return 0;
 		}
@@ -77,13 +77,9 @@ main(int argc, char *argv[])
 		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
-			if (bodies[i].elements > 0)
-			{
-				bodies_copy[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
-				bodies_copy[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
-			}
-			bodies_copy[i] = bodies[i];
-			if (bodies[i].point_mass == false)
+			bodies_copy[i] = create_and_copy_CelestialBody(bodies[i]);
+			if (bodies[i].point_mass == false &&
+				bodies[i].deformable == true)
 			{
 				omega_correction_on_body[i] = 1;
 			}
@@ -93,10 +89,12 @@ main(int argc, char *argv[])
 			}
 			omega_correction_lod[i] = bodies[i].lod;
 		}
-		simulation.omega_correction_t_final = 
-			10.0 * largest_time_scale(bodies, 
-						simulation.number_of_bodies,
-						simulation.G);
+		// simulation.omega_correction_t_final = 
+		// 	10.0 * largest_time_scale(bodies, 
+		// 				simulation.number_of_bodies,
+		// 				simulation.G);
+		// printf("%1.5e\n", simulation.omega_correction_t_final);
+		simulation.omega_correction_t_final = 10.0;
 		simulation.omega_correction_counter = 0;
 		simulation_copy = simulation;
 		simulation.write_to_file = false;
@@ -138,13 +136,13 @@ main(int argc, char *argv[])
 					}
 					omega_correction_lod[i] += omega_correction_step[i];
 
-					bodies[i] = bodies_copy[i];
+					copy_CelestialBody(&bodies[i], bodies_copy[i]);
 					bodies[i].lod = omega_correction_lod[i];
 
 				}
 				else
 				{
-					bodies[i] = bodies_copy[i]; // reboot to initial state
+					copy_CelestialBody(&bodies[i], bodies_copy[i]);
 				}
 			}
 		}
@@ -156,7 +154,7 @@ main(int argc, char *argv[])
 		initialize_angular_velocity_on_z_axis(&bodies[i]);
 		calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
 		initialize_angular_velocity(&bodies[i]); // correct alignment
-		calculate_l(&bodies[i], simulation.number_of_bodies, simulation.G);
+		calculate_l(&bodies[i]);
 	}
 
 	/* total number of Voigt elements */
@@ -176,18 +174,25 @@ main(int argc, char *argv[])
 		int	dim_state_skip = i * dim_state_per_body_without_elements + 5 * elements_counter;
 		for (int j = 0; j < 3; j++)
 		{
-			y[0 + dim_state_skip + j] 	= bodies[i].x[j];
-			y[3 + dim_state_skip + j] 	= bodies[i].x_dot[j];
-			y[6 + dim_state_skip + j] 	= bodies[i].l[j];
+			y[0 + dim_state_skip + j] = bodies[i].x[j];
+			y[3 + dim_state_skip + j] = bodies[i].x_dot[j];
+			y[6 + dim_state_skip + j] = bodies[i].l[j];
 		}
 		for (int j = 0; j < 5; j++)
 		{
-			y[9 + dim_state_skip + j] 	= bodies[i].b0_me[j];
-			y[14 + dim_state_skip + j] 	= bodies[i].u_me[j];
+			if (bodies[i].deformable == true)
+			{
+				y[9 + dim_state_skip + j] = bodies[i].p_me[j];
+			}
+			else
+			{
+				y[9 + dim_state_skip + j] = bodies[i].bs_me[j];
+			}
+			y[14 + dim_state_skip + j] = bodies[i].b_eta_me[j];
 		}
 		for (int j = 0; j < 5 * bodies[i].elements; j++)
 		{
-			y[19 + dim_state_skip + j] 	= bodies[i].bk_me[j];
+			y[19 + dim_state_skip + j] = bodies[i].bk_me[j];
 		}
 		for (int j = 0; j < 4; j++)
 		{
@@ -197,7 +202,7 @@ main(int argc, char *argv[])
 	}
 
 	/* parameters */
-	int		dim_params_per_body_without_elements = 12;
+	int		dim_params_per_body_without_elements = 11;
 	int		dim_params = 4 + (dim_params_per_body_without_elements * simulation.number_of_bodies) + (2 * elements_total);
 	double	params[dim_params];
 	elements_counter = 0; 
@@ -215,18 +220,17 @@ main(int argc, char *argv[])
 		params[4 + 4 + dim_params_skip] = (double) bodies[i].deformable;
 		params[4 + 5 + dim_params_skip] = bodies[i].mass;
 		params[4 + 6 + dim_params_skip] = bodies[i].I0;
-		params[4 + 7 + dim_params_skip] = bodies[i].gamma;
+		params[4 + 7 + dim_params_skip] = bodies[i].gamma_0;
 		params[4 + 8 + dim_params_skip] = bodies[i].alpha;
 		params[4 + 9 + dim_params_skip] = bodies[i].eta;
-		params[4 + 10 + dim_params_skip] = bodies[i].alpha_0;
-		params[4 + 11 + dim_params_skip] = (double) bodies[i].elements;
+		params[4 + 10 + dim_params_skip] = (double) bodies[i].elements;
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[4 + 12 + dim_params_skip + j] = bodies[i].alpha_elements[j];
+			params[4 + 11 + dim_params_skip + j] = bodies[i].alpha_elements[j];
 		}
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[4 + 13 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
+			params[4 + 12 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
 		}
 		elements_counter += bodies[i].elements;		
 	}
@@ -268,11 +272,12 @@ main(int argc, char *argv[])
 			simulation.t_step = final_time - simulation.t; // smaller last step
 		}
 
-	  	gsl_odeiv2_system sys = {field_GV, NULL, dim_state, params};
+	  	gsl_odeiv2_system sys = {field_gV, NULL, dim_state, params};
 	
 		int status = 
 			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
-				ode_control, ode_step, &sys, &simulation.t, simulation.t_step, y);
+				ode_control, ode_step, &sys, &simulation.t,
+				simulation.t_step, y);
 
 		if (status != GSL_SUCCESS)
 		{
@@ -296,8 +301,15 @@ main(int argc, char *argv[])
 			}
 			for (int j = 0; j < 5; j++)
 			{
-				bodies[i].b0_me[j] 	= y[9 + dim_state_skip + j];
-				bodies[i].u_me[j] 	= y[14 + dim_state_skip + j];
+				if (bodies[i].deformable == true)
+				{
+					bodies[i].p_me[j] = y[9 + dim_state_skip + j];
+				}
+				else
+				{
+					bodies[i].bs_me[j] = y[9 + dim_state_skip + j];
+				}
+				bodies[i].b_eta_me[j] = y[14 + dim_state_skip + j];
 			}
 			if (bodies[i].elements > 0)
 			{

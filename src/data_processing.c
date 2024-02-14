@@ -393,7 +393,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		input_deformable_received[i] = false;
 	}
 	/* verification variables for rheology */
-	int 	number_maxwell_inputs = 4;
+	int 	number_maxwell_inputs = 3;
 	bool	input_maxwell_received[number_maxwell_inputs];
 	for (int i = 0; i < number_maxwell_inputs; i++)
 	{
@@ -716,23 +716,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_deformable_received[4] = true;
 		}
-		else if (strcmp(token, "kf") == 0)
+		else if (strcmp(token, "k0") == 0)
 		{
 			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*bodies)[i].kf = atof(token);
+				(*bodies)[i].k0 = atof(token);
 			}
 			input_maxwell_received[0] = true;
-		}
-		else if (strcmp(token, "ks") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				(*bodies)[i].ks = atof(token);
-			}
-			input_maxwell_received[1] = true;
 		}
 		else if (strcmp(token, "Dt(s)") == 0)
 		{
@@ -741,7 +732,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].Dt = atof(token);
 			}
-			input_maxwell_received[2] = true;
+			input_maxwell_received[1] = true;
 		}
 		else if (strcmp(token, "tau(yr)") == 0)
 		{
@@ -750,14 +741,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].tau = atof(token);
 			}
-			input_maxwell_received[3] = true;
+			input_maxwell_received[2] = true;
 		}
-		else if (strcmp(token, "gamma") == 0)
+		else if (strcmp(token, "gamma_0") == 0)
 		{
 			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*bodies)[i].gamma = atof(token);
+				(*bodies)[i].gamma_0 = atof(token);
 			}
 			input_gV_received[0] = true;
 		}
@@ -854,6 +845,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 		}
 
+		// allocate memory for Voigt element
 		int elements_max = 0;
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
@@ -1047,9 +1039,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
-				if (fabs((*bodies)[i].kf) < 1e-10)
+				if (fabs((*bodies)[i].k0) < 1e-10)
 				{	
-					fprintf(stderr, "Warning: kf cannot be zero.\n");
+					fprintf(stderr, "Warning: k0 cannot be zero.\n");
 					fprintf(stderr, "Exiting the program now.\n");
 					exit(16);
 				}
@@ -1074,7 +1066,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
 			{
-				if (fabs((*bodies)[i].gamma) < 1e-10)
+				if (fabs((*bodies)[i].gamma_0) < 1e-10)
 				{	
 					fprintf(stderr, "Warning: gamma cannot be zero.\n");
 					fprintf(stderr, "Exiting the program now.\n");
@@ -1121,8 +1113,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		double	w = (*bodies)[i].w;
 		double	Omega = (*bodies)[i].Omega;
 
-		double	ks = (*bodies)[i].ks;
-		double	kf = (*bodies)[i].kf;
+		double	k0 = (*bodies)[i].k0;
 		double	Dt = (*bodies)[i].Dt;
 		double	tau = (*bodies)[i].tau;
 		
@@ -1202,25 +1193,31 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].elements = 0;
 		}
 
-		/* 4th set of variables - gamma, alpha and eta */
+		/* 4th set of variables - gamma_0, alpha and eta */
 		if ((*bodies)[i].deformable == true)
 		{
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
-				(*bodies)[i].gamma = parameter_gamma(simulation.G, (*bodies)[i].I0, R, kf);
-				(*bodies)[i].alpha = (*bodies)[i].gamma * Dt / (tau - Dt);
-				(*bodies)[i].eta   = (*bodies)[i].gamma * Dt;
-			}	
+				(*bodies)[i].gamma_0 = parameter_gamma_0(simulation.G, (*bodies)[i].I0, R, k0);
+				(*bodies)[i].alpha 	 = (*bodies)[i].gamma_0 * Dt / (tau - Dt);
+				(*bodies)[i].eta   	 = (*bodies)[i].gamma_0 * Dt;
+			}
+			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{
+				(*bodies)[i].k0  = NAN;
+				(*bodies)[i].tau = NAN;
+				(*bodies)[i].Dt  = NAN;
+			}
 		}
 		else
 		{
-			(*bodies)[i].kf  = NAN;
+			(*bodies)[i].k0  = NAN;
 			(*bodies)[i].tau = NAN;
 			(*bodies)[i].Dt  = NAN;
 
-			(*bodies)[i].gamma = 1.0;
-			(*bodies)[i].alpha = 0.0;
-			(*bodies)[i].eta   = 1.0;
+			(*bodies)[i].gamma_0 = 1.0;
+			(*bodies)[i].alpha 	 = 0.0;
+			(*bodies)[i].eta   	 = 1.0;
 
 			if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
 			{
@@ -1231,20 +1228,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				}
 			}
 		}
-
-		/* prestress parameters */
-		if ((*bodies)[i].prestress == true)
-		{
-			(*bodies)[i].alpha_0 = parameter_alpha_0(simulation.G, (*bodies)[i].I0, R, kf, ks);
-		}
-		else
-		{
-			(*bodies)[i].alpha_0 = 0.0;
-		}
-
 	} // end loop over bodies
 
-	/* calculate b0, and initialize bk and u */
+	/* set bs, calculate p, and initialize b_eta and bk */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		/* transformation matrices */
@@ -1252,7 +1238,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
 		transpose_square_matrix(Y_i_trans, Y_i);
 
-		/* deformation from stokes coefficients */
+		/* real deformation */
 		double B_stokes_i[9];
 		body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
 		double B_stokes_i_diag[9];
@@ -1260,6 +1246,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		double b_stokes_i[9];
 		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i_diag);
 		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].bs_me, b_stokes_i);
 
 		/* update gravity field coefficients to */
 		/* the frame of principal inertia moments */
@@ -1272,56 +1259,32 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 		(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 
-		/* still implementing / testing */
-		// double A = Iner_diag[0];
-		// double C = Iner_diag[8];
-
-		// double ks = (3.0 * simulation.G * (C-A)) / 
-		// 	(pow(norm_vector((*bodies)[i].omega), 2.0) *
-		// 	 pow((*bodies)[i].R, 5.0));
-		// printf("ks = %1.5e\n", ks);
-		// printf("Body %d: %s\n", i+1, (*bodies)[i].name);
-		// printf("I0 = %1.5e\n", (*bodies)[i].I0);
-		// printf("ang_vel = %1.5e\n", norm_vector((*bodies)[i].omega));
-		// printf("C = %1.5e\n", C);
-		// printf("A = %1.5e\n", A);
-		// double first_term_alpha_0 = ((*bodies)[i].I0*norm_vector((*bodies)[i].omega)*norm_vector((*bodies)[i].omega))/
-		// 	(C-A);
-		// printf("1st term alpha 0 = %1.5e\n", first_term_alpha_0);
-		// printf("gamma = %1.5e\n", (*bodies)[i].gamma);
-		// printf("alpha_0 = %1.5e\n", first_term_alpha_0-(*bodies)[i].gamma);
-
 		/* prestress */
-		double b0_i[9];	
-		null_matrix(b0_i);
-		if((*bodies)[i].prestress == true)
+		double p_i[9];	
+		null_matrix(p_i);
+		if ((*bodies)[i].prestress == true &&
+			(*bodies)[i].deformable == true)
 		{
-			if ((*bodies)[i].deformable == false)
-			{
-				copy_square_matrix(b0_i, b_stokes_i);
-			}
-			else
-			{
-				double f_cent_static_i[9];
-				double mean_omega = norm_vector((*bodies)[i].omega);
-				calculate_f_cent_static(f_cent_static_i, mean_omega);
-				double f_tide_static_i[9];
-				null_matrix(f_tide_static_i); // no permanent tide
-				linear_combination_three_square_matrix(b0_i,
-					((*bodies)[i].gamma+(*bodies)[i].alpha_0)/(*bodies)[i].alpha_0, b_stokes_i,
-					-1.0/(*bodies)[i].alpha_0, f_cent_static_i,
-					-1.0/(*bodies)[i].alpha_0, f_tide_static_i);
-			}
+			double f_cent_static_i[9];
+			double mean_omega = norm_vector((*bodies)[i].omega);
+			calculate_f_cent_static(f_cent_static_i, mean_omega);
+			double f_tide_static_i[9];
+			null_matrix(f_tide_static_i); // no permanent tide for now
+			linear_combination_three_square_matrix(p_i,
+				(*bodies)[i].gamma_0, b_stokes_i,
+				-1.0, f_cent_static_i,
+				-1.0, f_tide_static_i);
 		}
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].b0_me, b0_i);
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].p_me, p_i);
 
-		/* initialize bk at equilibrium */
+		/* alloc and initialize bk at equilibrium */
 		if ((*bodies)[i].elements > 0)
 		{
-			(*bodies)[i].bk_me = (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
+			(*bodies)[i].bk_me 
+				= (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
 		}
 
-		/* initialize u */
+		/* initialize b_eta */
 		double f_cent_i[9];
 		null_matrix(f_cent_i);
 		if ((*bodies)[i].centrifugal == true)
@@ -1342,17 +1305,17 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			calculate_f_ps(f_ps_i, (*bodies)[i]);
 		}
 		double c_i = calculate_c((*bodies)[i]);
-		double u_i[9];
-		null_matrix(u_i);
+		double b_eta_i[9];
+		null_matrix(b_eta_i);
 		if ((*bodies)[i].deformable == true)
 		{
-			linear_combination_four_square_matrix(u_i,
-				-1.0 * c_i, b_stokes_i,
-					1.0, f_cent_i,
-					1.0, f_tide_i,
-					1.0, f_ps_i);
+			linear_combination_four_square_matrix(b_eta_i,
+				 c_i/(*bodies)[i].alpha, b_stokes_i,
+				-1.0/(*bodies)[i].alpha, f_cent_i,
+				-1.0/(*bodies)[i].alpha, f_tide_i,
+				-1.0/(*bodies)[i].alpha, f_ps_i);
 		}
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].u_me, u_i);
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, b_eta_i);
 		
 	} // end loop over bodies
 
@@ -1900,9 +1863,7 @@ output_to_spin	(cltbdy *bodies,
 				fprintf (out_orientation, " %.15e", norm_vector(bodies[i].l));
 
 				/* norm of deformation matrix */
-				// double b_diag[9];
-				// calculate_diagonalized_square_matrix(b_diag, bodies[i].b);
-				fprintf (out_orientation, " %.14e", norm_square_matrix(bodies[i].b));
+				fprintf (out_orientation, " %.15e", norm_square_matrix(bodies[i].b));
 
 				/* obliquity */
 				if (i == 0)

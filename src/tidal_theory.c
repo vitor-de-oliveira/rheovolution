@@ -29,28 +29,18 @@ body_frame_deformation_from_stokes_coefficients	(double B[9],
 }
 
 double
-parameter_gamma(const double G,
-				const double I0, 
-				const double R,
-				const double kf)
-{
-	return 3.0 * I0 * G / (pow(R, 5.0) * kf);
-}
-
-double
-parameter_alpha_0	(const double G,
+parameter_gamma_0	(const double G,
 					 const double I0, 
 					 const double R,
-					 const double kf,
-					 const double ks)
+					 const double k0)
 {
-	return (3.0 * I0 * G / pow(R, 5.0)) * (1.0 / ks - 1.0 / kf);
+	return 3.0 * I0 * G / (pow(R, 5.0) * k0);
 }
 
 double
 calculate_c(const cltbdy body)
 {
-	return body.gamma + body.alpha_0 + body.alpha;
+	return body.gamma_0 + body.alpha;
 }
 
 int
@@ -97,9 +87,7 @@ int
 calculate_f_ps	(double f_ps[9],
 			 	 const cltbdy body)
 {
-	double b0[9];
-	construct_traceless_symmetric_matrix(b0, body.b0_me);
-	scale_square_matrix(f_ps, body.alpha_0, b0);
+	construct_traceless_symmetric_matrix(f_ps, body.p_me);
 
 	return 0;
 }
@@ -108,9 +96,9 @@ int
 calculate_f_rheo(double f_rheo[9],
 			 	 const cltbdy body)
 {
-	double u[9];
-	construct_traceless_symmetric_matrix(u, body.u_me);
-	scale_square_matrix(f_rheo, -1.0, u);
+	double b_eta[9];
+	construct_traceless_symmetric_matrix(b_eta, body.b_eta_me);
+	scale_square_matrix(f_rheo, body.alpha, b_eta);
 	if (body.elements > 0)
 	{
 		double bk_me_2d_array[body.elements][5];
@@ -217,7 +205,7 @@ calculate_b	(const int id,
 	}
 	else if (bodies[id].deformable == false)
 	{
-		construct_traceless_symmetric_matrix(bodies[id].b, bodies[id].b0_me);
+		construct_traceless_symmetric_matrix(bodies[id].b, bodies[id].bs_me);
 	}
 	else
 	{
@@ -247,9 +235,7 @@ calculate_b	(const int id,
 }
 
 int
-calculate_l	(cltbdy *body,
-			 const int number_of_bodies,
-			 const double G)
+calculate_l	(cltbdy *body)
 {
 	double I[9];
 	calculate_inertia_tensor(I, (*body).I0, (*body).b);
@@ -293,15 +279,15 @@ calculate_omega	(const int id,
 
 		if (bodies[id].deformable == false)
 		{
-			double b0_i[9];
-			construct_traceless_symmetric_matrix(b0_i, 
-				bodies[id].b0_me);
+			double bs_i[9];
+			construct_traceless_symmetric_matrix(bs_i, 
+				bodies[id].bs_me);
 
 			/* calculate H = 0 */
 			double aux_H_first_term[9];
 			linear_combination_square_matrix(aux_H_first_term,
 				 1.0, Id,
-				-1.0, b0_i);
+				-1.0, bs_i);
 			double H_first_term[3];
 			square_matrix_times_vector(H_first_term, 
 				aux_H_first_term, omega);
@@ -312,7 +298,7 @@ calculate_omega	(const int id,
 			/* calculate DH */
 			linear_combination_square_matrix(DH,
 				 1.0, Id,
-				-1.0, b0_i);
+				-1.0, bs_i);
 		}
 		else
 		{

@@ -18,8 +18,8 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/data_processing.c
 
 .PHONY: run orbit spin plot all example_1 example_2 example_3 examples \
-		clean clean_slurm input_check
-.SILENT: tides calibration clean clean_slurm
+		examples_parallel clean clean_slurm clean_examples input_check
+.SILENT: tides examples_parallel calibration clean clean_slurm clean_examples
 
 tides:
 ifeq ($(CC),icc)
@@ -46,24 +46,27 @@ example_1:
 	$(eval EXAMPLE_NAME := Earth-Moon system)
 	$(eval EXAMPLE_DIR := examples/EM_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
-	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
 example_2:
 	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
 	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
-	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
 example_3:
 	$(eval EXAMPLE_NAME := rigid Earth)
 	$(eval EXAMPLE_DIR := examples/E_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
-	@$(MAKE) all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
 examples: example_1 example_2 example_3
+
+examples_parallel:
+	@$(MAKE) -j 3 example_1 example_2 example_3
 
 calibration:
 	$(eval TARGET = CALIBRATION)
@@ -80,6 +83,9 @@ clean:
 
 clean_slurm:
 	-rm -f slurm-*.out
+
+clean_examples:
+	-rm -f -r examples/output_*/
 
 input_check:
 ifeq ($(INPUT), )

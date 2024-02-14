@@ -20,17 +20,10 @@ body_frame_deformation_from_stokes_coefficients	(double B[9],
 												 const cltbdy body);
 
 double
-parameter_gamma(const double G,
-				const double I0, 
-				const double R,
-				const double kf);
-
-double
-parameter_alpha_0	(const double G,
+parameter_gamma_0	(const double G,
 					 const double I0, 
 					 const double R,
-					 const double kf,
-					 const double ks);
+					 const double k0);
 
 double
 calculate_c(const cltbdy body);
@@ -72,9 +65,7 @@ calculate_b	(const int id,
 			 const double G);
 
 int
-calculate_l	(cltbdy *body,
-			 const int number_of_bodies,
-			 const double G);
+calculate_l	(cltbdy *body);
 
 int
 calculate_omega	(const int id,

@@ -17,14 +17,14 @@ I(deg)					     0.0000		-5.145
 M(deg)					     0.0000  	0.0000		
 w(deg)					     0.0000		0.0000		
 OMEGA(deg)				     0.0000		0.0000
-gamma_0     1.6291069230e+09 0.0        0.0
-alpha       3.6396471655e+09 0.0        0.0
-eta         6.0199134888e+10 0.0        0.0
+gamma_0     4.2502682204e+09 0.0        0.0
+alpha       9.4956757468e+09 0.0        0.0
+eta         1.5705680371e+11 0.0        0.0
 elements    1                0          0
-alpha_1     9.3096886452e+09 0.0        0.0 
-eta_1       5.3986926474e+06 0.0        0.0
+alpha_1     2.4288590127e+10 0.0        0.0 
+eta_1       1.4084902287e+07 0.0        0.0
 point_mass  no               yes        yes
 deformable  yes              no         no
-prestress   no               no         no
+prestress   yes              no         no
 centrifugal yes              no         no
 tidal       yes              no         no        
