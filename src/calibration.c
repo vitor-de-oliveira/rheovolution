@@ -173,6 +173,17 @@ main(int argc, char *argv[])
 	// calculate_k2(&real, &imag, sigma, kf, tau_v, tau);
 	// printf("real = %1.5e imag = %1.15e\n", real, imag);
 
+	// double real_k2, imag_k2;
+	// double sigma_CWob = (2.0 * M_PI) / (433.0 / 365.25);
+	// double k_0 = 0.35761431522;
+	// double tau_v = 3.953e-4;
+	// double tau = 1.707e-3;
+
+	// calculate_k2(&real_k2, &imag_k2, sigma_CWob, k_0, 
+	// 		tau_v, tau);
+	// printf("real = %1.5e imag = %1.15e\n", real_k2, imag_k2);
+	// exit(45);
+
 	/* generalised Voigt */
 
 	// double tau_a, tau_b;
@@ -196,6 +207,7 @@ main(int argc, char *argv[])
 	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma, Re_k2, Im_k2);
 
 	double k0 = 0.933;
+	// k0 = 0.35761431522;
 
 	// my calibration for semi-diurnal freq
 	double sigma_SD = 4434.21;
@@ -204,8 +216,11 @@ main(int argc, char *argv[])
 
 	double tau_a_SD, tau_b_SD;
 	
-	tau_a_SD = 5.60984e-3 - 3.81469e-3;
-	tau_b_SD = 5.60984e-3;
+	// tau_a_SD = 5.60984e-3 - 3.81469e-3;
+	// tau_b_SD = 5.60984e-3;
+
+	calculate_tau_a_tau_b(&tau_a_SD, &tau_b_SD, k0, 
+		sigma_SD, Re_k2_SD, Im_k2_SD);
 
 	// M2(L) from Table 1 on Ragazzo 2017
 	double sigma_M2L 	= (2.0 * M_PI) / (12.421 / (365.25 * 24.0));
@@ -218,28 +233,31 @@ main(int argc, char *argv[])
 		sigma_M2L, Re_k2_M2L, Im_k2_M2L);
 
 	// Chandler Wobble approx from Fig. 10 Ragazzo 2022
-	// double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
-	// double Im_k2_CW 	= -0.002; // taken by eye from plot
-	// double Re_k2_CW 	= 0.358;
-	
-	// double tau_a_CW, tau_b_CW;
-
-	// calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
-	// 	sigma_CW, Re_k2_CW, Im_k2_CW);
-
-	// Chandler Wobble from Chen 2023
-	double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
-	double Im_k2_CW 	= -0.00226238; // taken by eye from plot
-	double Re_k2_CW 	= 0.35010616;
+	double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
+	double Im_k2_CW 	= -0.002; // taken by eye from plot
+	double Re_k2_CW 	= 0.358;
 	
 	double tau_a_CW, tau_b_CW;
 
 	calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
 		sigma_CW, Re_k2_CW, Im_k2_CW);
+
+	// Chandler Wobble from Chen 2023
+	// double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
+	// double Im_k2_CW 	= -0.00226238;
+	// double Re_k2_CW 	= 0.35010616;
+	
+	// double tau_a_CW, tau_b_CW;
+
+	// calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
+	// 	sigma_CW, Re_k2_CW, Im_k2_CW);
 	
 	// printf ("tau_a_CW = %1.5e\n", tau_a_CW);
 	// printf ("tau_b_CW = %1.5e\n", tau_b_CW);
 	// printf ("tau_e_CW / tau_CW  = %1.5e\n", tau_a_CW / tau_b_CW);
+	// double year_to_s = 365.25 * 24.0 * 60.0 * 60.0;
+	// printf ("tau_v_CW = %1.5e s\n", (tau_b_CW - tau_a_CW) * year_to_s);
+	// printf ("tau_CW = %1.5e yr\n", tau_b_CW);
 	// exit(12);
 
 	//  N2(L) from Table 1 on Ragazzo 2017
@@ -257,6 +275,7 @@ main(int argc, char *argv[])
 	gvrheo gV;
 
 	double gamma = 1.629106922962863e+09; // result for parameter_gamma() in data_processing.c for Earth
+	// gamma = (1.629106922962863e+09+2.6211612974e9); // accounting for mu0 as in Ragazzo 2022
 
 	/* maxwell model */
 	// int	   m = 0;
@@ -268,16 +287,16 @@ main(int argc, char *argv[])
 
 	/* burgers model */
 	int	   m = 1;
-	// double sigma[] = {sigma_M2L, sigma_CW};
-	// double tau_a[] = {tau_a_M2L, tau_a_CW};
-	// double tau_b[] = {tau_b_M2L, tau_b_CW};
-	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
-	double sigma[] = {sigma_SD, sigma_CW};
-	double tau_a[] = {tau_a_SD, tau_a_CW};
-	double tau_b[] = {tau_b_SD, tau_b_CW};
-	double Re_k2[] = {Re_k2_SD, Re_k2_CW};
-	double Im_k2[] = {Im_k2_SD, Im_k2_CW};
+	double sigma[] = {sigma_M2L, sigma_CW};
+	double tau_a[] = {tau_a_M2L, tau_a_CW};
+	double tau_b[] = {tau_b_M2L, tau_b_CW};
+	double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
+	double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
+	// double sigma[] = {sigma_SD, sigma_CW};
+	// double tau_a[] = {tau_a_SD, tau_a_CW};
+	// double tau_b[] = {tau_b_SD, tau_b_CW};
+	// double Re_k2[] = {Re_k2_SD, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_SD, Im_k2_CW};
 
 	/* two elements model */
 	// int	  m = 2;
@@ -310,16 +329,19 @@ main(int argc, char *argv[])
 		printf ("eta_%d = %1.10e\n", i+1, gV.eta_k[i]);
 	}
 
+	double sigma_reference = 1.0;
+	sigma_reference = sigma_M2L;
+
 	FILE *out_1 = fopen("tests/test_calibration_k2_reference_points.dat", "w");
 	for (int i = 0; i < gV.m + 1; i++)
 	{
 		fprintf(out_1, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma[i], Re_k2[i], -1.0 * Im_k2[i],
+			sigma[i] / sigma_reference, Re_k2[i], -1.0 * Im_k2[i],
 			sqrt(Re_k2[i] * Re_k2[i] + Im_k2[i] * Im_k2[i]));
 	}
 	fclose(out_1);
 
-	// /* Love number as a function of frequency */
+	/* Love number as a function of frequency */
 	FILE *out_2 = fopen("tests/test_calibration_k2_plot.dat", "w");
 	for (double sigma_loop = 1e-10; sigma_loop < 1e10; sigma_loop *= 1.01)
 	{
@@ -342,7 +364,7 @@ main(int argc, char *argv[])
 			tau_b_sigma - tau_a_sigma, tau_b_sigma);
 		
 		fprintf(out_2, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma_loop, real_loop, -1.0 * imag_loop,
+			sigma_loop / sigma_reference, real_loop, -1.0 * imag_loop,
 			sqrt(real_loop * real_loop + imag_loop * imag_loop));
 	}
 	fclose(out_2);
@@ -723,16 +745,30 @@ convert_parameters_gV (gvrheo *gV)
 		// T2 = gsl_multiroot_fsolver_hybrids;
 		// s2 = gsl_multiroot_fsolver_alloc (T2, n_size_t);
 
+		bool loop = false;
+		int loop_counter = 0, loop_limit = 1000;
+
  		if (gV->m == 1)
 		{
-			gsl_vector_set (x, 0, alpha_init);
-			gsl_vector_set (x, 1, eta_init * 10000.0); // overshooting for eta
-			gsl_vector_set (x, 2, alpha_init);
-			gsl_vector_set (x, 3, eta_init);
+			gsl_vector_set (x, 0, alpha_init / 10000.0);
+			gsl_vector_set (x, 1, eta_init * 1000.0); // overshooting for eta
+			gsl_vector_set (x, 2, alpha_init / 1000.0);
+			gsl_vector_set (x, 3, eta_init / 10000.0);
+			/* trying for ps with a0 calibrated */
+			// gsl_vector_set (x, 0, alpha_init / 100.0);
+			// gsl_vector_set (x, 1, eta_init * 1000.0);
+			// gsl_vector_set (x, 2, alpha_init / 10.0);
+			// gsl_vector_set (x, 3, eta_init * 10.0);
 		}
 		else
 		{
 			/****** does not work (yet) *******/
+
+			loop = true;
+			/* turn off error handler so I can loop */
+			gsl_set_error_handler_off();
+
+			back:;
 
 			const gsl_rng_type * T_rng;
 			gsl_rng * r;
@@ -741,22 +777,22 @@ convert_parameters_gV (gvrheo *gV)
 
 			T_rng = gsl_rng_default;
 			r = gsl_rng_alloc (T_rng);
-			gsl_rng_set (r, time(NULL));
 
 			double sum_min = 1e6;
-			int interval_max = 25;
-			int interval_min = 8;
+			int interval_max = 22;
+			int interval_min = 10;
 			for (int k = 0; k < 1000000; k++)
 			{
 				gsl_vector *x_rng = gsl_vector_alloc (n_size_t);
 				gsl_vector *f_rng = gsl_vector_alloc (n_size_t);
 
+				gsl_rng_set (r, time(NULL));
+
 				for (int i = 0; i < n; i++)
 				{
 					int exponent = (gsl_rng_get (r) % 
 						(interval_max - interval_min + 1)) + interval_min;
-					gsl_vector_set (x_rng, i, 
-						gsl_rng_uniform (r) * pow (10.0, exponent));
+					gsl_vector_set (x_rng, i, pow (10.0, exponent));
 				}
 
 				convert_parameters_gV_f(x_rng, gV, f_rng);
@@ -781,7 +817,7 @@ convert_parameters_gV (gvrheo *gV)
 
 		// gsl_multiroot_fsolver_set (s2, &f, x);
 	
-		int status;
+		int status_1, status_2;
 		size_t iter = 0;
 
 		print_state_fdf (iter, s);
@@ -792,24 +828,46 @@ convert_parameters_gV (gvrheo *gV)
 		{
 			iter++;
 
-			status = gsl_multiroot_fdfsolver_iterate (s);
+			status_1 = gsl_multiroot_fdfsolver_iterate (s);
 
-			// status = gsl_multiroot_fsolver_iterate (s2);
+			// status_1 = gsl_multiroot_fsolver_iterate (s2);
 
 			print_state_fdf (iter, s);
 
 			// print_state_f (iter, s2);
 
-			if (status)
-				break;
+			int sinal_check = 0;
+			for (size_t i = 0; i < s->x->size; i++)
+			{
+				if(gsl_vector_get (s->x, i) < 0.0)
+				{
+					sinal_check = -1;
+				}
+			}
 
-			status = gsl_multiroot_test_residual (s->f, 1e-10);
+			if ((status_1 || sinal_check) && loop)
+			{
+				loop_counter++;
+				if (loop_counter == loop_limit)
+				{
+					break;
+				}
+				else
+				{
+					goto back;
+				}
+			}
+				
+			status_2 = gsl_multiroot_test_residual (s->f, 1e-10);
 
-			// status = gsl_multiroot_test_residual (s2->f, 1e-10);
+			// status_2 = gsl_multiroot_test_residual (s2->f, 1e-10);
 		}
-		while (status == GSL_CONTINUE && iter < 1000);
+		while (status_2 == GSL_CONTINUE && iter < 1000);
 
-		printf ("status = %s\n", gsl_strerror (status));
+		if (!loop)
+		{
+			printf ("status = %s\n", gsl_strerror (status_1));
+		}
 
 		gsl_vector_memcpy (x, s->x);
 

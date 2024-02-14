@@ -84,9 +84,9 @@ cartesian_to_spherical_coordinates  (double v_spherical[],
 	double y = v[1];
 	double z = v[2];
 
-	double r 		= norm_vector(v);
-	double theta 	= atan2(y, x);
-	double phi 		= acos(z/r);
+	double r 	 = norm_vector(v);
+	double theta = atan2(y, x);
+	double phi 	 = acos(z/r);
 
 	v_spherical[0] = r;
 	v_spherical[1] = theta;
@@ -688,8 +688,6 @@ conjugate_quaternion(double qc[], double q[])
 int
 quaternion_times_quaternion(double t[], const double r[], const double s[])
 {
-	// I am defining everything by hand for now
-	// would have to extend this lib to 4d otherwise
 	double t_local[4];
 
 	t_local[0] = r[0]*s[0] - r[1]*s[1] - r[2]*s[2] - r[3]*s[3];

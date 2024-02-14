@@ -437,6 +437,130 @@ calculate_longitude_of_the_ascending_node   (const double G,
 }
 
 int
+copy_CelestialBody	(cltbdy *body_dest,
+					 const cltbdy body_src)
+{
+    if (body_dest->elements != body_src.elements)
+    {
+        fprintf(stderr, "Error: cltbdy structs with ");
+        fprintf(stderr, "different sizes being copied.\n");
+        return -1;
+    }
+
+    strcpy(body_dest->name, body_src.name);
+    
+    body_dest->mass = body_src.mass;
+    body_dest->R = body_src.R;
+    body_dest->lod = body_src.lod;
+    body_dest->azi = body_src.azi;
+    body_dest->pol = body_src.pol;
+
+    body_dest->I0 = body_src.I0;
+    body_dest->rg = body_src.rg;
+    body_dest->J2 = body_src.J2;
+    body_dest->C22 = body_src.C22;
+    body_dest->S22 = body_src.S22;
+    body_dest->C21 = body_src.C21;
+    body_dest->S21 = body_src.S21;
+
+    body_dest->obl = body_src.obl;
+    body_dest->psi = body_src.psi;
+    body_dest->lib = body_src.lib;
+
+    body_dest->a = body_src.a;
+    body_dest->e = body_src.e;
+    body_dest->I = body_src.I;
+    body_dest->M = body_src.M;
+    body_dest->w = body_src.w;
+    body_dest->Omega = body_src.Omega;
+
+    body_dest->k0 = body_src.k0;
+    body_dest->Dt = body_src.Dt;
+    body_dest->tau = body_src.tau;
+
+    body_dest->gamma_0 = body_src.gamma_0;
+    body_dest->alpha = body_src.alpha;
+    body_dest->eta = body_src.eta;
+    for (int i = 0; i < body_dest->elements; i++)
+    {
+        body_dest->alpha_elements[i] = body_src.alpha_elements[i];
+        body_dest->eta_elements[i] = body_src.eta_elements[i];
+    }
+
+    body_dest->point_mass = body_src.point_mass;
+    body_dest->deformable = body_src.deformable;
+    body_dest->prestress = body_src.prestress;
+    body_dest->centrifugal = body_src.centrifugal;
+    body_dest->tidal = body_src.tidal;
+
+    for (int i = 0; i < 3; i++)
+    {
+        body_dest->x[i] = body_src.x[i];
+        body_dest->x_dot[i] = body_src.x_dot[i];
+        body_dest->l[i] = body_src.l[i];
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        body_dest->p_me[i] = body_src.p_me[i];
+        body_dest->b_eta_me[i] = body_src.b_eta_me[i];
+    }
+    for (int i = 0; i < body_dest->elements * 5; i++)
+    {
+        body_dest->bk_me[i] = body_src.bk_me[i];
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        body_dest->bs_me[i] = body_src.bs_me[i];
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        body_dest->q[i] = body_src.q[i];
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        body_dest->omega[i] = body_src.omega[i];
+    }
+    for (int i = 0; i < 9; i++)
+    {
+        body_dest->b[i] = body_src.b[i];
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        body_dest->relative_x[i] = body_src.relative_x[i];
+        body_dest->relative_x_dot[i] = body_src.relative_x_dot[i];
+    }
+
+    return 0;
+}
+
+cltbdy
+create_and_copy_CelestialBody(const cltbdy body_src)
+{
+    cltbdy body_copy;
+
+    body_copy.elements = body_src.elements;
+
+    if (body_copy.elements > 0)
+	{
+		body_copy.alpha_elements 
+			= (double *) malloc(body_copy.elements * sizeof(double));
+		body_copy.eta_elements 	
+			= (double *) malloc(body_copy.elements * sizeof(double));
+        body_copy.bk_me 	
+			= (double *) malloc(body_copy.elements * 5 * sizeof(double));
+    }
+
+    copy_CelestialBody(&body_copy, body_src);
+
+    return body_copy;
+}
+                    
+
+int
 print_CelestialBody(cltbdy body)
 {
 	printf("name = ");
@@ -484,21 +608,19 @@ print_CelestialBody(cltbdy body)
 	printf("Omega = ");	
 	printf("%1.5e\n", body.Omega);
 
-	printf("kf = ");	
-	printf("%1.5e\n", body.kf);
+	printf("k0 = ");	
+	printf("%1.5e\n", body.k0);
 	printf("Dt = ");	
 	printf("%1.5e\n", body.Dt);
 	printf("tau = ");	
 	printf("%1.5e\n", body.tau);
 
-	printf("gamma = ");	
-	printf("%1.5e\n", body.gamma);
+	printf("gamma_0 = ");	
+	printf("%1.5e\n", body.gamma_0);
 	printf("alpha = ");	
 	printf("%1.5e\n", body.alpha);
 	printf("eta = ");	
 	printf("%1.5e\n", body.eta);
-	printf("alpha_0 = ");	
-	printf("%1.5e\n", body.alpha_0);
 	printf("elements = ");	
 	printf("%d\n", body.elements);
 	for(int i = 0; i < body.elements; i++)
@@ -526,14 +648,14 @@ print_CelestialBody(cltbdy body)
 	print_vector(body.x_dot);
 	printf("l = ");
 	print_vector(body.l);
-	double b0[9];
-	construct_traceless_symmetric_matrix(b0, body.b0_me);
-	printf("b0 = \n");
-	print_square_matrix(b0);
-	double u[9];
-	construct_traceless_symmetric_matrix(u, body.u_me);
-	printf("u = \n");
-	print_square_matrix(u);
+	double p[9];
+	construct_traceless_symmetric_matrix(p, body.p_me);
+	printf("p = \n");
+	print_square_matrix(p);
+	double b_eta[9];
+	construct_traceless_symmetric_matrix(b_eta, body.b_eta_me);
+	printf("b_eta = \n");
+	print_square_matrix(b_eta);
 	if (body.elements > 0)
 	{
 		double	bk_me_2d_array[body.elements][5];
@@ -549,6 +671,11 @@ print_CelestialBody(cltbdy body)
 			print_square_matrix(bk);
 		}
 	}
+	
+    double bs[9];
+	construct_traceless_symmetric_matrix(bs, body.bs_me);
+	printf("bs = \n");
+	print_square_matrix(bs);
 
 	printf("q = \n");
 	print_quaternion(body.q);
@@ -557,6 +684,11 @@ print_CelestialBody(cltbdy body)
 	print_vector(body.omega);
 	printf("b = \n");
 	print_square_matrix(body.b);
+
+    printf("relative_x = ");
+	print_vector(body.relative_x);
+	printf("relative_x_dot = ");
+	print_vector(body.relative_x_dot);
 
 	return 0;
 }
@@ -570,14 +702,14 @@ print_state_variables(cltbdy body)
 	print_vector(body.x_dot);
 	printf("l = ");
 	print_vector(body.l);
-	double b0[9];
-	construct_traceless_symmetric_matrix(b0, body.b0_me);
-	printf("b0 = \n");
-	print_square_matrix(b0);
-	double u[9];
-	construct_traceless_symmetric_matrix(u, body.u_me);
-	printf("u = \n");
-	print_square_matrix(u);
+	double p[9];
+	construct_traceless_symmetric_matrix(p, body.p_me);
+	printf("p = \n");
+	print_square_matrix(p);
+	double b_eta[9];
+	construct_traceless_symmetric_matrix(b_eta, body.b_eta_me);
+	printf("b_eta = \n");
+	print_square_matrix(b_eta);
 	if (body.elements > 0)
 	{
 		double	bk_me_2d_array[body.elements][5];
@@ -593,6 +725,10 @@ print_state_variables(cltbdy body)
 			print_square_matrix(bk);
 		}
 	}
+	double bs[9];
+	construct_traceless_symmetric_matrix(bs, body.bs_me);
+	printf("bs = \n");
+	print_square_matrix(bs);
 
 	return 0;
 }
@@ -974,11 +1110,11 @@ initialize_angular_velocity_on_z_axis(cltbdy *body)
 int
 initialize_angular_velocity(cltbdy *body)
 {
-    double omega_on_body[] = {0.0, 0.0, 0.0};
     double omega_on_body_spherical[] = 
         {2.0 * M_PI / (*body).lod, 
          (*body).azi,
          (*body).pol};
+    double omega_on_body[] = {0.0, 0.0, 0.0};
     spherical_to_cartesian_coordinates(omega_on_body, 
         omega_on_body_spherical);
     rotate_vector_with_quaternion((*body).omega,

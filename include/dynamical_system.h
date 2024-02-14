@@ -11,9 +11,9 @@
 #include "celestial_mechanics.h"
 #include "tidal_theory.h"
 
-/* field for the Generalized-Voigt rheology */
+/* field for the generalised Voigt rheology */
 int
-field_GV(double t, 
+field_gV(double t, 
 		 const double y[],
 		 double f[],
        	 void *params);

@@ -10,6 +10,7 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
@@ -166,15 +167,13 @@ typedef struct CelestialBody {
 	double	w;		    		// argument of periapsis (deg)
 	double	Omega;	    		// longitude of the ascending node (deg)
 
-	double	ks;					// secular Love number
-	double	kf;		    		// fluid Love number
+	double	k0;					// Love number at zero frequency
 	double	Dt;		    		// tidal lag (s)
 	double	tau;	    		// Maxwell relaxation time plus tidal lag (yr)
 
-	double	gamma;				// gravitational modulus
+	double	gamma_0;			// gravitational modulus + prestress elastic modulus
 	double	alpha;				// elastic modulus
 	double	eta;				// viscosity
-	double	alpha_0;			// prestress elastic modulus
 	int		elements;			// number of Voigt elements
 	double	*alpha_elements;	// elastic modulus for Voigt elements
 	double	*eta_elements;		// viscosity for Voigt elements
@@ -190,23 +189,36 @@ typedef struct CelestialBody {
 	double	x[3];				// position
 	double	x_dot[3];			// velocity
 	double	l[3];				// angular momentum
-	double	b0_me[5];			// main elements of prestress matrix
-	double	u_me[5];			// main elements of u matrix
-	double	*bk_me;				// main elements of Voigt elements matrix
+	double	p_me[5];			// main elements of prestress matrix
+	double	b_eta_me[5];		// main elements of b_eta matrix
+	double	*bk_me;				// main elements of Voigt elements matrices
 
-	/* rotation quaternion (body frame) */
+	/* real deformation */
+	double	bs_me[5];			// deformation calculated from
+								// the stokes coefficients
+
+	/* rotation quaternion */
 	double	q[4];				// quaternion which transforms
 								// from the body to the inertial frame 
 
-	/* non-state variables */
+	/* non-state variables (inertial frame) */
 	double	omega[3];			// angular velocity
 	double	b[9];				// deformation matrix
 
 	/* relative motion (arbitraty frame) */
-	double relative_x[3];
-	double relative_x_dot[3];
+	double	relative_x[3];
+	double	relative_x_dot[3];
 
 } cltbdy;
+
+/* copies CelestialBody */
+int
+copy_CelestialBody	(cltbdy *body_dest,
+					 const cltbdy body_src);
+
+/* creates copied CelestialBody */
+cltbdy
+create_and_copy_CelestialBody(const cltbdy body_src);
 
 /* prints CelestialBody */
 int

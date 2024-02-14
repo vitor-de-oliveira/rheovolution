@@ -1,7 +1,7 @@
 #include "dynamical_system.h"
 
 int
-field_GV(double t, 
+field_gV(double t, 
 		 const double y[],
 		 double f[],
        	 void *params)
@@ -20,36 +20,40 @@ field_GV(double t,
 	cltbdy 	*bodies;
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
-	int	dim_params_per_body_without_elements = 12;
+	int	dim_params_per_body_without_elements = 11;
 	int	dim_state_per_body_without_elements = 23;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
+		int	dim_params_skip 
+			= i * dim_params_per_body_without_elements + 2 * elements_counter;
 		
-		bodies[i].point_mass 			= (bool) par[4 + 0 + dim_params_skip];
-		bodies[i].prestress 			= (bool) par[4 + 1 + dim_params_skip];
-		bodies[i].centrifugal 			= (bool) par[4 + 2 + dim_params_skip];
-		bodies[i].tidal 				= (bool) par[4 + 3 + dim_params_skip];
-		bodies[i].deformable			= (bool) par[4 + 4 + dim_params_skip];
-		bodies[i].mass 					= par[4 + 5 + dim_params_skip];
-		bodies[i].I0 					= par[4 + 6 + dim_params_skip];
-		bodies[i].gamma 				= par[4 + 7 + dim_params_skip];
-		bodies[i].alpha 				= par[4 + 8 + dim_params_skip];
-		bodies[i].eta					= par[4 + 9 + dim_params_skip];
-		bodies[i].alpha_0 				= par[4 + 10 + dim_params_skip];
-		bodies[i].elements				= (int) par[4 + 11 + dim_params_skip];
+		bodies[i].point_mass  = (bool) par[4 + 0 + dim_params_skip];
+		bodies[i].prestress   = (bool) par[4 + 1 + dim_params_skip];
+		bodies[i].centrifugal = (bool) par[4 + 2 + dim_params_skip];
+		bodies[i].tidal 	  = (bool) par[4 + 3 + dim_params_skip];
+		bodies[i].deformable  = (bool) par[4 + 4 + dim_params_skip];
+		bodies[i].mass 		  = par[4 + 5 + dim_params_skip];
+		bodies[i].I0 		  = par[4 + 6 + dim_params_skip];
+		bodies[i].gamma_0 	  = par[4 + 7 + dim_params_skip];
+		bodies[i].alpha 	  = par[4 + 8 + dim_params_skip];
+		bodies[i].eta		  = par[4 + 9 + dim_params_skip];
+		bodies[i].elements	  = (int) par[4 + 10 + dim_params_skip];
 		if (bodies[i].elements > 0)
 		{
-			bodies[i].alpha_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+			bodies[i].alpha_elements 
+				= (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].alpha_elements[j] = par[4 + 12 + dim_params_skip + j];
+				bodies[i].alpha_elements[j] 
+					= par[4 + 11 + dim_params_skip + j];
 			}
-			bodies[i].eta_elements = (double *) malloc(bodies[i].elements * sizeof(double));
+			bodies[i].eta_elements 
+				= (double *) malloc(bodies[i].elements * sizeof(double));
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
-				bodies[i].eta_elements[j] = par[4 + 13 + dim_params_skip + j + bodies[i].elements - 1];
+				bodies[i].eta_elements[j] 
+					= par[4 + 12 + dim_params_skip + j + bodies[i].elements - 1];
 			}
 		}
 
@@ -63,12 +67,20 @@ field_GV(double t,
 		}
 		for (int j = 0; j < 5; j++)
 		{
-			bodies[i].b0_me[j] 	= y[9 + dim_state_skip + j];
-			bodies[i].u_me[j] 	= y[14 + dim_state_skip + j];
+			if (bodies[i].deformable == true)
+			{
+				bodies[i].p_me[j] = y[9 + dim_state_skip + j];
+			}
+			else
+			{
+				bodies[i].bs_me[j] = y[9 + dim_state_skip + j];
+			}
+			bodies[i].b_eta_me[j] = y[14 + dim_state_skip + j];
 		}
 		if (bodies[i].elements > 0)
 		{
-			bodies[i].bk_me = (double *) malloc(5 * bodies[i].elements * sizeof(double));
+			bodies[i].bk_me 
+				= (double *) malloc(5 * bodies[i].elements * sizeof(double));
 			for (int j = 0; j < 5 * bodies[i].elements; j++)
 			{
 				bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
@@ -76,10 +88,9 @@ field_GV(double t,
 		}
 		for (int j = 0; j < 4; j++)
 		{
-			bodies[i].q[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
+			bodies[i].q[j] 
+				= y[19 + 5 * bodies[i].elements + dim_state_skip + j];
 		}
-		// normalize_quaternion(bodies[i].q);
-
 		elements_counter += bodies[i].elements;
 	}
 	elements_total = elements_counter;
@@ -94,18 +105,20 @@ field_GV(double t,
 	double component_x[number_of_bodies][3];
 	double component_x_dot[number_of_bodies][3];
 	double component_l[number_of_bodies][3];
-	double component_b0_me[number_of_bodies][5];
-	double component_u_me[number_of_bodies][5];
+	double component_p_or_bs_me[number_of_bodies][5];
+	double component_b_eta_me[number_of_bodies][5];
 	double ***component_bk_me = *(&component_bk_me);
 	if (elements_total > 0)
 	{
-		component_bk_me	= (double ***) malloc(number_of_bodies * sizeof(double **));
+		component_bk_me	
+			= (double ***) malloc(number_of_bodies * sizeof(double **));
 	}
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		if (bodies[i].elements > 0)
 		{
-			component_bk_me[i] = (double **) malloc(bodies[i].elements * sizeof(double *));
+			component_bk_me[i] 
+				= (double **) malloc(bodies[i].elements * sizeof(double *));
 
 			for (int j = 0; j < bodies[i].elements; j++)
 			{
@@ -138,13 +151,17 @@ field_GV(double t,
 					1.0, bodies[i].x,
 					-1.0, bodies[0].x);
 
-				double x_relative_to_ref_norm		= norm_vector(relative_to_ref_x);
-				double x_relative_to_ref_norm_cube	= pow(x_relative_to_ref_norm, 3.0);
+				double x_relative_to_ref_norm		
+					= norm_vector(relative_to_ref_x);
+				double x_relative_to_ref_norm_cube	
+					= pow(x_relative_to_ref_norm, 3.0);
 				
-				double minus_G_times_total_mass = -1.0 * G * (bodies[0].mass + bodies[i].mass);
+				double minus_G_times_total_mass 
+					= -1.0 * G * (bodies[0].mass + bodies[i].mass);
 
 				scale_vector (component_x_dot[i], 
-					minus_G_times_total_mass / x_relative_to_ref_norm_cube, relative_to_ref_x);	
+					minus_G_times_total_mass / x_relative_to_ref_norm_cube,
+					relative_to_ref_x);	
 			}
 		}
 		else if (two_bodies_aprox == true)
@@ -271,24 +288,31 @@ field_GV(double t,
 			} 
 		} 
 
-		// b0 component
+		// p_or_bs component
 
-		double b0[9];
-		construct_traceless_symmetric_matrix(b0, bodies[i].b0_me);
-		double component_b0[] = { 0.0, 0.0, 0.0,
-								  0.0, 0.0, 0.0,
-								  0.0, 0.0, 0.0 };
-		commutator(component_b0, omega_hat, b0);
-		get_main_elements_traceless_symmetric_matrix(component_b0_me[i], 
-			component_b0);
+		double p_or_bs[9];
+		if (bodies[i].deformable == true)
+		{
+			construct_traceless_symmetric_matrix(p_or_bs, bodies[i].p_me);
+		}
+		else
+		{
+			construct_traceless_symmetric_matrix(p_or_bs, bodies[i].bs_me);
+		}
+		double component_p_or_bs[] = { 0.0, 0.0, 0.0,
+								  	   0.0, 0.0, 0.0,
+								  	   0.0, 0.0, 0.0 };
+		commutator(component_p_or_bs, omega_hat, p_or_bs);
+		get_main_elements_traceless_symmetric_matrix(component_p_or_bs_me[i], 
+			component_p_or_bs);
 
-		// u and bk components
+		// b_eta and bk components
 
-		double u[9];
-		construct_traceless_symmetric_matrix(u, bodies[i].u_me);
+		double b_eta[9];
+		construct_traceless_symmetric_matrix(b_eta, bodies[i].b_eta_me);
 		double lambda[9];
 		linear_combination_square_matrix(lambda, 
-			1.0, u, bodies[i].alpha, bodies[i].b);
+			bodies[i].alpha, bodies[i].b, -1.0 * bodies[i].alpha, b_eta);
 
 		if (bodies[i].elements > 0)
 		{
@@ -311,11 +335,10 @@ field_GV(double t,
 			{
 				double omega_hat_comm_bk[9];
 				commutator(omega_hat_comm_bk, omega_hat, bk[k]);
-				double tau_elements = 
-					bodies[i].eta_elements[k] / bodies[i].alpha_elements[k];
 				double minus_bk_over_tau_elements[9];
 				scale_square_matrix(minus_bk_over_tau_elements, 
-					-1.0 / tau_elements, bk[k]);
+					-1.0 * bodies[i].alpha_elements[k] / bodies[i].eta_elements[k],
+					bk[k]);
 				double lambda_over_eta_elements[9];
 				scale_square_matrix(lambda_over_eta_elements,
 					1.0 / bodies[i].eta_elements[k], lambda);
@@ -330,19 +353,20 @@ field_GV(double t,
 
 				get_main_elements_traceless_symmetric_matrix(component_bk_me[i][k],
 					component_bk);
-
 			}
 		} // end bodies[i].elements > 0
 
-		double omega_hat_comm_u[9];
-		commutator(omega_hat_comm_u, omega_hat, u);
-		double tau = bodies[i].eta / bodies[i].alpha;
-		double component_u[] = { 0.0, 0.0, 0.0,
-								 0.0, 0.0, 0.0,
-								 0.0, 0.0, 0.0 };
-		linear_combination_square_matrix(component_u, 
-			1.0, omega_hat_comm_u, -1.0 / tau, lambda);
-		get_main_elements_traceless_symmetric_matrix(component_u_me[i], component_u);
+		double omega_hat_comm_b_eta[9];
+		commutator(omega_hat_comm_b_eta, omega_hat, b_eta);
+		double lambda_over_eta[9];
+		scale_square_matrix(lambda_over_eta,
+			1.0 / bodies[i].eta, lambda);
+		double component_b_eta[] = { 0.0, 0.0, 0.0,
+									 0.0, 0.0, 0.0,
+								 	 0.0, 0.0, 0.0 };
+		linear_combination_square_matrix(component_b_eta, 
+			1.0, omega_hat_comm_b_eta, 1.0, lambda_over_eta);
+		get_main_elements_traceless_symmetric_matrix(component_b_eta_me[i], component_b_eta);
 
 		// q component
 		double half_omega[3];
@@ -359,7 +383,9 @@ field_GV(double t,
 	elements_counter = 0;
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		int	dim_state_skip = i * dim_state_per_body_without_elements + 5 * elements_counter;
+		int	dim_state_skip 
+			= i * dim_state_per_body_without_elements 
+			+ 5 * elements_counter;
 		for (int j = 0; j < 3; j++)
 		{
 			f[0 + dim_state_skip + j] = component_x[i][j];
@@ -368,19 +394,21 @@ field_GV(double t,
 		}
 		for (int j = 0; j < 5; j++)
 		{
-			f[9 + dim_state_skip + j] = component_b0_me[i][j];
-			f[14 + dim_state_skip + j] = component_u_me[i][j];
+			f[9 + dim_state_skip + j]  = component_p_or_bs_me[i][j];
+			f[14 + dim_state_skip + j] = component_b_eta_me[i][j];
 		}
 		for (int k = 0; k < bodies[i].elements; k++)
 		{
 			for (int l = 0; l < 5; l++)
 			{
-				f[19 + dim_state_skip + 5*k + l] = component_bk_me[i][k][l];
+				f[19 + dim_state_skip + 5*k + l]
+					= component_bk_me[i][k][l];
 			}
 		}
 		for (int j = 0; j < 4; j++)
 		{
-			f[19 + 5 * bodies[i].elements + dim_state_skip + j]	= component_q[i][j];
+			f[19 + 5 * bodies[i].elements + dim_state_skip + j]	
+				= component_q[i][j];
 		}
 		elements_counter += bodies[i].elements;
 	}
