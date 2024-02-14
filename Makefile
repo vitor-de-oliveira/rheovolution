@@ -28,30 +28,30 @@ ifeq ($(CC),icc)
 endif
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
-run: input_check tides
+run: input_check
 	./$(TARGET) $(INPUT)
 
-orbit: input_check tides
+orbit: input_check
 	./$(TARGET) $(INPUT) orbit
 
-spin: input_check tides
+spin: input_check
 	./$(TARGET) $(INPUT) spin
 
-plot: input_check tides
+plot: input_check
 	./$(TARGET) $(INPUT) plot
 
-all: input_check tides run orbit spin plot
+all: input_check run orbit spin plot
 
 example_1:
-	$(eval EXAMPLE_NAME := Earth-Moon system)
-	$(eval EXAMPLE_DIR := examples/EM_example.dat)
+	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
+	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
 example_2:
-	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
-	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
+	$(eval EXAMPLE_NAME := Earth-Moon system)
+	$(eval EXAMPLE_DIR := examples/EM_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
@@ -66,7 +66,7 @@ example_3:
 examples: example_1 example_2 example_3
 
 examples_parallel:
-	@$(MAKE) -j 3 example_1 example_2 example_3
+	@$(MAKE) -j examples
 
 calibration:
 	$(eval TARGET = CALIBRATION)
