@@ -265,6 +265,7 @@ main(int argc, char *argv[])
 	{
 		final_time = simulation.omega_correction_t_final;
 	}
+	// while (simulation.counter < 1) // for testing
 	while (simulation.t < final_time)
 	{
 		if (fabs(final_time-simulation.t) < simulation.t_step)

@@ -259,7 +259,8 @@ calculate_omega	(const int id,
 	}
 
 	/* method parameters */
-	int 	number_of_iterates = 5;
+	int		counter_iterates = 0;
+	int		max_number_of_iterates = 100;
 	double 	max_error = 1e-8;
 	double	error = 1.0;
 	double 	omega[3], previous_omega[3];
@@ -269,9 +270,17 @@ calculate_omega	(const int id,
 	double Id[9];
 	identity_matrix(Id);
 
-	for (int i = 0; i < number_of_iterates; i++)
-	// while (error > max_error) // an alternative
+	// for (int i = 0; i < max_number_of_iterates; i++) // option 1
+	while (error > max_error) // option 2
 	{
+		counter_iterates++;
+		if (counter_iterates == max_number_of_iterates) // option 2
+		{
+			fprintf(stderr, "Error: maximum number of iterates reached\n");
+			fprintf(stderr, "for omega calculation in body %d.\n", id + 1);
+			exit(99);			
+		}
+
 		/* store previous value of omega */
 		copy_vector(previous_omega, omega);
 
@@ -382,12 +391,14 @@ calculate_omega	(const int id,
 
 	}
 
-	if (error > max_error)
-	{
-		fprintf(stderr, "Error: error higher than the max allowed\n");
-		fprintf(stderr, "for omega calculation in body %d.\n", id + 1);
-		exit(99);
-	}
+	// if (error > max_error) // option 1
+	// {
+	// 	fprintf(stderr, "Error: error value higher than the max allowed\n");
+	// 	fprintf(stderr, "for omega calculation in body %d.\n", id + 1);
+	// 	fprintf(stderr, "Value = %1.5e.\n", error);
+	// 	fprintf(stderr, "Max value = %1.5e.\n", max_error);
+	// 	exit(99);
+	// }
 
 	copy_vector(bodies[id].omega, omega);
 

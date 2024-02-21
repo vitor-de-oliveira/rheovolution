@@ -207,7 +207,9 @@ main(int argc, char *argv[])
 	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma, Re_k2, Im_k2);
 
 	double k0 = 0.933;
-	// k0 = 0.35761431522;
+	// k0 = 0.358;
+	k0 = 0.5;
+	// k0 = 1.5;
 
 	// my calibration for semi-diurnal freq
 	double sigma_SD = 4434.21;
@@ -222,6 +224,10 @@ main(int argc, char *argv[])
 	calculate_tau_a_tau_b(&tau_a_SD, &tau_b_SD, k0, 
 		sigma_SD, Re_k2_SD, Im_k2_SD);
 
+	printf ("tau_a_SD = %1.10e tau_b_SD = %1.10e\n", tau_a_SD, tau_b_SD);
+
+	printf ("tau_e_SD = %1.10e tau_SD = %1.10e\n", tau_b_SD-tau_a_SD, tau_b_SD);
+
 	// M2(L) from Table 1 on Ragazzo 2017
 	double sigma_M2L 	= (2.0 * M_PI) / (12.421 / (365.25 * 24.0));
 	double Im_k2_M2L 	= -0.02496;
@@ -232,6 +238,58 @@ main(int argc, char *argv[])
 	calculate_tau_a_tau_b(&tau_a_M2L, &tau_b_M2L, k0, 
 		sigma_M2L, Re_k2_M2L, Im_k2_M2L);
 
+	printf ("tau_a_M2L = %1.10e tau_b_M2L = %1.10e\n", tau_a_M2L, tau_b_M2L);
+
+	// O1(L) from Table 1 on Ragazzo 2017
+	double sigma_O1L 	= (2.0 * M_PI) / (25.819 / (365.25 * 24.0));
+	double Im_k2_O1L 	= -0.02190;
+	double Re_k2_O1L 	= 0.2755;
+
+	double tau_a_O1L, tau_b_O1L;
+	
+	calculate_tau_a_tau_b(&tau_a_O1L, &tau_b_O1L, k0, 
+		sigma_O1L, Re_k2_O1L, Im_k2_O1L);
+
+	printf ("tau_a_O1L = %1.10e tau_b_O1L = %1.10e\n", tau_a_O1L, tau_b_O1L);
+
+	//  N2(L) from Table 1 on Ragazzo 2017
+	double sigma_N2L = (2.0 * M_PI) / (12.658 / (365.25 * 24.0));
+	double Im_k2_N2L = -0.03214;
+	double Re_k2_N2L = 0.2825;
+
+	double tau_a_N2L, tau_b_N2L;
+
+	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
+		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
+
+	// Diurnal freq from Table 3 on Ragazzo 2017
+	double sigma_DIU 	= 2301.214;
+	double Im_k2_DIU 	= -0.01944;
+	double Re_k2_DIU 	= 0.2803;
+
+	double tau_a_DIU, tau_b_DIU;
+	
+	calculate_tau_a_tau_b(&tau_a_DIU, &tau_b_DIU, k0, 
+		sigma_DIU, Re_k2_DIU, Im_k2_DIU);
+
+	printf ("tau_a_DIU = %1.10e tau_b_DIU = %1.10e\n", tau_a_DIU, tau_b_DIU);
+
+	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
+		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
+
+	// Semi-diurnal freq from Table 3 on Ragazzo 2017
+	double sigma_SEMI_DIU 	= 2.0 * sigma_DIU;
+	double Im_k2_SEMI_DIU 	= -0.02324;
+	double Re_k2_SEMI_DIU 	= 0.2817;
+
+	double tau_a_SEMI_DIU, tau_b_SEMI_DIU;
+	
+	calculate_tau_a_tau_b(&tau_a_SEMI_DIU, &tau_b_SEMI_DIU, k0, 
+		sigma_SEMI_DIU, Re_k2_SEMI_DIU, Im_k2_SEMI_DIU);
+
+	printf ("tau_a_SEMI_DIU = %1.10e tau_b_SEMI_DIU = %1.10e\n", 
+		tau_a_SEMI_DIU, tau_b_SEMI_DIU);
+
 	// Chandler Wobble approx from Fig. 10 Ragazzo 2022
 	double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
 	double Im_k2_CW 	= -0.002; // taken by eye from plot
@@ -241,6 +299,12 @@ main(int argc, char *argv[])
 
 	calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
 		sigma_CW, Re_k2_CW, Im_k2_CW);
+
+	// Re_k2_CW = 0.35761431522;
+	// tau_a_CW = 0.0;
+	// tau_b_CW = 0.0;
+
+	printf ("tau_a_CW = %1.10e tau_b_CW = %1.10e\n", tau_a_CW, tau_b_CW);
 
 	// Chandler Wobble from Chen 2023
 	// double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
@@ -260,22 +324,39 @@ main(int argc, char *argv[])
 	// printf ("tau_CW = %1.5e yr\n", tau_b_CW);
 	// exit(12);
 
-	//  N2(L) from Table 1 on Ragazzo 2017
-	double sigma_N2L = (2.0 * M_PI) / (12.658 / (365.25 * 24.0));
-	double Im_k2_N2L = -0.03214;
-	double Re_k2_N2L = 0.2825;
+	// infinity frequency limit from Correia Rodriguez 2013
+	double sigma_inf 	= 1e10;
+	double Im_k2_inf	= -1e-10;
+	double Re_k2_inf 	= 0.299;
+	
+	double tau_a_inf, tau_b_inf;
 
-	double tau_a_N2L, tau_b_N2L;
+	calculate_tau_a_tau_b(&tau_a_inf, &tau_b_inf, k0, 
+		sigma_inf, Re_k2_inf, Im_k2_inf);
 
-	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
-		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
+	printf ("tau_a_inf = %1.10e tau_b_inf = %1.10e\n", tau_a_inf, tau_b_inf);
+
+	// test frequency
+	double sigma_tst 	= 0.0118677;
+	double Im_k2_tst	= -0.287348;
+	double Re_k2_tst 	= 0.637618;
+	
+	double tau_a_tst, tau_b_tst;
+
+	calculate_tau_a_tau_b(&tau_a_tst, &tau_b_tst, k0, 
+		sigma_tst, Re_k2_tst, Im_k2_tst);
+
+	printf ("tau_a_tst = %1.10e tau_b_tst = %1.10e\n", tau_a_tst, tau_b_tst);
 
 	/*** converting gV ***/
 
 	gvrheo gV;
 
-	double gamma = 1.629106922962863e+09; // result for parameter_gamma() in data_processing.c for Earth
-	// gamma = (1.629106922962863e+09+2.6211612974e9); // accounting for mu0 as in Ragazzo 2022
+	double G = 4.0 * M_PI * M_PI;
+	double R_earth = 4.2587504556e-05;
+	double I0_earth = 1.7978820925e-15;
+
+	double gamma = parameter_gamma_0(G, I0_earth, R_earth, k0);
 
 	/* maxwell model */
 	// int	   m = 0;
@@ -284,19 +365,68 @@ main(int argc, char *argv[])
 	// double tau_b[] = {tau_b_M2L};
 	// double Re_k2[] = {Re_k2_M2L};
 	// double Im_k2[] = {Im_k2_M2L};
+	// double sigma[] = {sigma_DIU};
+	// double tau_a[] = {tau_a_DIU};
+	// double tau_b[] = {tau_b_DIU};
+	// double Re_k2[] = {Re_k2_DIU};
+	// double Im_k2[] = {Im_k2_DIU};
+	// double sigma[] = {sigma_CW};
+	// double tau_a[] = {tau_a_CW};
+	// double tau_b[] = {tau_b_CW};
+	// double Re_k2[] = {Re_k2_CW};
+	// double Im_k2[] = {Im_k2_CW};
+
+	// printf ("k0 = %1.10e\n", k0);
+	// printf("Dt(s) = %1.10e\n", (tau_b[0]-tau_a[0])*365.25*24.*60.*60.);
+	// printf("tau(yr) = %1.10e\n", tau_b[0]);
 
 	/* burgers model */
 	int	   m = 1;
-	double sigma[] = {sigma_M2L, sigma_CW};
-	double tau_a[] = {tau_a_M2L, tau_a_CW};
-	double tau_b[] = {tau_b_M2L, tau_b_CW};
-	double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
-	double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
-	// double sigma[] = {sigma_SD, sigma_CW};
-	// double tau_a[] = {tau_a_SD, tau_a_CW};
-	// double tau_b[] = {tau_b_SD, tau_b_CW};
-	// double Re_k2[] = {Re_k2_SD, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_SD, Im_k2_CW};
+	// double sigma[] = {sigma_M2L, sigma_CW};
+	// double tau_a[] = {tau_a_M2L, tau_a_CW};
+	// double tau_b[] = {tau_b_M2L, tau_b_CW};
+	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
+	double sigma[] = {sigma_SD, sigma_CW};
+	double tau_a[] = {tau_a_SD, tau_a_CW};
+	double tau_b[] = {tau_b_SD, tau_b_CW};
+	double Re_k2[] = {Re_k2_SD, Re_k2_CW};
+	double Im_k2[] = {Im_k2_SD, Im_k2_CW};
+	// double sigma[] = {sigma_CW, sigma_SD};
+	// double tau_a[] = {tau_a_CW, tau_a_SD};
+	// double tau_b[] = {tau_b_CW, tau_b_SD};
+	// double Re_k2[] = {Re_k2_CW, Re_k2_SD};
+	// double Im_k2[] = {Im_k2_CW, Im_k2_SD};
+	// double sigma[] = {sigma_DIU, sigma_CW};
+	// double tau_a[] = {tau_a_DIU, tau_a_CW};
+	// double tau_b[] = {tau_b_DIU, tau_b_CW};
+	// double Re_k2[] = {Re_k2_DIU, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_DIU, Im_k2_CW};
+	// double sigma[] = {sigma_tst, sigma_CW};
+	// double tau_a[] = {tau_a_tst, tau_a_CW};
+	// double tau_b[] = {tau_b_tst, tau_b_CW};
+	// double Re_k2[] = {Re_k2_tst, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_tst, Im_k2_CW};
+	// double sigma[] = {sigma_M2L, sigma_O1L};
+	// double tau_a[] = {tau_a_M2L, tau_a_O1L};
+	// double tau_b[] = {tau_b_M2L, tau_b_O1L};
+	// double Re_k2[] = {Re_k2_M2L, Re_k2_O1L};
+	// double Im_k2[] = {Im_k2_M2L, Im_k2_O1L};
+	// double sigma[] = {sigma_DIU, sigma_SEMI_DIU};
+	// double tau_a[] = {tau_a_DIU, tau_a_SEMI_DIU};
+	// double tau_b[] = {tau_b_DIU, tau_b_SEMI_DIU};
+	// double Re_k2[] = {Re_k2_DIU, Re_k2_SEMI_DIU};
+	// double Im_k2[] = {Im_k2_DIU, Im_k2_SEMI_DIU};
+	// double sigma[] = {sigma_SEMI_DIU, sigma_DIU};
+	// double tau_a[] = {tau_a_SEMI_DIU, tau_a_DIU};
+	// double tau_b[] = {tau_b_SEMI_DIU, tau_b_DIU};
+	// double Re_k2[] = {Re_k2_SEMI_DIU, Re_k2_DIU};
+	// double Im_k2[] = {Im_k2_SEMI_DIU, Im_k2_DIU};
+	// double sigma[] = {sigma_DIU, sigma_inf};
+	// double tau_a[] = {tau_a_DIU, tau_a_inf};
+	// double tau_b[] = {tau_b_DIU, tau_b_inf};
+	// double Re_k2[] = {Re_k2_DIU, Re_k2_inf};
+	// double Im_k2[] = {Im_k2_DIU, Im_k2_inf};
 
 	/* two elements model */
 	// int	  m = 2;
@@ -305,7 +435,29 @@ main(int argc, char *argv[])
 	// double tau_b[] = {tau_b_M2L, tau_b_CW, tau_b_N2L};
 	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW, Re_k2_N2L};
 	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW, Im_k2_N2L};
+	// double sigma[] = {sigma_CW, sigma_M2L, sigma_inf};
+	// double tau_a[] = {tau_a_CW, tau_a_M2L, tau_a_inf};
+	// double tau_b[] = {tau_b_CW, tau_b_M2L, tau_b_inf};
+	// double Re_k2[] = {Re_k2_CW, Re_k2_M2L, Re_k2_inf};
+	// double Im_k2[] = {Im_k2_CW, Im_k2_M2L, Im_k2_inf};
+	// double sigma[] = {sigma_tst, sigma_CW, sigma_DIU};
+	// double tau_a[] = {tau_a_tst, tau_a_CW, tau_a_DIU};
+	// double tau_b[] = {tau_b_tst, tau_b_CW, tau_b_DIU};
+	// double Re_k2[] = {Re_k2_tst, Re_k2_CW, Re_k2_DIU};
+	// double Im_k2[] = {Im_k2_tst, Im_k2_CW, Im_k2_DIU};
 
+	// result for
+	// double sigma[] = {sigma_tst, sigma_CW};
+	// double tau_a[] = {tau_a_tst, tau_a_CW};
+	// double tau_b[] = {tau_b_tst, tau_b_CW};
+	// double Re_k2[] = {Re_k2_tst, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_tst, Im_k2_CW};
+	// gamma = 1.6291069229e+09
+	// alpha = 2.6903199477e+09
+	// eta = 8.6952450513e+10
+	// alpha_1 = 9.4135195034e+10
+	// eta_1 = 2.1973986591e+09
+	
 	gV.m 	 = m;
 	gV.gamma = gamma;
 	gV.sigma = sigma;
@@ -320,6 +472,28 @@ main(int argc, char *argv[])
 
 	convert_parameters_gV(&gV);
 
+	/* Grevorgyan 2023 */
+	// double kg_to_Msun = 1.0 / (1988500.0e24);
+	// double m_to_AU = 1.0 / (1.495978707e11);
+	// double s_to_year = 1.0 / (365.25 * 24.0 * 60.0 * 60.0);
+	// double Pa = kg_to_Msun / (m_to_AU * s_to_year * s_to_year);
+	// double Pas = kg_to_Msun / (m_to_AU * s_to_year);
+	// m = 2;
+	// gV.gamma 	  = 1.02159e9 * Pa;
+	// gV.alpha 	  = 60.0e9 * Pa;
+	// gV.eta		  = 9.05e20 * Pas;
+	// gV.alpha_k[0] = 1050.0e9 * Pa;
+	// gV.eta_k[0]   = 1.66e18 * Pas;
+	// gV.alpha_k[1] = 1662.0e9 * Pa;
+	// gV.eta_k[1]   = 1.76e18 * Pas;
+	// gV.gamma 	  = 1.02159e9;
+	// gV.alpha 	  = 60.0e9;
+	// gV.eta		  = 9.05e20;
+	// gV.alpha_k[0] = 1050.0e9;
+	// gV.eta_k[0]   = 1.66e18;
+	// gV.alpha_k[1] = 1662.0e9;
+	// gV.eta_k[1]   = 1.76e18;
+
 	printf ("gamma = %1.10e\n", gV.gamma);
 	printf ("alpha = %1.10e\n", gV.alpha);
 	printf ("eta = %1.10e\n", gV.eta);
@@ -330,7 +504,7 @@ main(int argc, char *argv[])
 	}
 
 	double sigma_reference = 1.0;
-	sigma_reference = sigma_M2L;
+	// sigma_reference = sigma_DIU;
 
 	FILE *out_1 = fopen("tests/test_calibration_k2_reference_points.dat", "w");
 	for (int i = 0; i < gV.m + 1; i++)
@@ -750,16 +924,25 @@ convert_parameters_gV (gvrheo *gV)
 
  		if (gV->m == 1)
 		{
-			gsl_vector_set (x, 0, alpha_init / 10000.0);
+			gsl_vector_set (x, 0, alpha_init);
 			gsl_vector_set (x, 1, eta_init * 1000.0); // overshooting for eta
-			gsl_vector_set (x, 2, alpha_init / 1000.0);
-			gsl_vector_set (x, 3, eta_init / 10000.0);
+			gsl_vector_set (x, 2, alpha_init);
+			gsl_vector_set (x, 3, eta_init);
 			/* trying for ps with a0 calibrated */
-			// gsl_vector_set (x, 0, alpha_init / 100.0);
+			// gsl_vector_set (x, 0, alpha_init * 10.0);
 			// gsl_vector_set (x, 1, eta_init * 1000.0);
-			// gsl_vector_set (x, 2, alpha_init / 10.0);
-			// gsl_vector_set (x, 3, eta_init * 10.0);
+			// gsl_vector_set (x, 2, alpha_init);
+			// gsl_vector_set (x, 3, eta_init);
 		}
+		// else if (gV->m == 2)
+		// {
+		// 	gsl_vector_set (x, 0, 2.6903199477e+09);
+		// 	gsl_vector_set (x, 1, 8.6952450513e+10);
+		// 	gsl_vector_set (x, 2, 9.4135195034e+10);
+		// 	gsl_vector_set (x, 3, 2.1973986591e+09);
+		// 	gsl_vector_set (x, 4, 9.4135195034e+10);
+		// 	gsl_vector_set (x, 5, 2.1973986591e+09);
+		// }
 		else
 		{
 			/****** does not work (yet) *******/
@@ -780,7 +963,7 @@ convert_parameters_gV (gvrheo *gV)
 
 			double sum_min = 1e6;
 			int interval_max = 22;
-			int interval_min = 10;
+			int interval_min = 6;
 			for (int k = 0; k < 1000000; k++)
 			{
 				gsl_vector *x_rng = gsl_vector_alloc (n_size_t);
@@ -837,15 +1020,21 @@ convert_parameters_gV (gvrheo *gV)
 			// print_state_f (iter, s2);
 
 			int sinal_check = 0;
+			int size_check = 0;
 			for (size_t i = 0; i < s->x->size; i++)
 			{
-				if(gsl_vector_get (s->x, i) < 0.0)
+				double x_value = gsl_vector_get (s->x, i);
+				if(x_value < 0.0)
 				{
 					sinal_check = -1;
 				}
+				else if(x_value > 1e30)
+				{
+					size_check = -1;
+				}
 			}
 
-			if ((status_1 || sinal_check) && loop)
+			if ((status_1 || sinal_check || size_check) && loop)
 			{
 				loop_counter++;
 				if (loop_counter == loop_limit)
@@ -903,18 +1092,7 @@ calculate_tau_a_tau_b	(double *tau_a,
 	double tau_a_local = 0.0;
 	double tau_b_local = 0.0;
 
-	/* tau_b^3 + a tau_b^2 + b tau_b + c = 0 */
-	double a = (k0 - Re_k2) / (sigma * Im_k2);
-	double b = 1.0 / (sigma * sigma);
-	double c = (k0 - Re_k2) / (sigma * sigma * sigma * Im_k2);
-
-	/* from Wolfram Alpha */
-	double d = pow((-2.0*a*a*a + 3.0*sqrt(3.0)*sqrt(4.0*a*a*a*c - a*a*b*b - 18.0*a*b*c 
-		+ 4.0*b*b*b + 27.0*c*c) + 9.0*a*b - 27.0*c),(1.0/3.0));
-
-	tau_b_local = d / (3.0 * pow(2.0,(1.0/3.0))) 
-		- (pow(2.0,(1.0/3.0)) * (3.0*b-a*a)) / (3.0 * d)
-		- a / 3.0;
+	tau_b_local = (Re_k2 - k0) / (sigma * Im_k2);
 
 	tau_a_local = (Re_k2 * (1.0 + sigma * sigma * tau_b_local * tau_b_local) - k0) 
 		/ (sigma * sigma * tau_b_local * k0);

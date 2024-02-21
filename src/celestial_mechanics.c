@@ -567,68 +567,68 @@ print_CelestialBody(cltbdy body)
 	printf("%s\n", body.name);
 
 	printf("mass = ");
-	printf("%1.5e\n", body.mass);
+	printf("%1.10e\n", body.mass);
 	printf("R = ");	
-	printf("%1.5e\n", body.R);
+	printf("%1.10e\n", body.R);
 	printf("lod = ");	
-	printf("%1.5e\n", body.lod);
+	printf("%1.10e\n", body.lod);
 
 	printf("I0 = ");	
-	printf("%1.5e\n", body.I0);
+	printf("%1.10e\n", body.I0);
 	printf("rg = ");	
-	printf("%1.5e\n", body.rg);
+	printf("%1.10e\n", body.rg);
 	printf("J2 = ");	
-	printf("%1.5e\n", body.J2);
+	printf("%1.10e\n", body.J2);
 	printf("C22 = ");	
-	printf("%1.5e\n", body.C22);
+	printf("%1.10e\n", body.C22);
 	printf("S22 = ");	
-	printf("%1.5e\n", body.S22);
+	printf("%1.10e\n", body.S22);
 	printf("C21 = ");	
-	printf("%1.5e\n", body.C21);
+	printf("%1.10e\n", body.C21);
 	printf("S21 = ");	
-	printf("%1.5e\n", body.S21);
+	printf("%1.10e\n", body.S21);
 
 	printf("obl = ");
-	printf("%1.5e\n", body.obl);
+	printf("%1.10e\n", body.obl);
 	printf("psi = ");	
-	printf("%1.5e\n", body.psi);
+	printf("%1.10e\n", body.psi);
 	printf("lib = ");	
-	printf("%1.5e\n", body.lib);
+	printf("%1.10e\n", body.lib);
 
 	printf("a = ");
-	printf("%1.5e\n", body.a);
+	printf("%1.10e\n", body.a);
 	printf("e = ");	
-	printf("%1.5e\n", body.e);
+	printf("%1.10e\n", body.e);
 	printf("I = ");	
-	printf("%1.5e\n", body.I);
+	printf("%1.10e\n", body.I);
 	printf("M = ");	
-	printf("%1.5e\n", body.M);
+	printf("%1.10e\n", body.M);
 	printf("w = ");	
-	printf("%1.5e\n", body.w);
+	printf("%1.10e\n", body.w);
 	printf("Omega = ");	
-	printf("%1.5e\n", body.Omega);
+	printf("%1.10e\n", body.Omega);
 
 	printf("k0 = ");	
-	printf("%1.5e\n", body.k0);
+	printf("%1.10e\n", body.k0);
 	printf("Dt = ");	
-	printf("%1.5e\n", body.Dt);
+	printf("%1.10e\n", body.Dt);
 	printf("tau = ");	
-	printf("%1.5e\n", body.tau);
+	printf("%1.10e\n", body.tau);
 
 	printf("gamma_0 = ");	
-	printf("%1.5e\n", body.gamma_0);
+	printf("%1.10e\n", body.gamma_0);
 	printf("alpha = ");	
-	printf("%1.5e\n", body.alpha);
+	printf("%1.10e\n", body.alpha);
 	printf("eta = ");	
-	printf("%1.5e\n", body.eta);
+	printf("%1.10e\n", body.eta);
 	printf("elements = ");	
 	printf("%d\n", body.elements);
 	for(int i = 0; i < body.elements; i++)
 	{
 		printf("alpha_%d = ", i+1);	
-		printf("%1.5e\n", body.alpha_elements[i]);
+		printf("%1.10e\n", body.alpha_elements[i]);
 		printf("eta_%d = ", i+1);	
-		printf("%1.5e\n", body.eta_elements[i]);
+		printf("%1.10e\n", body.eta_elements[i]);
 	}
 
 	printf("point mass = ");	

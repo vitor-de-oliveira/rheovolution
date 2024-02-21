@@ -1788,7 +1788,9 @@ output_to_spin	(cltbdy *bodies,
 			fprintf(out_orientation, " wI3(°)"); // angle w and I3
 			fprintf(out_orientation, " wI3sf(°)"); // angle w and I3 solid frame
 			fprintf(out_orientation, " wl(°)"); // angle w and l
-			fprintf(out_orientation, " azi(°)");
+			fprintf(out_orientation, " azi(°)"); // nutation angle
+			fprintf(out_orientation, " aziPIM(°)"); // nutation angle on Principal
+													 // Inertia Momenta (PIM) frame
 			fprintf(out_orientation, "\n");
 
 			// convertion units
@@ -1911,6 +1913,17 @@ output_to_spin	(cltbdy *bodies,
 					ang_vel_body_frame);
 				bodies[i].azi = ang_vel_body_frame_spherical[1];
 				fprintf (out_orientation, " %.15e", bodies[i].azi * rad_to_deg);
+
+				/* nutation frequency on Principal Inertia Momenta (PIM) frame */
+				double P_i[9], P_i_trans[9];
+				calculate_eigenvectors_matrix(P_i, bodies[i].b);
+				transpose_square_matrix(P_i_trans, P_i);	
+				square_matrix_times_vector(ang_vel_body_frame,
+					P_i_trans, bodies[i].omega);
+				cartesian_to_spherical_coordinates(ang_vel_body_frame_spherical,
+					ang_vel_body_frame);
+				fprintf (out_orientation, " %.15e", 
+					ang_vel_body_frame_spherical[1] * rad_to_deg);
 
 				/* next line */
 				fprintf(out_orientation, "\n");		
