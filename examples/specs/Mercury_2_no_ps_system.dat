@@ -1,0 +1,30 @@
+Name		    Sun		    Mercury	
+mass(Msun)      1.0         1.66e-7		
+rot(day)        1.0         58.650		
+rot_ini(day)    1.0         57.380	
+azi(deg)        0.0         0.0
+pol(deg)        0.0         0.0
+obl(deg)        0.0		    0.034		
+psi(deg)        0.0			0.0			
+lib(deg)        0.0         0.0
+R(km)           1.0         2439.7	
+rg              0.1 		0.35
+J2              0.1         5.03216e-5
+C22             0.0         8.03889e-6
+S22             0.0         -1.34959e-8
+C21             0.0         -2.08530e-8
+S21             0.0         -1.76205e-8
+k0              0.0         0.7
+Dt(s)		    0.1         4.144054e6
+tau(yr)         0.0         4.55765e-1
+a(AU)       			    0.38709893
+e						    0.20563069
+I(deg)					    0.0		
+M(deg)					    0.0
+w(deg)					    0.0
+OMEGA(deg)				    0.0
+point_mass      yes         no
+deformable      no          yes
+prestress       no          no
+centrifugal     no          yes
+tidal           no          yes     
