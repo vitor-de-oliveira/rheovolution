@@ -431,12 +431,12 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_par_received[0] = true;
 		}
-		else if (strcmp(token, "lod(day)") == 0)
+		else if (strcmp(token, "rot(day)") == 0)
 		{
 			for (int i = 0; i < simulation.number_of_bodies; i++)
 			{
 				token = strtok(NULL, tok_del);
-				(*bodies)[i].lod = atof(token);
+				(*bodies)[i].rot = atof(token);
 			}
 			input_par_received[1] = true;
 		}
@@ -1004,7 +1004,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			(*bodies)[i].mass *= Msun_to_kg;
 			(*bodies)[i].R *= km_to_m;
-			(*bodies)[i].lod *= day_to_s;
+			(*bodies)[i].rot *= day_to_s;
 			(*bodies)[i].a *= AU_to_m;
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
@@ -1023,7 +1023,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			(*bodies)[i].R *= km_to_AU;
-			(*bodies)[i].lod *= day_to_year;
+			(*bodies)[i].rot *= day_to_year;
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
 				(*bodies)[i].Dt *= s_to_year;

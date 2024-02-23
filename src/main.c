@@ -64,16 +64,16 @@ main(int argc, char *argv[])
 	int		omega_correction_number_of_iterates = 20;
 	int		*omega_correction_on_body = *(&omega_correction_on_body);
 	double	*omega_correction_step = *(&omega_correction_step);
-	double 	*omega_correction_lod = *(&omega_correction_lod);
-	double	*omega_correction_lod_after_simulation = *(&omega_correction_lod_after_simulation);
+	double 	*omega_correction_rot = *(&omega_correction_rot);
+	double	*omega_correction_rot_after_simulation = *(&omega_correction_rot_after_simulation);
 	siminf	simulation_copy = *(&simulation_copy);
 	cltbdy	*bodies_copy = *(&bodies_copy);
 	if (simulation.omega_correction == true)
 	{
 		omega_correction_on_body = (int *) malloc(simulation.number_of_bodies * sizeof(int));
 		omega_correction_step = (double *) malloc(simulation.number_of_bodies * sizeof(double));
-		omega_correction_lod = (double *) malloc(simulation.number_of_bodies * sizeof(double));
-		omega_correction_lod_after_simulation = (double *) malloc(simulation.number_of_bodies * sizeof(double));
+		omega_correction_rot = (double *) malloc(simulation.number_of_bodies * sizeof(double));
+		omega_correction_rot_after_simulation = (double *) malloc(simulation.number_of_bodies * sizeof(double));
 		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 			{
 				omega_correction_on_body[i] = 0;
 			}
-			omega_correction_lod[i] = bodies[i].lod;
+			omega_correction_rot[i] = bodies[i].rot;
 		}
 		// simulation.omega_correction_t_final = 
 		// 	10.0 * largest_time_scale(bodies, 
@@ -118,26 +118,26 @@ main(int argc, char *argv[])
 			{
 				if (omega_correction_on_body[i] == 1)
 				{
-					omega_correction_lod_after_simulation[i] 
+					omega_correction_rot_after_simulation[i] 
 						= 2.0 * M_PI / norm_vector(bodies[i].omega);
 
 					if (simulation.omega_correction_counter == 1) // defines first step
 					{
 						omega_correction_step[i] = 
-							bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+							bodies_copy[i].rot - omega_correction_rot_after_simulation[i];
 					}
 					else
 					{
-						double aux = bodies_copy[i].lod - omega_correction_lod_after_simulation[i];
+						double aux = bodies_copy[i].rot - omega_correction_rot_after_simulation[i];
 						if (omega_correction_step[i] * aux < 0.0)
 						{
 							omega_correction_step[i] /= -2.1;
 						}
 					}
-					omega_correction_lod[i] += omega_correction_step[i];
+					omega_correction_rot[i] += omega_correction_step[i];
 
 					copy_CelestialBody(&bodies[i], bodies_copy[i]);
-					bodies[i].lod = omega_correction_lod[i];
+					bodies[i].rot = omega_correction_rot[i];
 
 				}
 				else
@@ -387,8 +387,8 @@ main(int argc, char *argv[])
 	{
 		free(omega_correction_on_body);
 		free(omega_correction_step);
-		free(omega_correction_lod);
-		free(omega_correction_lod_after_simulation);
+		free(omega_correction_rot);
+		free(omega_correction_rot_after_simulation);
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			if (bodies_copy[i].elements > 0)

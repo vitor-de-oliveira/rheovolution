@@ -186,368 +186,387 @@ main(int argc, char *argv[])
 
 	/* generalised Voigt */
 
-	// double tau_a, tau_b;
+	// // double tau_a, tau_b;
 
-	// double Omega 	= (2.0 * M_PI) / (0.9972708 / 365.25);
-	// double m1 		= 3.00317e-6;
-	// double m2 		= 3.69464e-8;
-	// double r 		= 2.56955e-3;
-	// double M 		= m1 + m2;
-	// double G 		= 4.0 * M_PI * M_PI;
-	// double r3		= pow(r, 3.0);
-	// double n 		= sqrt((G * M) / r3);
+	// // double Omega 	= (2.0 * M_PI) / (0.9972708 / 365.25);
+	// // double m1 		= 3.00317e-6;
+	// // double m2 		= 3.69464e-8;
+	// // double r 		= 2.56955e-3;
+	// // double M 		= m1 + m2;
+	// // double G 		= 4.0 * M_PI * M_PI;
+	// // double r3		= pow(r, 3.0);
+	// // double n 		= sqrt((G * M) / r3);
 
-	// double sigma 	= 2.0 * (Omega - n); // Semi-diurnal
-	// double k0 		= 0.933;
-	// double Im_k2 	= -2.546376867228876e-02;
-	// double Re_k2 	= k0 * (1.0 + 
-	// 	sigma*sigma*(5.609836775924446e-03-3.814689007628624e-03)*5.609836775924446e-03)
-	// 	/ (1.0 + sigma*sigma*5.609836775924446e-03*5.609836775924446e-03);
+	// // double sigma 	= 2.0 * (Omega - n); // Semi-diurnal
+	// // double k0 		= 0.933;
+	// // double Im_k2 	= -2.546376867228876e-02;
+	// // double Re_k2 	= k0 * (1.0 + 
+	// // 	sigma*sigma*(5.609836775924446e-03-3.814689007628624e-03)*5.609836775924446e-03)
+	// // 	/ (1.0 + sigma*sigma*5.609836775924446e-03*5.609836775924446e-03);
 
-	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma, Re_k2, Im_k2);
+	// // calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma, Re_k2, Im_k2);
 
-	double k0 = 0.933;
-	// k0 = 0.358;
-	k0 = 0.5;
-	// k0 = 1.5;
+	// double k0 = 0.933;
+	// // k0 = 0.358;
+	// k0 = 0.5;
+	// // k0 = 1.5;
 
-	// my calibration for semi-diurnal freq
-	double sigma_SD = 4434.21;
-	double Im_k2_SD = -2.54638e-2;
-	double Re_k2_SD = 0.299584;
+	// // my calibration for semi-diurnal freq
+	// double sigma_SD = 4434.21;
+	// double Im_k2_SD = -2.54638e-2;
+	// double Re_k2_SD = 0.299584;
 
-	double tau_a_SD, tau_b_SD;
+	// double tau_a_SD, tau_b_SD;
 	
-	// tau_a_SD = 5.60984e-3 - 3.81469e-3;
-	// tau_b_SD = 5.60984e-3;
+	// // tau_a_SD = 5.60984e-3 - 3.81469e-3;
+	// // tau_b_SD = 5.60984e-3;
 
-	calculate_tau_a_tau_b(&tau_a_SD, &tau_b_SD, k0, 
-		sigma_SD, Re_k2_SD, Im_k2_SD);
+	// calculate_tau_a_tau_b(&tau_a_SD, &tau_b_SD, k0, 
+	// 	sigma_SD, Re_k2_SD, Im_k2_SD);
 
-	printf ("tau_a_SD = %1.10e tau_b_SD = %1.10e\n", tau_a_SD, tau_b_SD);
+	// printf ("tau_a_SD = %1.10e tau_b_SD = %1.10e\n", tau_a_SD, tau_b_SD);
 
-	printf ("tau_e_SD = %1.10e tau_SD = %1.10e\n", tau_b_SD-tau_a_SD, tau_b_SD);
+	// printf ("tau_e_SD = %1.10e tau_SD = %1.10e\n", tau_b_SD-tau_a_SD, tau_b_SD);
 
-	// M2(L) from Table 1 on Ragazzo 2017
-	double sigma_M2L 	= (2.0 * M_PI) / (12.421 / (365.25 * 24.0));
-	double Im_k2_M2L 	= -0.02496;
-	double Re_k2_M2L 	= 0.2811;
+	// // M2(L) from Table 1 on Ragazzo 2017
+	// double sigma_M2L 	= (2.0 * M_PI) / (12.421 / (365.25 * 24.0));
+	// double Im_k2_M2L 	= -0.02496;
+	// double Re_k2_M2L 	= 0.2811;
 
-	double tau_a_M2L, tau_b_M2L;
+	// double tau_a_M2L, tau_b_M2L;
 	
-	calculate_tau_a_tau_b(&tau_a_M2L, &tau_b_M2L, k0, 
-		sigma_M2L, Re_k2_M2L, Im_k2_M2L);
+	// calculate_tau_a_tau_b(&tau_a_M2L, &tau_b_M2L, k0, 
+	// 	sigma_M2L, Re_k2_M2L, Im_k2_M2L);
 
-	printf ("tau_a_M2L = %1.10e tau_b_M2L = %1.10e\n", tau_a_M2L, tau_b_M2L);
+	// printf ("tau_a_M2L = %1.10e tau_b_M2L = %1.10e\n", tau_a_M2L, tau_b_M2L);
 
-	// O1(L) from Table 1 on Ragazzo 2017
-	double sigma_O1L 	= (2.0 * M_PI) / (25.819 / (365.25 * 24.0));
-	double Im_k2_O1L 	= -0.02190;
-	double Re_k2_O1L 	= 0.2755;
+	// // O1(L) from Table 1 on Ragazzo 2017
+	// double sigma_O1L 	= (2.0 * M_PI) / (25.819 / (365.25 * 24.0));
+	// double Im_k2_O1L 	= -0.02190;
+	// double Re_k2_O1L 	= 0.2755;
 
-	double tau_a_O1L, tau_b_O1L;
+	// double tau_a_O1L, tau_b_O1L;
 	
-	calculate_tau_a_tau_b(&tau_a_O1L, &tau_b_O1L, k0, 
-		sigma_O1L, Re_k2_O1L, Im_k2_O1L);
+	// calculate_tau_a_tau_b(&tau_a_O1L, &tau_b_O1L, k0, 
+	// 	sigma_O1L, Re_k2_O1L, Im_k2_O1L);
 
-	printf ("tau_a_O1L = %1.10e tau_b_O1L = %1.10e\n", tau_a_O1L, tau_b_O1L);
+	// printf ("tau_a_O1L = %1.10e tau_b_O1L = %1.10e\n", tau_a_O1L, tau_b_O1L);
 
-	//  N2(L) from Table 1 on Ragazzo 2017
-	double sigma_N2L = (2.0 * M_PI) / (12.658 / (365.25 * 24.0));
-	double Im_k2_N2L = -0.03214;
-	double Re_k2_N2L = 0.2825;
+	// //  N2(L) from Table 1 on Ragazzo 2017
+	// double sigma_N2L = (2.0 * M_PI) / (12.658 / (365.25 * 24.0));
+	// double Im_k2_N2L = -0.03214;
+	// double Re_k2_N2L = 0.2825;
 
-	double tau_a_N2L, tau_b_N2L;
+	// double tau_a_N2L, tau_b_N2L;
 
-	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
-		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
+	// calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
+	// 	sigma_N2L, Re_k2_N2L, Im_k2_N2L);
 
-	// Diurnal freq from Table 3 on Ragazzo 2017
-	double sigma_DIU 	= 2301.214;
-	double Im_k2_DIU 	= -0.01944;
-	double Re_k2_DIU 	= 0.2803;
+	// // Diurnal freq from Table 3 on Ragazzo 2017
+	// double sigma_DIU 	= 2301.214;
+	// double Im_k2_DIU 	= -0.01944;
+	// double Re_k2_DIU 	= 0.2803;
 
-	double tau_a_DIU, tau_b_DIU;
+	// double tau_a_DIU, tau_b_DIU;
 	
-	calculate_tau_a_tau_b(&tau_a_DIU, &tau_b_DIU, k0, 
-		sigma_DIU, Re_k2_DIU, Im_k2_DIU);
+	// calculate_tau_a_tau_b(&tau_a_DIU, &tau_b_DIU, k0, 
+	// 	sigma_DIU, Re_k2_DIU, Im_k2_DIU);
 
-	printf ("tau_a_DIU = %1.10e tau_b_DIU = %1.10e\n", tau_a_DIU, tau_b_DIU);
+	// printf ("tau_a_DIU = %1.10e tau_b_DIU = %1.10e\n", tau_a_DIU, tau_b_DIU);
 
-	calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
-		sigma_N2L, Re_k2_N2L, Im_k2_N2L);
+	// calculate_tau_a_tau_b(&tau_a_N2L, &tau_b_N2L, k0, 
+	// 	sigma_N2L, Re_k2_N2L, Im_k2_N2L);
 
-	// Semi-diurnal freq from Table 3 on Ragazzo 2017
-	double sigma_SEMI_DIU 	= 2.0 * sigma_DIU;
-	double Im_k2_SEMI_DIU 	= -0.02324;
-	double Re_k2_SEMI_DIU 	= 0.2817;
+	// // Semi-diurnal freq from Table 3 on Ragazzo 2017
+	// double sigma_SEMI_DIU 	= 2.0 * sigma_DIU;
+	// double Im_k2_SEMI_DIU 	= -0.02324;
+	// double Re_k2_SEMI_DIU 	= 0.2817;
 
-	double tau_a_SEMI_DIU, tau_b_SEMI_DIU;
+	// double tau_a_SEMI_DIU, tau_b_SEMI_DIU;
 	
-	calculate_tau_a_tau_b(&tau_a_SEMI_DIU, &tau_b_SEMI_DIU, k0, 
-		sigma_SEMI_DIU, Re_k2_SEMI_DIU, Im_k2_SEMI_DIU);
+	// calculate_tau_a_tau_b(&tau_a_SEMI_DIU, &tau_b_SEMI_DIU, k0, 
+	// 	sigma_SEMI_DIU, Re_k2_SEMI_DIU, Im_k2_SEMI_DIU);
 
-	printf ("tau_a_SEMI_DIU = %1.10e tau_b_SEMI_DIU = %1.10e\n", 
-		tau_a_SEMI_DIU, tau_b_SEMI_DIU);
+	// printf ("tau_a_SEMI_DIU = %1.10e tau_b_SEMI_DIU = %1.10e\n", 
+	// 	tau_a_SEMI_DIU, tau_b_SEMI_DIU);
 
-	// Chandler Wobble approx from Fig. 10 Ragazzo 2022
-	double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
-	double Im_k2_CW 	= -0.002; // taken by eye from plot
-	double Re_k2_CW 	= 0.358;
-	
-	double tau_a_CW, tau_b_CW;
-
-	calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
-		sigma_CW, Re_k2_CW, Im_k2_CW);
-
-	// Re_k2_CW = 0.35761431522;
-	// tau_a_CW = 0.0;
-	// tau_b_CW = 0.0;
-
-	printf ("tau_a_CW = %1.10e tau_b_CW = %1.10e\n", tau_a_CW, tau_b_CW);
-
-	// Chandler Wobble from Chen 2023
-	// double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
-	// double Im_k2_CW 	= -0.00226238;
-	// double Re_k2_CW 	= 0.35010616;
+	// // Chandler Wobble approx from Fig. 10 Ragazzo 2022
+	// double sigma_CW 	= (2.0 * M_PI) / (433.0 / 365.25);
+	// double Im_k2_CW 	= -0.002; // taken by eye from plot
+	// double Re_k2_CW 	= 0.358;
 	
 	// double tau_a_CW, tau_b_CW;
 
 	// calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
 	// 	sigma_CW, Re_k2_CW, Im_k2_CW);
+
+	// // Re_k2_CW = 0.35761431522;
+	// // tau_a_CW = 0.0;
+	// // tau_b_CW = 0.0;
+
+	// printf ("tau_a_CW = %1.10e tau_b_CW = %1.10e\n", tau_a_CW, tau_b_CW);
+
+	// // Chandler Wobble from Chen 2023
+	// // double sigma_CW 	= (2.0 * M_PI) / (430.4 / 365.25);
+	// // double Im_k2_CW 	= -0.00226238;
+	// // double Re_k2_CW 	= 0.28389; // 0.35010616 2-layer model
 	
-	// printf ("tau_a_CW = %1.5e\n", tau_a_CW);
-	// printf ("tau_b_CW = %1.5e\n", tau_b_CW);
-	// printf ("tau_e_CW / tau_CW  = %1.5e\n", tau_a_CW / tau_b_CW);
-	// double year_to_s = 365.25 * 24.0 * 60.0 * 60.0;
-	// printf ("tau_v_CW = %1.5e s\n", (tau_b_CW - tau_a_CW) * year_to_s);
-	// printf ("tau_CW = %1.5e yr\n", tau_b_CW);
-	// exit(12);
+	// // double tau_a_CW, tau_b_CW;
 
-	// infinity frequency limit from Correia Rodriguez 2013
-	double sigma_inf 	= 1e10;
-	double Im_k2_inf	= -1e-10;
-	double Re_k2_inf 	= 0.299;
+	// // calculate_tau_a_tau_b(&tau_a_CW, &tau_b_CW, k0, 
+	// // 	sigma_CW, Re_k2_CW, Im_k2_CW);
 	
-	double tau_a_inf, tau_b_inf;
+	// // printf ("tau_a_CW = %1.5e\n", tau_a_CW);
+	// // printf ("tau_b_CW = %1.5e\n", tau_b_CW);
+	// // printf ("tau_e_CW / tau_CW  = %1.5e\n", tau_a_CW / tau_b_CW);
+	// // double year_to_s = 365.25 * 24.0 * 60.0 * 60.0;
+	// // printf ("tau_v_CW = %1.5e s\n", (tau_b_CW - tau_a_CW) * year_to_s);
+	// // printf ("tau_CW = %1.5e yr\n", tau_b_CW);
+	// // exit(12);
 
-	calculate_tau_a_tau_b(&tau_a_inf, &tau_b_inf, k0, 
-		sigma_inf, Re_k2_inf, Im_k2_inf);
-
-	printf ("tau_a_inf = %1.10e tau_b_inf = %1.10e\n", tau_a_inf, tau_b_inf);
-
-	// test frequency
-	double sigma_tst 	= 0.0118677;
-	double Im_k2_tst	= -0.287348;
-	double Re_k2_tst 	= 0.637618;
+	// // infinity frequency limit from Correia Rodriguez 2013
+	// double sigma_inf 	= 1e10;
+	// double Im_k2_inf	= -1e-10;
+	// double Re_k2_inf 	= 0.299;
 	
-	double tau_a_tst, tau_b_tst;
+	// double tau_a_inf, tau_b_inf;
 
-	calculate_tau_a_tau_b(&tau_a_tst, &tau_b_tst, k0, 
-		sigma_tst, Re_k2_tst, Im_k2_tst);
+	// calculate_tau_a_tau_b(&tau_a_inf, &tau_b_inf, k0, 
+	// 	sigma_inf, Re_k2_inf, Im_k2_inf);
 
-	printf ("tau_a_tst = %1.10e tau_b_tst = %1.10e\n", tau_a_tst, tau_b_tst);
+	// printf ("tau_a_inf = %1.10e tau_b_inf = %1.10e\n", tau_a_inf, tau_b_inf);
 
-	/*** converting gV ***/
-
-	gvrheo gV;
-
-	double G = 4.0 * M_PI * M_PI;
-	double R_earth = 4.2587504556e-05;
-	double I0_earth = 1.7978820925e-15;
-
-	double gamma = parameter_gamma_0(G, I0_earth, R_earth, k0);
-
-	/* maxwell model */
-	// int	   m = 0;
-	// double sigma[] = {sigma_M2L};
-	// double tau_a[] = {tau_a_M2L};
-	// double tau_b[] = {tau_b_M2L};
-	// double Re_k2[] = {Re_k2_M2L};
-	// double Im_k2[] = {Im_k2_M2L};
-	// double sigma[] = {sigma_DIU};
-	// double tau_a[] = {tau_a_DIU};
-	// double tau_b[] = {tau_b_DIU};
-	// double Re_k2[] = {Re_k2_DIU};
-	// double Im_k2[] = {Im_k2_DIU};
-	// double sigma[] = {sigma_CW};
-	// double tau_a[] = {tau_a_CW};
-	// double tau_b[] = {tau_b_CW};
-	// double Re_k2[] = {Re_k2_CW};
-	// double Im_k2[] = {Im_k2_CW};
-
-	// printf ("k0 = %1.10e\n", k0);
-	// printf("Dt(s) = %1.10e\n", (tau_b[0]-tau_a[0])*365.25*24.*60.*60.);
-	// printf("tau(yr) = %1.10e\n", tau_b[0]);
-
-	/* burgers model */
-	int	   m = 1;
-	// double sigma[] = {sigma_M2L, sigma_CW};
-	// double tau_a[] = {tau_a_M2L, tau_a_CW};
-	// double tau_b[] = {tau_b_M2L, tau_b_CW};
-	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
-	double sigma[] = {sigma_SD, sigma_CW};
-	double tau_a[] = {tau_a_SD, tau_a_CW};
-	double tau_b[] = {tau_b_SD, tau_b_CW};
-	double Re_k2[] = {Re_k2_SD, Re_k2_CW};
-	double Im_k2[] = {Im_k2_SD, Im_k2_CW};
-	// double sigma[] = {sigma_CW, sigma_SD};
-	// double tau_a[] = {tau_a_CW, tau_a_SD};
-	// double tau_b[] = {tau_b_CW, tau_b_SD};
-	// double Re_k2[] = {Re_k2_CW, Re_k2_SD};
-	// double Im_k2[] = {Im_k2_CW, Im_k2_SD};
-	// double sigma[] = {sigma_DIU, sigma_CW};
-	// double tau_a[] = {tau_a_DIU, tau_a_CW};
-	// double tau_b[] = {tau_b_DIU, tau_b_CW};
-	// double Re_k2[] = {Re_k2_DIU, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_DIU, Im_k2_CW};
-	// double sigma[] = {sigma_tst, sigma_CW};
-	// double tau_a[] = {tau_a_tst, tau_a_CW};
-	// double tau_b[] = {tau_b_tst, tau_b_CW};
-	// double Re_k2[] = {Re_k2_tst, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_tst, Im_k2_CW};
-	// double sigma[] = {sigma_M2L, sigma_O1L};
-	// double tau_a[] = {tau_a_M2L, tau_a_O1L};
-	// double tau_b[] = {tau_b_M2L, tau_b_O1L};
-	// double Re_k2[] = {Re_k2_M2L, Re_k2_O1L};
-	// double Im_k2[] = {Im_k2_M2L, Im_k2_O1L};
-	// double sigma[] = {sigma_DIU, sigma_SEMI_DIU};
-	// double tau_a[] = {tau_a_DIU, tau_a_SEMI_DIU};
-	// double tau_b[] = {tau_b_DIU, tau_b_SEMI_DIU};
-	// double Re_k2[] = {Re_k2_DIU, Re_k2_SEMI_DIU};
-	// double Im_k2[] = {Im_k2_DIU, Im_k2_SEMI_DIU};
-	// double sigma[] = {sigma_SEMI_DIU, sigma_DIU};
-	// double tau_a[] = {tau_a_SEMI_DIU, tau_a_DIU};
-	// double tau_b[] = {tau_b_SEMI_DIU, tau_b_DIU};
-	// double Re_k2[] = {Re_k2_SEMI_DIU, Re_k2_DIU};
-	// double Im_k2[] = {Im_k2_SEMI_DIU, Im_k2_DIU};
-	// double sigma[] = {sigma_DIU, sigma_inf};
-	// double tau_a[] = {tau_a_DIU, tau_a_inf};
-	// double tau_b[] = {tau_b_DIU, tau_b_inf};
-	// double Re_k2[] = {Re_k2_DIU, Re_k2_inf};
-	// double Im_k2[] = {Im_k2_DIU, Im_k2_inf};
-
-	/* two elements model */
-	// int	  m = 2;
-	// double sigma[] = {sigma_M2L, sigma_CW, sigma_N2L};
-	// double tau_a[] = {tau_a_M2L, tau_a_CW, tau_a_N2L};
-	// double tau_b[] = {tau_b_M2L, tau_b_CW, tau_b_N2L};
-	// double Re_k2[] = {Re_k2_M2L, Re_k2_CW, Re_k2_N2L};
-	// double Im_k2[] = {Im_k2_M2L, Im_k2_CW, Im_k2_N2L};
-	// double sigma[] = {sigma_CW, sigma_M2L, sigma_inf};
-	// double tau_a[] = {tau_a_CW, tau_a_M2L, tau_a_inf};
-	// double tau_b[] = {tau_b_CW, tau_b_M2L, tau_b_inf};
-	// double Re_k2[] = {Re_k2_CW, Re_k2_M2L, Re_k2_inf};
-	// double Im_k2[] = {Im_k2_CW, Im_k2_M2L, Im_k2_inf};
-	// double sigma[] = {sigma_tst, sigma_CW, sigma_DIU};
-	// double tau_a[] = {tau_a_tst, tau_a_CW, tau_a_DIU};
-	// double tau_b[] = {tau_b_tst, tau_b_CW, tau_b_DIU};
-	// double Re_k2[] = {Re_k2_tst, Re_k2_CW, Re_k2_DIU};
-	// double Im_k2[] = {Im_k2_tst, Im_k2_CW, Im_k2_DIU};
-
-	// result for
-	// double sigma[] = {sigma_tst, sigma_CW};
-	// double tau_a[] = {tau_a_tst, tau_a_CW};
-	// double tau_b[] = {tau_b_tst, tau_b_CW};
-	// double Re_k2[] = {Re_k2_tst, Re_k2_CW};
-	// double Im_k2[] = {Im_k2_tst, Im_k2_CW};
-	// gamma = 1.6291069229e+09
-	// alpha = 2.6903199477e+09
-	// eta = 8.6952450513e+10
-	// alpha_1 = 9.4135195034e+10
-	// eta_1 = 2.1973986591e+09
+	// // test frequency
+	// double sigma_tst 	= 0.0118677;
+	// double Im_k2_tst	= -0.287348;
+	// double Re_k2_tst 	= 0.637618;
 	
-	gV.m 	 = m;
-	gV.gamma = gamma;
-	gV.sigma = sigma;
-	gV.tau_a = tau_a;
-	gV.tau_b = tau_b;
+	// double tau_a_tst, tau_b_tst;
 
-	if (gV.m > 0)
-	{
-		gV.alpha_k 	= (double *) malloc(gV.m * sizeof(double));
-		gV.eta_k	= (double *) malloc(gV.m * sizeof(double));
-	}
+	// calculate_tau_a_tau_b(&tau_a_tst, &tau_b_tst, k0, 
+	// 	sigma_tst, Re_k2_tst, Im_k2_tst);
 
-	convert_parameters_gV(&gV);
+	// printf ("tau_a_tst = %1.10e tau_b_tst = %1.10e\n", tau_a_tst, tau_b_tst);
 
-	/* Grevorgyan 2023 */
-	// double kg_to_Msun = 1.0 / (1988500.0e24);
-	// double m_to_AU = 1.0 / (1.495978707e11);
-	// double s_to_year = 1.0 / (365.25 * 24.0 * 60.0 * 60.0);
-	// double Pa = kg_to_Msun / (m_to_AU * s_to_year * s_to_year);
-	// double Pas = kg_to_Msun / (m_to_AU * s_to_year);
-	// m = 2;
-	// gV.gamma 	  = 1.02159e9 * Pa;
-	// gV.alpha 	  = 60.0e9 * Pa;
-	// gV.eta		  = 9.05e20 * Pas;
-	// gV.alpha_k[0] = 1050.0e9 * Pa;
-	// gV.eta_k[0]   = 1.66e18 * Pas;
-	// gV.alpha_k[1] = 1662.0e9 * Pa;
-	// gV.eta_k[1]   = 1.76e18 * Pas;
-	// gV.gamma 	  = 1.02159e9;
-	// gV.alpha 	  = 60.0e9;
-	// gV.eta		  = 9.05e20;
-	// gV.alpha_k[0] = 1050.0e9;
-	// gV.eta_k[0]   = 1.66e18;
-	// gV.alpha_k[1] = 1662.0e9;
-	// gV.eta_k[1]   = 1.76e18;
+	// /*** converting gV ***/
 
-	printf ("gamma = %1.10e\n", gV.gamma);
-	printf ("alpha = %1.10e\n", gV.alpha);
-	printf ("eta = %1.10e\n", gV.eta);
-	for (int i = 0; i < gV.m; i++)
-	{
-		printf ("alpha_%d = %1.10e\n", i+1, gV.alpha_k[i]);
-		printf ("eta_%d = %1.10e\n", i+1, gV.eta_k[i]);
-	}
+	// gvrheo gV;
 
-	double sigma_reference = 1.0;
-	// sigma_reference = sigma_DIU;
+	// double G = 4.0 * M_PI * M_PI;
+	// double R_earth = 4.2587504556e-05;
+	// double I0_earth = 1.7978820925e-15;
 
-	FILE *out_1 = fopen("tests/test_calibration_k2_reference_points.dat", "w");
-	for (int i = 0; i < gV.m + 1; i++)
-	{
-		fprintf(out_1, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma[i] / sigma_reference, Re_k2[i], -1.0 * Im_k2[i],
-			sqrt(Re_k2[i] * Re_k2[i] + Im_k2[i] * Im_k2[i]));
-	}
-	fclose(out_1);
+	// double gamma = parameter_gamma_0(G, I0_earth, R_earth, k0);
 
-	/* Love number as a function of frequency */
-	FILE *out_2 = fopen("tests/test_calibration_k2_plot.dat", "w");
-	for (double sigma_loop = 1e-10; sigma_loop < 1e10; sigma_loop *= 1.01)
-	{
-		double tau_a_sigma, tau_b_sigma;
+	// /* maxwell model */
+	// // int	   m = 0;
+	// // double sigma[] = {sigma_M2L};
+	// // double tau_a[] = {tau_a_M2L};
+	// // double tau_b[] = {tau_b_M2L};
+	// // double Re_k2[] = {Re_k2_M2L};
+	// // double Im_k2[] = {Im_k2_M2L};
+	// // double sigma[] = {sigma_DIU};
+	// // double tau_a[] = {tau_a_DIU};
+	// // double tau_b[] = {tau_b_DIU};
+	// // double Re_k2[] = {Re_k2_DIU};
+	// // double Im_k2[] = {Im_k2_DIU};
+	// // double sigma[] = {sigma_CW};
+	// // double tau_a[] = {tau_a_CW};
+	// // double tau_b[] = {tau_b_CW};
+	// // double Re_k2[] = {Re_k2_CW};
+	// // double Im_k2[] = {Im_k2_CW};
 
-		double *C_and_D;
+	// // printf ("k0 = %1.10e\n", k0);
+	// // printf("Dt(s) = %1.10e\n", (tau_b[0]-tau_a[0])*365.25*24.*60.*60.);
+	// // printf("tau(yr) = %1.10e\n", tau_b[0]);
 
-		C_and_D = convert_parameters_gV_summations_C_and_D(gV, sigma_loop);
+	// /* burgers model */
+	// int	   m = 1;
+	// // double sigma[] = {sigma_M2L, sigma_CW};
+	// // double tau_a[] = {tau_a_M2L, tau_a_CW};
+	// // double tau_b[] = {tau_b_M2L, tau_b_CW};
+	// // double Re_k2[] = {Re_k2_M2L, Re_k2_CW};
+	// // double Im_k2[] = {Im_k2_M2L, Im_k2_CW};
+	// double sigma[] = {sigma_SD, sigma_CW};
+	// double tau_a[] = {tau_a_SD, tau_a_CW};
+	// double tau_b[] = {tau_b_SD, tau_b_CW};
+	// double Re_k2[] = {Re_k2_SD, Re_k2_CW};
+	// double Im_k2[] = {Im_k2_SD, Im_k2_CW};
+	// // double sigma[] = {sigma_CW, sigma_SD};
+	// // double tau_a[] = {tau_a_CW, tau_a_SD};
+	// // double tau_b[] = {tau_b_CW, tau_b_SD};
+	// // double Re_k2[] = {Re_k2_CW, Re_k2_SD};
+	// // double Im_k2[] = {Im_k2_CW, Im_k2_SD};
+	// // double sigma[] = {sigma_DIU, sigma_CW};
+	// // double tau_a[] = {tau_a_DIU, tau_a_CW};
+	// // double tau_b[] = {tau_b_DIU, tau_b_CW};
+	// // double Re_k2[] = {Re_k2_DIU, Re_k2_CW};
+	// // double Im_k2[] = {Im_k2_DIU, Im_k2_CW};
+	// // double sigma[] = {sigma_tst, sigma_CW};
+	// // double tau_a[] = {tau_a_tst, tau_a_CW};
+	// // double tau_b[] = {tau_b_tst, tau_b_CW};
+	// // double Re_k2[] = {Re_k2_tst, Re_k2_CW};
+	// // double Im_k2[] = {Im_k2_tst, Im_k2_CW};
+	// // double sigma[] = {sigma_M2L, sigma_O1L};
+	// // double tau_a[] = {tau_a_M2L, tau_a_O1L};
+	// // double tau_b[] = {tau_b_M2L, tau_b_O1L};
+	// // double Re_k2[] = {Re_k2_M2L, Re_k2_O1L};
+	// // double Im_k2[] = {Im_k2_M2L, Im_k2_O1L};
+	// // double sigma[] = {sigma_DIU, sigma_SEMI_DIU};
+	// // double tau_a[] = {tau_a_DIU, tau_a_SEMI_DIU};
+	// // double tau_b[] = {tau_b_DIU, tau_b_SEMI_DIU};
+	// // double Re_k2[] = {Re_k2_DIU, Re_k2_SEMI_DIU};
+	// // double Im_k2[] = {Im_k2_DIU, Im_k2_SEMI_DIU};
+	// // double sigma[] = {sigma_SEMI_DIU, sigma_DIU};
+	// // double tau_a[] = {tau_a_SEMI_DIU, tau_a_DIU};
+	// // double tau_b[] = {tau_b_SEMI_DIU, tau_b_DIU};
+	// // double Re_k2[] = {Re_k2_SEMI_DIU, Re_k2_DIU};
+	// // double Im_k2[] = {Im_k2_SEMI_DIU, Im_k2_DIU};
+	// // double sigma[] = {sigma_DIU, sigma_inf};
+	// // double tau_a[] = {tau_a_DIU, tau_a_inf};
+	// // double tau_b[] = {tau_b_DIU, tau_b_inf};
+	// // double Re_k2[] = {Re_k2_DIU, Re_k2_inf};
+	// // double Im_k2[] = {Im_k2_DIU, Im_k2_inf};
 
-		tau_a_sigma = (gV.eta / gV.alpha + gV.eta * C_and_D[0]) 
-			/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
-		tau_b_sigma = (gV.eta / gV.alpha + gV.eta / gV.gamma + gV.eta * C_and_D[0]) 
-			/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
+	// /* two elements model */
+	// // int	  m = 2;
+	// // double sigma[] = {sigma_M2L, sigma_CW, sigma_N2L};
+	// // double tau_a[] = {tau_a_M2L, tau_a_CW, tau_a_N2L};
+	// // double tau_b[] = {tau_b_M2L, tau_b_CW, tau_b_N2L};
+	// // double Re_k2[] = {Re_k2_M2L, Re_k2_CW, Re_k2_N2L};
+	// // double Im_k2[] = {Im_k2_M2L, Im_k2_CW, Im_k2_N2L};
+	// // double sigma[] = {sigma_CW, sigma_M2L, sigma_inf};
+	// // double tau_a[] = {tau_a_CW, tau_a_M2L, tau_a_inf};
+	// // double tau_b[] = {tau_b_CW, tau_b_M2L, tau_b_inf};
+	// // double Re_k2[] = {Re_k2_CW, Re_k2_M2L, Re_k2_inf};
+	// // double Im_k2[] = {Im_k2_CW, Im_k2_M2L, Im_k2_inf};
+	// // double sigma[] = {sigma_tst, sigma_CW, sigma_DIU};
+	// // double tau_a[] = {tau_a_tst, tau_a_CW, tau_a_DIU};
+	// // double tau_b[] = {tau_b_tst, tau_b_CW, tau_b_DIU};
+	// // double Re_k2[] = {Re_k2_tst, Re_k2_CW, Re_k2_DIU};
+	// // double Im_k2[] = {Im_k2_tst, Im_k2_CW, Im_k2_DIU};
 
-		free(C_and_D);
+	// // result for
+	// // double sigma[] = {sigma_tst, sigma_CW};
+	// // double tau_a[] = {tau_a_tst, tau_a_CW};
+	// // double tau_b[] = {tau_b_tst, tau_b_CW};
+	// // double Re_k2[] = {Re_k2_tst, Re_k2_CW};
+	// // double Im_k2[] = {Im_k2_tst, Im_k2_CW};
+	// // gamma = 1.6291069229e+09
+	// // alpha = 2.6903199477e+09
+	// // eta = 8.6952450513e+10
+	// // alpha_1 = 9.4135195034e+10
+	// // eta_1 = 2.1973986591e+09
+	
+	// gV.m 	 = m;
+	// gV.gamma = gamma;
+	// gV.sigma = sigma;
+	// gV.tau_a = tau_a;
+	// gV.tau_b = tau_b;
 
-		double real_loop, imag_loop;
+	// if (gV.m > 0)
+	// {
+	// 	gV.alpha_k 	= (double *) malloc(gV.m * sizeof(double));
+	// 	gV.eta_k	= (double *) malloc(gV.m * sizeof(double));
+	// }
 
-		calculate_k2(&real_loop, &imag_loop, sigma_loop, k0, 
-			tau_b_sigma - tau_a_sigma, tau_b_sigma);
+	// convert_parameters_gV(&gV);
+
+	// /* Grevorgyan 2023 */
+	// // double kg_to_Msun = 1.0 / (1988500.0e24);
+	// // double m_to_AU = 1.0 / (1.495978707e11);
+	// // double s_to_year = 1.0 / (365.25 * 24.0 * 60.0 * 60.0);
+	// // double Pa = kg_to_Msun / (m_to_AU * s_to_year * s_to_year);
+	// // double Pas = kg_to_Msun / (m_to_AU * s_to_year);
+	// // m = 2;
+	// // gV.gamma 	  = 1.02159e9 * Pa;
+	// // gV.alpha 	  = 60.0e9 * Pa;
+	// // gV.eta		  = 9.05e20 * Pas;
+	// // gV.alpha_k[0] = 1050.0e9 * Pa;
+	// // gV.eta_k[0]   = 1.66e18 * Pas;
+	// // gV.alpha_k[1] = 1662.0e9 * Pa;
+	// // gV.eta_k[1]   = 1.76e18 * Pas;
+	// // gV.gamma 	  = 1.02159e9;
+	// // gV.alpha 	  = 60.0e9;
+	// // gV.eta		  = 9.05e20;
+	// // gV.alpha_k[0] = 1050.0e9;
+	// // gV.eta_k[0]   = 1.66e18;
+	// // gV.alpha_k[1] = 1662.0e9;
+	// // gV.eta_k[1]   = 1.76e18;
+
+	// printf ("gamma = %1.10e\n", gV.gamma);
+	// printf ("alpha = %1.10e\n", gV.alpha);
+	// printf ("eta = %1.10e\n", gV.eta);
+	// for (int i = 0; i < gV.m; i++)
+	// {
+	// 	printf ("alpha_%d = %1.10e\n", i+1, gV.alpha_k[i]);
+	// 	printf ("eta_%d = %1.10e\n", i+1, gV.eta_k[i]);
+	// }
+
+	// double sigma_reference = 1.0;
+	// // sigma_reference = sigma_DIU;
+
+	// FILE *out_1 = fopen("tests/test_calibration_k2_reference_points.dat", "w");
+	// for (int i = 0; i < gV.m + 1; i++)
+	// {
+	// 	fprintf(out_1, "%1.15e %1.15e %1.15e %1.15e\n", 
+	// 		sigma[i] / sigma_reference, Re_k2[i], -1.0 * Im_k2[i],
+	// 		sqrt(Re_k2[i] * Re_k2[i] + Im_k2[i] * Im_k2[i]));
+	// }
+	// fclose(out_1);
+
+	// /* Love number as a function of frequency */
+	// FILE *out_2 = fopen("tests/test_calibration_k2_plot.dat", "w");
+	// for (double sigma_loop = 1e-10; sigma_loop < 1e10; sigma_loop *= 1.01)
+	// {
+	// 	double tau_a_sigma, tau_b_sigma;
+
+	// 	double *C_and_D;
+
+	// 	C_and_D = convert_parameters_gV_summations_C_and_D(gV, sigma_loop);
+
+	// 	tau_a_sigma = (gV.eta / gV.alpha + gV.eta * C_and_D[0]) 
+	// 		/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
+	// 	tau_b_sigma = (gV.eta / gV.alpha + gV.eta / gV.gamma + gV.eta * C_and_D[0]) 
+	// 		/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
+
+	// 	free(C_and_D);
+
+	// 	double real_loop, imag_loop;
+
+	// 	calculate_k2(&real_loop, &imag_loop, sigma_loop, k0, 
+	// 		tau_b_sigma - tau_a_sigma, tau_b_sigma);
 		
-		fprintf(out_2, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma_loop / sigma_reference, real_loop, -1.0 * imag_loop,
-			sqrt(real_loop * real_loop + imag_loop * imag_loop));
-	}
-	fclose(out_2);
+	// 	fprintf(out_2, "%1.15e %1.15e %1.15e %1.15e\n", 
+	// 		sigma_loop / sigma_reference, real_loop, -1.0 * imag_loop,
+	// 		sqrt(real_loop * real_loop + imag_loop * imag_loop));
+	// }
+	// fclose(out_2);
 
-	if (gV.m > 0)
-	{
-		free(gV.alpha_k);
-		free(gV.eta_k);
-	}
+	// if (gV.m > 0)
+	// {
+	// 	free(gV.alpha_k);
+	// 	free(gV.eta_k);
+	// }
+
+	/* Mercury */
+
+	double k0;
+
+	// k0 = 0.8; // k_inf = 0.5695; // sigma*tau = 20.91
+	k0 = 0.7; // k_inf = 0.5691; // sigma*tau = 11.89
+
+	double Re_k2 = 0.57, Im_k2 = -0.011, sigma_orb = (2.0*M_PI)/87.969;
+
+	double tau_a, tau_b;
+
+	calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma_orb, Re_k2, Im_k2);
+
+	printf("sigma*tau = %1.5e\n", sigma_orb*tau_b);
+
+	double k_inf = k0*tau_a/tau_b;
+
+	printf("k_inf = %1.5e\n", k_inf);
 
 	return 0;
 }

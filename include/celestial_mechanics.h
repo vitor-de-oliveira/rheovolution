@@ -142,7 +142,7 @@ typedef struct CelestialBody {
 	/* bulk, orbital and rheology parameters */
 	double  mass;       		// mass (sun mass)
 	double	R;		    		// radius (km)
-	double	lod;	    		// length of day (day)
+	double	rot;	    		// length of day (day)
 	double	azi;				// azimuthal angle of angular velocity (deg)
 	double	pol;				// polar angle of angular velocity (deg)
 

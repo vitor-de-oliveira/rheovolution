@@ -451,7 +451,7 @@ copy_CelestialBody	(cltbdy *body_dest,
     
     body_dest->mass = body_src.mass;
     body_dest->R = body_src.R;
-    body_dest->lod = body_src.lod;
+    body_dest->rot = body_src.rot;
     body_dest->azi = body_src.azi;
     body_dest->pol = body_src.pol;
 
@@ -570,8 +570,8 @@ print_CelestialBody(cltbdy body)
 	printf("%1.10e\n", body.mass);
 	printf("R = ");	
 	printf("%1.10e\n", body.R);
-	printf("lod = ");	
-	printf("%1.10e\n", body.lod);
+	printf("rot = ");	
+	printf("%1.10e\n", body.rot);
 
 	printf("I0 = ");	
 	printf("%1.10e\n", body.I0);
@@ -1100,7 +1100,7 @@ calculate_orbital_elements  (cltbdy *body,
 int
 initialize_angular_velocity_on_z_axis(cltbdy *body)
 {
-    double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).lod};
+    double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).rot};
     rotate_vector_with_quaternion((*body).omega,
         (*body).q, omega_on_body);
 
@@ -1111,7 +1111,7 @@ int
 initialize_angular_velocity(cltbdy *body)
 {
     double omega_on_body_spherical[] = 
-        {2.0 * M_PI / (*body).lod, 
+        {2.0 * M_PI / (*body).rot, 
          (*body).azi,
          (*body).pol};
     double omega_on_body[] = {0.0, 0.0, 0.0};
@@ -1252,7 +1252,7 @@ largest_time_scale	(const cltbdy *bodies,
                 largest_orbital_period = body_orbital_period;
             }
         }
-        double body_rotational_period = bodies[i].lod;
+        double body_rotational_period = bodies[i].rot;
         if (body_rotational_period > largest_rotational_period)
         {
             largest_rotational_period = body_rotational_period;
