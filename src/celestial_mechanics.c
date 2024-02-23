@@ -452,6 +452,7 @@ copy_CelestialBody	(cltbdy *body_dest,
     body_dest->mass = body_src.mass;
     body_dest->R = body_src.R;
     body_dest->rot = body_src.rot;
+    body_dest->rot_ini = body_src.rot_ini;
     body_dest->azi = body_src.azi;
     body_dest->pol = body_src.pol;
 
@@ -572,6 +573,8 @@ print_CelestialBody(cltbdy body)
 	printf("%1.10e\n", body.R);
 	printf("rot = ");	
 	printf("%1.10e\n", body.rot);
+	printf("rot_ini = ");	
+	printf("%1.10e\n", body.rot_ini);
 
 	printf("I0 = ");	
 	printf("%1.10e\n", body.I0);
@@ -1100,7 +1103,7 @@ calculate_orbital_elements  (cltbdy *body,
 int
 initialize_angular_velocity_on_z_axis(cltbdy *body)
 {
-    double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).rot};
+    double omega_on_body[] = {0.0, 0.0, 2.0 * M_PI / (*body).rot_ini};
     rotate_vector_with_quaternion((*body).omega,
         (*body).q, omega_on_body);
 
@@ -1111,7 +1114,7 @@ int
 initialize_angular_velocity(cltbdy *body)
 {
     double omega_on_body_spherical[] = 
-        {2.0 * M_PI / (*body).rot, 
+        {2.0 * M_PI / (*body).rot_ini, 
          (*body).azi,
          (*body).pol};
     double omega_on_body[] = {0.0, 0.0, 0.0};

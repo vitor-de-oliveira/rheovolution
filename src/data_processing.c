@@ -384,6 +384,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	{
 		input_par_received[i] = false;
 	}
+	bool	input_initial_rot_received = false;
 	/* verification variables for names and deformable settings */
 	bool	input_name_received = false;
 	int 	number_deformable_inputs = 5; 
@@ -439,6 +440,15 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				(*bodies)[i].rot = atof(token);
 			}
 			input_par_received[1] = true;
+		}
+		else if (strcmp(token, "rot_ini(day)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].rot_ini = atof(token);
+			}
+			input_initial_rot_received = true;
 		}
 		else if (strcmp(token, "obl(deg)") == 0)
 		{
@@ -794,6 +804,13 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			exit(14);
 		}
 	}
+	if(input_initial_rot_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].rot_ini = (*bodies)[i].rot;
+		}
+	}
 	/* name input verification */
 	if (input_name_received == false)
 	{
@@ -1005,6 +1022,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].mass *= Msun_to_kg;
 			(*bodies)[i].R *= km_to_m;
 			(*bodies)[i].rot *= day_to_s;
+			(*bodies)[i].rot_ini *= day_to_s;
 			(*bodies)[i].a *= AU_to_m;
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
@@ -1024,6 +1042,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			(*bodies)[i].R *= km_to_AU;
 			(*bodies)[i].rot *= day_to_year;
+			(*bodies)[i].rot_ini *= day_to_year;
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
 				(*bodies)[i].Dt *= s_to_year;
@@ -1266,7 +1285,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].deformable == true)
 		{
 			double f_cent_static_i[9];
-			double mean_omega = norm_vector((*bodies)[i].omega);
+			double mean_omega = 2.0 * M_PI / (*bodies)[i].rot;
 			calculate_f_cent_static(f_cent_static_i, mean_omega);
 			double f_tide_static_i[9];
 			null_matrix(f_tide_static_i); // no permanent tide for now
