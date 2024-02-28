@@ -55,8 +55,8 @@ calculate_f_cent(double f_cent[9],
 				 const double omega[3]);
 
 int
-calculate_f_cent_static(double f_cent_static[9],
-				 		const double mean_omega);
+calculate_F_cent_mean	(double F_cent_mean[9],
+				 	  	 const double mean_omega);
 
 int
 calculate_b	(const int id,

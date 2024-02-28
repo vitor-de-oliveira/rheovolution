@@ -178,13 +178,14 @@ calculate_f_cent(double f_cent[9], const double omega[3])
 }
 
 int
-calculate_f_cent_static(double f_cent_static[9], const double mean_omega)
+calculate_F_cent_mean	(double F_cent_mean[9],
+				 	  	 const double mean_omega)
 {
 	double a = (mean_omega * mean_omega) / 3.0;
 	double M[] = {1.0, 0.0, 0.0,
 				  0.0, 1.0, 0.0,
 				  0.0, 0.0, -2.0};
-	scale_square_matrix(f_cent_static, a, M);
+	scale_square_matrix(F_cent_mean, a, M);
 
 	return 0;
 }

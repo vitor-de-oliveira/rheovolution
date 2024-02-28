@@ -1252,48 +1252,51 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* set bs, calculate p, and initialize b_eta and bk */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		/* transformation matrices */
-		double Y_i[9], Y_i_trans[9];
-		rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
-		transpose_square_matrix(Y_i_trans, Y_i);
-
-		/* real deformation */
+		/* real deformation on Tisserand frame */
 		double B_stokes_i[9];
 		body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
-		double B_stokes_i_diag[9];
-		calculate_diagonalized_square_matrix(B_stokes_i_diag, B_stokes_i);
-		double b_stokes_i[9];
-		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_i_diag);
-		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].bs_me, b_stokes_i);
+		double B_stokes_diag_i[9];
+		calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
 
 		/* update gravity field coefficients to */
 		/* the frame of principal inertia moments */
 		double Iner_diag[9];
-		calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_i_diag);
-		(*bodies)[i].rg = calculate_rg((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].J2 = calculate_J2((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
+		(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+		(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 		(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 		(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 		(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 		(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 
-		/* prestress */
-		double p_i[9];	
-		null_matrix(p_i);
+		/* prestress on Tisserand frame */
+		double P_i[9];	
+		null_matrix(P_i);
 		if ((*bodies)[i].prestress == true &&
 			(*bodies)[i].deformable == true)
 		{
-			double f_cent_static_i[9];
+			double F_cent_mean_i[9];
 			double mean_omega = 2.0 * M_PI / (*bodies)[i].rot;
-			calculate_f_cent_static(f_cent_static_i, mean_omega);
-			double f_tide_static_i[9];
-			null_matrix(f_tide_static_i); // no permanent tide for now
-			linear_combination_three_square_matrix(p_i,
-				(*bodies)[i].gamma_0, b_stokes_i,
-				-1.0, f_cent_static_i,
-				-1.0, f_tide_static_i);
+			calculate_F_cent_mean(F_cent_mean_i, mean_omega);
+			double F_tide_mean_i[9];
+			null_matrix(F_tide_mean_i); // no permanent tide for now
+			linear_combination_three_square_matrix(P_i,
+				(*bodies)[i].gamma_0, B_stokes_diag_i,
+				-1.0, F_cent_mean_i,
+				-1.0, F_tide_mean_i);
 		}
+
+		/* real deformation and prestress on inertial frame */
+		double Y_i[9], Y_i_trans[9];
+		rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
+		transpose_square_matrix(Y_i_trans, Y_i);
+		double b_stokes_i[9];
+		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_diag_i);
+		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].bs_me, b_stokes_i);
+		double p_i[9];
+		square_matrix_times_square_matrix(p_i, Y_i, P_i);
+		square_matrix_times_square_matrix(p_i, p_i, Y_i_trans);			
 		get_main_elements_traceless_symmetric_matrix((*bodies)[i].p_me, p_i);
 
 		/* alloc and initialize bk at equilibrium */
