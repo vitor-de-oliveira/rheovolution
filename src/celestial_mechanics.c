@@ -451,6 +451,7 @@ copy_CelestialBody	(cltbdy *body_dest,
     
     body_dest->mass = body_src.mass;
     body_dest->R = body_src.R;
+    body_dest->orb = body_src.orb;
     body_dest->rot = body_src.rot;
     body_dest->rot_ini = body_src.rot_ini;
     body_dest->azi = body_src.azi;
@@ -571,6 +572,8 @@ print_CelestialBody(cltbdy body)
 	printf("%1.10e\n", body.mass);
 	printf("R = ");	
 	printf("%1.10e\n", body.R);
+	printf("orb = ");	
+	printf("%1.10e\n", body.orb);
 	printf("rot = ");	
 	printf("%1.10e\n", body.rot);
 	printf("rot_ini = ");	

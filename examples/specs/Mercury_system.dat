@@ -1,7 +1,6 @@
 Name		    Sun		    Mercury	
 mass(Msun)      1.0         1.66e-7		
 rot(day)        1.0         58.650		
-rot_ini(day)    1.0         57.380	
 azi(deg)        0.0         0.0
 pol(deg)        0.0         0.0
 obl(deg)        0.0		    0.034		

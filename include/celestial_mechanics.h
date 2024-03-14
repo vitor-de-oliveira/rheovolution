@@ -142,6 +142,7 @@ typedef struct CelestialBody {
 	/* bulk, orbital and rheology parameters */
 	double  mass;       		// mass (sun mass)
 	double	R;		    		// radius (km)
+	double	orb;				// orbital period (day)
 	double	rot;	    		// sidereal rotation period (day)
 	double	rot_ini;	   		// initial rotation period (day)
 	double	azi;				// azimuthal angle of angular velocity (deg)

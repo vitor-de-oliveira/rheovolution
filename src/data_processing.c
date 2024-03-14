@@ -384,6 +384,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	{
 		input_par_received[i] = false;
 	}
+	bool	input_orb_received = false;
 	bool	input_initial_rot_received = false;
 	/* verification variables for names and deformable settings */
 	bool	input_name_received = false;
@@ -431,6 +432,15 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				(*bodies)[i].mass = atof(token);
 			}
 			input_par_received[0] = true;
+		}
+		else if (strcmp(token, "orb(day)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].orb = atof(token);
+			}
+			input_orb_received = true;
 		}
 		else if (strcmp(token, "rot(day)") == 0)
 		{
@@ -991,7 +1001,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		}
 	}
 
-	/* converting units */
+	/* converting units and setting orbital period */
 
 	double deg_to_rad = M_PI / 180.0;
 	for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -1028,6 +1038,22 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			{
 				(*bodies)[i].tau *= year_to_s;
 			}
+			if (i==0)
+			{
+				(*bodies)[i].orb = 0.0;	
+			}
+			else
+			{
+				if(input_orb_received == true)
+				{
+					(*bodies)[i].orb *= day_to_s;
+				}
+				else
+				{
+					(*bodies)[i].orb = kepler_period((*bodies)[0].mass, 
+						(*bodies)[i].mass, simulation.G, (*bodies)[i].a);
+				}
+			}
 		}
 	}
 	else
@@ -1046,6 +1072,22 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
 				(*bodies)[i].Dt *= s_to_year;
+			}
+			if (i==0)
+			{
+				(*bodies)[i].orb = 0.0;	
+			}
+			else
+			{
+				if(input_orb_received == true)
+				{
+					(*bodies)[i].orb *= day_to_year;
+				}
+				else
+				{
+					(*bodies)[i].orb = kepler_period((*bodies)[0].mass, 
+						(*bodies)[i].mass, simulation.G, (*bodies)[i].a);
+				}
 			}
 		}
 	}
@@ -1117,6 +1159,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	{
 		double	m = (*bodies)[i].mass;
 		double	R = (*bodies)[i].R;
+		double	T = (*bodies)[i].orb;
 
 		double	rg = (*bodies)[i].rg;
 		double	J2 = (*bodies)[i].J2;
@@ -1149,10 +1192,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		}
 		else
 		{
-			double T = 
-			kepler_period((*bodies)[0].mass, m, simulation.G, a);
 			double n = (2.0 * M_PI) / T;
-
 			double E = kepler_equation(e, M);
 			double r = a * (1.0 - e * cos(E));
 			double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);

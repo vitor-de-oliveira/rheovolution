@@ -553,10 +553,11 @@ main(int argc, char *argv[])
 
 	double k0;
 
-	// k0 = 0.8; // k_inf = 0.5695; // sigma*tau = 20.91
-	k0 = 0.7; // k_inf = 0.5691; // sigma*tau = 11.89
+	k0 = 0.8; // k_inf = 0.5695; // sigma*tau = 20.91
+	// k0 = 0.7; // k_inf = 0.5691; // sigma*tau = 11.89
 
 	double Re_k2 = 0.57, Im_k2 = -0.011, sigma_orb = (2.0*M_PI)/87.969;
+	Im_k2 = -0.022;
 
 	double tau_a, tau_b;
 

@@ -1,7 +1,7 @@
 t_init(yr)          0.0
 t_trans(yr)         0.0
-t_final(yr)         1000000.0
+t_final(yr)         500000.0
 t_step(yr)          0.016057495e-2
 eps_abs             1.0e-4
 eps_rel             1.0e-4
-data_skip           100000
+data_skip           50000
