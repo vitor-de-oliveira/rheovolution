@@ -25,6 +25,15 @@ parameter_gamma_0	(const double G,
 					 const double R,
 					 const double k0);
 
+int
+calculate_Y_and_Y_transpose(cltbdy *body);
+
+int
+calculate_bs_me(cltbdy *body);
+
+int
+calculate_p_me(cltbdy *body);
+
 double
 calculate_c(const cltbdy body);
 

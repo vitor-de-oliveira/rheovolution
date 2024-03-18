@@ -165,7 +165,7 @@ main(int argc, char *argv[])
 	}
 	
 	/* state variables */
-	int		dim_state_per_body_without_elements = 23;
+	int		dim_state_per_body_without_elements = 18;
 	int		dim_state = (dim_state_per_body_without_elements * simulation.number_of_bodies) + (5 * elements_total);
 	double 	y[dim_state];
 	int		elements_counter = 0;
@@ -180,29 +180,21 @@ main(int argc, char *argv[])
 		}
 		for (int j = 0; j < 5; j++)
 		{
-			if (bodies[i].deformable == true)
-			{
-				y[9 + dim_state_skip + j] = bodies[i].p_me[j];
-			}
-			else
-			{
-				y[9 + dim_state_skip + j] = bodies[i].bs_me[j];
-			}
-			y[14 + dim_state_skip + j] = bodies[i].b_eta_me[j];
+			y[9 + dim_state_skip + j] = bodies[i].b_eta_me[j];
 		}
 		for (int j = 0; j < 5 * bodies[i].elements; j++)
 		{
-			y[19 + dim_state_skip + j] = bodies[i].bk_me[j];
+			y[14 + dim_state_skip + j] = bodies[i].bk_me[j];
 		}
 		for (int j = 0; j < 4; j++)
 		{
-			y[19 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
+			y[14 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
 		}
 		elements_counter += bodies[i].elements;
 	}
 
 	/* parameters */
-	int		dim_params_per_body_without_elements = 11;
+	int		dim_params_per_body_without_elements = 21;
 	int		dim_params = 4 + (dim_params_per_body_without_elements * simulation.number_of_bodies) + (2 * elements_total);
 	double	params[dim_params];
 	elements_counter = 0; 
@@ -223,14 +215,22 @@ main(int argc, char *argv[])
 		params[4 + 7 + dim_params_skip] = bodies[i].gamma_0;
 		params[4 + 8 + dim_params_skip] = bodies[i].alpha;
 		params[4 + 9 + dim_params_skip] = bodies[i].eta;
-		params[4 + 10 + dim_params_skip] = (double) bodies[i].elements;
+		for (int j = 0; j < 5; j++)
+		{
+			params[4 + 10 + j + dim_params_skip] = bodies[i].Bs_me[j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			params[4 + 15 + j + dim_params_skip] = bodies[i].P_me[j];
+		}
+		params[4 + 20 + dim_params_skip] = (double) bodies[i].elements;
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[4 + 11 + dim_params_skip + j] = bodies[i].alpha_elements[j];
+			params[4 + 21 + dim_params_skip + j] = bodies[i].alpha_elements[j];
 		}
 		for (int j = 0; j < bodies[i].elements; j++)
 		{
-			params[4 + 12 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
+			params[4 + 22 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
 		}
 		elements_counter += bodies[i].elements;		
 	}
@@ -302,30 +302,30 @@ main(int argc, char *argv[])
 			}
 			for (int j = 0; j < 5; j++)
 			{
-				if (bodies[i].deformable == true)
-				{
-					bodies[i].p_me[j] = y[9 + dim_state_skip + j];
-				}
-				else
-				{
-					bodies[i].bs_me[j] = y[9 + dim_state_skip + j];
-				}
-				bodies[i].b_eta_me[j] = y[14 + dim_state_skip + j];
+				bodies[i].b_eta_me[j] = y[9 + dim_state_skip + j];
 			}
 			if (bodies[i].elements > 0)
 			{
 				for (int j = 0; j < 5 * bodies[i].elements; j++)
 				{
-					bodies[i].bk_me[j] = y[19 + dim_state_skip + j];
+					bodies[i].bk_me[j] = y[14 + dim_state_skip + j];
 				}
 			}
 			for (int j = 0; j < 4; j++)
 			{
-				bodies[i].q[j] = y[19 + 5 * bodies[i].elements + dim_state_skip + j];
+				bodies[i].q[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
 			}
 			normalize_quaternion(bodies[i].q);
 			
 			elements_counter += bodies[i].elements;
+		}
+
+		/* update bs and ps */
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			calculate_Y_and_Y_transpose(&bodies[i]);
+			calculate_bs_me(&bodies[i]);
+			calculate_p_me(&bodies[i]);
 		}
 
 		/* update omega and b */

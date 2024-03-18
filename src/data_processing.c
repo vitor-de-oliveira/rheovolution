@@ -1289,7 +1289,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		}
 	} // end loop over bodies
 
-	/* set bs, calculate p, and initialize b_eta and bk */
+	/* calculate Bs_me and P_me, and initialize b_eta and bk */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		/* real deformation on Tisserand frame */
@@ -1297,6 +1297,8 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
 		double B_stokes_diag_i[9];
 		calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
+			B_stokes_diag_i);
 
 		/* update gravity field coefficients to */
 		/* the frame of principal inertia moments */
@@ -1325,20 +1327,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				-1.0, F_cent_mean_i,
 				-1.0, F_tide_mean_i);
 		}
+		get_main_elements_traceless_symmetric_matrix((*bodies)[i].P_me,
+			P_i);
 
 		/* real deformation and prestress on inertial frame */
-		double Y_i[9], Y_i_trans[9];
-		rotation_matrix_from_quaternion(Y_i, (*bodies)[i].q);
-		transpose_square_matrix(Y_i_trans, Y_i);
-		double b_stokes_i[9];
-		square_matrix_times_square_matrix(b_stokes_i, Y_i, B_stokes_diag_i);
-		square_matrix_times_square_matrix(b_stokes_i, b_stokes_i, Y_i_trans);
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].bs_me, b_stokes_i);
-		double p_i[9];
-		square_matrix_times_square_matrix(p_i, Y_i, P_i);
-		square_matrix_times_square_matrix(p_i, p_i, Y_i_trans);			
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].p_me, p_i);
-
+		calculate_Y_and_Y_transpose(&(*bodies)[i]);
+		calculate_bs_me(&(*bodies)[i]);
+		calculate_p_me(&(*bodies)[i]);
+		
 		/* alloc and initialize bk at equilibrium */
 		if ((*bodies)[i].elements > 0)
 		{
@@ -1371,8 +1367,11 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		null_matrix(b_eta_i);
 		if ((*bodies)[i].deformable == true)
 		{
+			double bs_i[9];
+			construct_traceless_symmetric_matrix(bs_i,
+				(*bodies)[i].bs_me);
 			linear_combination_four_square_matrix(b_eta_i,
-				 c_i/(*bodies)[i].alpha, b_stokes_i,
+				 c_i/(*bodies)[i].alpha, bs_i,
 				-1.0/(*bodies)[i].alpha, f_cent_i,
 				-1.0/(*bodies)[i].alpha, f_tide_i,
 				-1.0/(*bodies)[i].alpha, f_ps_i);
