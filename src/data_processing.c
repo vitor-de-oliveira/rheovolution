@@ -364,21 +364,13 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* allocate memory for bodies */
 	*bodies = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
 
-	/* pre-initializing some parameters */
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{	
-		(*bodies)[i].S22 = 0.0;
-		(*bodies)[i].C21 = 0.0;
-		(*bodies)[i].S21 = 0.0;
-	}
-
 	/* auxiliary variables for reading input */
 	char 	*line = NULL;
 	size_t 	len = 0;
 	ssize_t read;
 
 	/* verification variables for input */
-	int 	number_par_inputs = 17;
+	int 	number_par_inputs = 7;
 	bool	input_par_received[number_par_inputs];
 	for (int i = 0; i < number_par_inputs; i++)
 	{
@@ -407,6 +399,23 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	{
 		input_gV_received[i] = false;
 	}
+	/* verification variables for some orbital parameters */
+	bool	input_e_received = false;
+	bool	input_I_received = false;
+	bool	input_M_received = false;
+	bool	input_w_received = false;
+	bool	input_OMEGA_received = false;
+	/* verification variables for angular velocity vector */
+	bool	input_omega_azi_received = false;
+	bool	input_omega_pol_received = false;
+	/* verification variables for some stokes coefficients */
+	bool	input_S22_received = false;
+	bool	input_C21_received = false;
+	bool	input_S21_received = false;
+	/* verification variables for some orientation parameters */
+	bool	input_obl_received = false;
+	bool	input_psi_received = false;
+	bool	input_lib_received = false;
 
 	/* reading input parameters */
 	FILE 	*in1 = fopen(simulation.system_specs, "r");
@@ -460,24 +469,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_initial_rot_received = true;
 		}
-		else if (strcmp(token, "obl(deg)") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				(*bodies)[i].obl = atof(token);
-			}
-			input_par_received[2] = true;
-		}
-		else if (strcmp(token, "psi(deg)") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				(*bodies)[i].psi = atof(token);
-			}
-			input_par_received[3] = true;
-		}
 		else if (strcmp(token, "R(km)") == 0)
 		{
 			for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -485,7 +476,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].R = atof(token);
 			}
-			input_par_received[4] = true;
+			input_par_received[2] = true;
 		}
 		else if (strcmp(token, "rg") == 0)
 		{
@@ -494,7 +485,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].rg = atof(token);
 			}
-			input_par_received[5] = true;
+			input_par_received[3] = true;
 		}
 		else if (strcmp(token, "J2") == 0)
 		{
@@ -503,7 +494,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].J2 = atof(token);
 			}
-			input_par_received[6] = true;
+			input_par_received[4] = true;
 		}
 		else if (strcmp(token, "C22") == 0)
 		{
@@ -512,7 +503,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].C22 = atof(token);
 			}
-			input_par_received[7] = true;
+			input_par_received[5] = true;
 		}
 		else if (strcmp(token, "C21") == 0)
 		{
@@ -521,6 +512,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].C21 = atof(token);
 			}
+			input_C21_received = true;
 		}
 		else if (strcmp(token, "S21") == 0)
 		{
@@ -529,6 +521,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].S21 = atof(token);
 			}
+			input_S21_received = true;
 		}
 		else if (strcmp(token, "S22") == 0)
 		{
@@ -537,6 +530,25 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].S22 = atof(token);
 			}
+			input_S22_received = true;
+		}
+		else if (strcmp(token, "obl(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].obl = atof(token);
+			}
+			input_obl_received = true;
+		}
+		else if (strcmp(token, "psi(deg)") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				(*bodies)[i].psi = atof(token);
+			}
+			input_psi_received = true;
 		}
 		else if (strcmp(token, "lib(deg)") == 0)
 		{
@@ -545,7 +557,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].lib = atof(token);
 			}
-			input_par_received[8] = true;
+			input_lib_received = true;
 		}
 		else if (strcmp(token, "a(AU)") == 0)
 		{
@@ -555,7 +567,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].a = atof(token);
 			}
-			input_par_received[9] = true;
+			input_par_received[6] = true;
 		}
 		else if (strcmp(token, "e") == 0)
 		{
@@ -565,7 +577,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].e = atof(token);
 			}
-			input_par_received[10] = true;
+			input_e_received = true;			
 		}
 		else if (strcmp(token, "I(deg)") == 0)
 		{
@@ -575,7 +587,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].I = atof(token);
 			}
-			input_par_received[11] = true;
+			input_I_received = true;
 		}
 		else if (strcmp(token, "M(deg)") == 0)
 		{
@@ -585,7 +597,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].M = atof(token);
 			}
-			input_par_received[12] = true;
+			input_M_received = true;
 		}
 		else if (strcmp(token, "w(deg)") == 0)
 		{
@@ -595,7 +607,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].w = atof(token);
 			}
-			input_par_received[13] = true;
+			input_w_received = true;
 		}
 		else if (strcmp(token, "OMEGA(deg)") == 0)
 		{
@@ -605,7 +617,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].Omega = atof(token);
 			}
-			input_par_received[14] = true;
+			input_OMEGA_received = true;
 		}
 		else if (strcmp(token, "azi(deg)") == 0)
 		{
@@ -614,7 +626,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].azi = atof(token);
 			}
-			input_par_received[15] = true;
+			input_omega_azi_received = true;
 		}
 		else if (strcmp(token, "pol(deg)") == 0)
 		{
@@ -623,7 +635,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].pol = atof(token);
 			}
-			input_par_received[16] = true;
+			input_omega_pol_received = true;
 		}
 		else if (strcmp(token, "centrifugal") == 0)
 		{
@@ -819,6 +831,102 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			(*bodies)[i].rot_ini = (*bodies)[i].rot;
+		}
+	}
+	if(input_e_received == false)
+	{
+		(*bodies)[0].e = NAN;
+		for (int i = 1; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].e = 0.0;
+		}
+	}
+	if(input_I_received == false)
+	{
+		(*bodies)[0].I = NAN;
+		for (int i = 1; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].I = 0.0;
+		}
+	}
+	if(input_M_received == false)
+	{
+		(*bodies)[0].M = NAN;
+		for (int i = 1; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].M = 0.0;
+		}
+	}
+	if(input_w_received == false)
+	{
+		(*bodies)[0].w = NAN;
+		for (int i = 1; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].w = 0.0;
+		}
+	}
+	if(input_OMEGA_received == false)
+	{
+		(*bodies)[0].Omega = NAN;
+		for (int i = 1; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].Omega = 0.0;
+		}
+	}
+	if(input_omega_azi_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].azi = 0.0;
+		}
+	}
+	if(input_omega_pol_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].pol = 0.0;
+		}
+	}
+	if(input_S22_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].S22 = 0.0;
+		}
+	}
+	if(input_C21_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].C21 = 0.0;
+		}	
+	}
+	if(input_S21_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].S21 = 0.0;
+		}
+	}
+	if(input_obl_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].obl = 0.0;
+		}
+	}
+	if(input_psi_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].psi = 0.0;
+		}
+	}
+	if(input_lib_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].lib = 0.0;
 		}
 	}
 	/* name input verification */
