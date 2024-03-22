@@ -25,6 +25,15 @@ parameter_gamma_0	(const double G,
 					 const double R,
 					 const double k0);
 
+int
+calculate_Y_and_Y_transpose(cltbdy *body);
+
+int
+calculate_bs_me(cltbdy *body);
+
+int
+calculate_p_me(cltbdy *body);
+
 double
 calculate_c(const cltbdy body);
 
@@ -55,8 +64,8 @@ calculate_f_cent(double f_cent[9],
 				 const double omega[3]);
 
 int
-calculate_f_cent_static(double f_cent_static[9],
-				 		const double mean_omega);
+calculate_F_cent_mean	(double F_cent_mean[9],
+				 	  	 const double mean_omega);
 
 int
 calculate_b	(const int id,

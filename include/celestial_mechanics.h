@@ -142,7 +142,9 @@ typedef struct CelestialBody {
 	/* bulk, orbital and rheology parameters */
 	double  mass;       		// mass (sun mass)
 	double	R;		    		// radius (km)
-	double	lod;	    		// length of day (day)
+	double	orb;				// orbital period (day)
+	double	rot;	    		// sidereal rotation period (day)
+	double	rot_ini;	   		// initial rotation period (day)
 	double	azi;				// azimuthal angle of angular velocity (deg)
 	double	pol;				// polar angle of angular velocity (deg)
 
@@ -189,17 +191,24 @@ typedef struct CelestialBody {
 	double	x[3];				// position
 	double	x_dot[3];			// velocity
 	double	l[3];				// angular momentum
-	double	p_me[5];			// main elements of prestress matrix
 	double	b_eta_me[5];		// main elements of b_eta matrix
 	double	*bk_me;				// main elements of Voigt elements matrices
 
-	/* real deformation */
+	/* real deformation and prestress */
+	double	Bs_me[5];			// deformation calculated from
+								// the stokes coefficients (Tisserand)
+	double	P_me[5];			// main elements of prestress matrix
+								// (Tisserand)
 	double	bs_me[5];			// deformation calculated from
-								// the stokes coefficients
+								// the stokes coefficients (inertial)
+	double	p_me[5];			// main elements of prestress matrix 
+								// (inertial)
 
 	/* rotation quaternion */
 	double	q[4];				// quaternion which transforms
 								// from the body to the inertial frame 
+	double	Y[9];				// rotation matrix
+	double	Y_trans[9];			// rotation matrix transpose
 
 	/* non-state variables (inertial frame) */
 	double	omega[3];			// angular velocity

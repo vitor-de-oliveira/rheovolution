@@ -37,6 +37,40 @@ parameter_gamma_0	(const double G,
 	return 3.0 * I0 * G / (pow(R, 5.0) * k0);
 }
 
+int
+calculate_Y_and_Y_transpose(cltbdy *body)
+{
+	rotation_matrix_from_quaternion((*body).Y, (*body).q);
+	transpose_square_matrix((*body).Y_trans, (*body).Y);
+	return 0;
+}
+
+int
+calculate_bs_me(cltbdy *body)
+{
+	double B_stokes[9];
+	construct_traceless_symmetric_matrix(B_stokes, (*body).Bs_me);
+	double b_stokes[9];
+	square_matrix_times_square_matrix(b_stokes, (*body).Y, B_stokes);
+	square_matrix_times_square_matrix(b_stokes, b_stokes, (*body).Y_trans);
+	get_main_elements_traceless_symmetric_matrix((*body).bs_me, b_stokes);
+
+	return 0;
+}
+
+int
+calculate_p_me(cltbdy *body)
+{
+	double P[9];
+	construct_traceless_symmetric_matrix(P, (*body).P_me);
+	double p[9];
+	square_matrix_times_square_matrix(p, (*body).Y, P);
+	square_matrix_times_square_matrix(p, p, (*body).Y_trans);
+	get_main_elements_traceless_symmetric_matrix((*body).p_me, p);
+
+	return 0;
+}
+
 double
 calculate_c(const cltbdy body)
 {
@@ -178,13 +212,14 @@ calculate_f_cent(double f_cent[9], const double omega[3])
 }
 
 int
-calculate_f_cent_static(double f_cent_static[9], const double mean_omega)
+calculate_F_cent_mean	(double F_cent_mean[9],
+				 	  	 const double mean_omega)
 {
 	double a = (mean_omega * mean_omega) / 3.0;
 	double M[] = {1.0, 0.0, 0.0,
 				  0.0, 1.0, 0.0,
 				  0.0, 0.0, -2.0};
-	scale_square_matrix(f_cent_static, a, M);
+	scale_square_matrix(F_cent_mean, a, M);
 
 	return 0;
 }
