@@ -1,0 +1,6 @@
+name                EMS_sun_reference
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        EMS_sun_reference_system.dat
+integration_specs   EMS_example_integration.dat
+rheology_model      Maxwell
