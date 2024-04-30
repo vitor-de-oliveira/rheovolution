@@ -2039,8 +2039,8 @@ output_to_spin	(cltbdy *bodies,
 				/* obliquity */
 				if (i == 0)
 				{
-					// calculate_obliquity_free_body_from_angular_velocity(&bodies[i]);
-					calculate_obliquity_free_body_from_figure_axis_of_solid_frame(&bodies[i]);
+					calculate_obliquity_free_body_from_angular_velocity(&bodies[i]);
+					// calculate_obliquity_free_body_from_figure_axis_of_solid_frame(&bodies[i]);
 				}
 				else
 				{
@@ -2050,8 +2050,8 @@ output_to_spin	(cltbdy *bodies,
 					linear_combination_vector(bodies[i].relative_x_dot,
 						1.0, bodies[i].x_dot,
 						-1.0, bodies[0].x_dot);
-					// calculate_obliquity_on_orbit_from_angular_velocity(&bodies[i]);
-					calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(&bodies[i]);
+					calculate_obliquity_on_orbit_from_angular_velocity(&bodies[i]);
+					// calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(&bodies[i]);
 				}	
 				fprintf (out_orientation, " %.15e", bodies[i].obl * rad_to_deg);
 
