@@ -232,7 +232,7 @@ calculate_b	(const int id,
 {
 	/**
 	 * if body is a point mass, b equals 0 
-	 * if body is not deformable, b equals to b0
+	 * if body is not deformable, b equals to bs
 	**/
 	if (bodies[id].point_mass == true)
 	{

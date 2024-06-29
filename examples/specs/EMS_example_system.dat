@@ -1,19 +1,24 @@
-Name		Earth		Moon		Sun		
-mass(Msun)	3.00317e-6	3.69464e-8	1.00		
-rot(day)	0.9972708 	27.322		25.			
-R(km)		6.3710e+3	1.7371e+3 	695.50e+3	
-rg			0.3308 		0.3935		0.080		
-J2          1.08263e-3  2.038e-4    1.e-6		
-C22         1.57462e-6  2.24e-5     0.0   
-S22         -9.0387e-7 	0.0	        0.0
-k0			0.933		0.0302		0.028		
-Dt(s)		1.20382e5   1.20382e5  	0.1		
-tau(yr)		5.60984e-3 	5.60984e-3 	0.0 			
-a(AU)					2.56955e-3	1.0000		
-e						0.0549		0.0167		
-I(deg)					0.0000		-5.145		
-point_mass  yes         yes         yes
-deformable  no          no          no
-prestress   no          no          no
-centrifugal no          no          no
-tidal       no          no          no
+Name		 Earth		 Moon		 Sun		
+mass(Msun)	 3.0035e-6	 3.6942e-8	 1.00		
+R(km)		 6371.0 	 1737.4  	 695.50e+3	
+rot(day)	 0.99727 	 27.322		 25.0			
+rot_ini(day) 0.99727 	 27.0		 25.0			
+obl(deg)     23.44       6.68        0.0
+a(AU)					 2.56955e-3	 1.0000		
+e						 0.0549		 0.0167		
+I(deg)					 5.145		 0.0		
+rg			 0.3308 	 0.394		 0.080		
+J2           1082.63e-6  203.224e-6  1.0e-6		
+C22          1.57462e-6  2.23814e-5  0.0   
+S22          -9.0387e-7  5.86059e-10 0.0
+C21          -0.26674e-9 1.89313e-11 0.0
+S21          -1.78727e-9 1.51469e-11 0.0
+gamma_0      0.0         4.65163e10  0.0
+alpha        0.0         1.81215e10  0.0
+eta          0.0         1.20935e7   0.0
+elements     0           0           0
+point_mass   yes         no          yes
+deformable   no          yes         no
+prestress    no          yes         no
+centrifugal  no          yes         no
+tidal        no          yes         no

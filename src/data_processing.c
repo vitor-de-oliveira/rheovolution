@@ -1090,11 +1090,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* hierarchy conditions (just to be safe) */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		if ((*bodies)[i].deformable == false &&
-			(*bodies)[i].prestress == false)
-		{
-			(*bodies)[i].point_mass = true;
-		}
 		if ((*bodies)[i].point_mass == true)
 		{
 			(*bodies)[i].deformable = false;
@@ -1352,7 +1347,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
 
 		/* 3rd set of variables - I0 */
-		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		if ((*bodies)[i].point_mass == true)
+		{
+			(*bodies)[i].I0 = 0.0;
+		}
+		else
+		{
+			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		}
 
 		/* Kelvin-Voigt elements */
 		if (strcmp(simulation.rheology_model, "Maxwell") == 0)
@@ -1503,7 +1505,7 @@ create_output_files	(const cltbdy *bodies,
 			 		 const siminf simulation,
 					 FILE *out[])
 {
-	char filename[150];
+	char filename[300];
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		/* names and opens output files for each body */
@@ -1653,7 +1655,7 @@ write_simulation_overview	(const int time_spent_in_seconds,
 							 const siminf simulation)
 {
 	// creates info file
-	char filename[150];
+	char filename[300];
 	strcpy(filename, simulation.output_folder);
 	strcat(filename, "results_");
 	strcat(filename, simulation.name);
@@ -1736,7 +1738,7 @@ output_to_orbit(cltbdy *bodies,
     ssize_t	read;
 
 	/* input filename of first body */
-	char filename_read_first_body[150];
+	char filename_read_first_body[300];
 	strcpy(filename_read_first_body, simulation.output_folder);
 	strcat(filename_read_first_body, "results_");
 	strcat(filename_read_first_body, simulation.name);
@@ -1762,7 +1764,7 @@ output_to_orbit(cltbdy *bodies,
 		ssize_t	read_first_body;
 
 		/* input files of remaining bodies */
-		char filename_read[150];
+		char filename_read[300];
 		strcpy(filename_read, simulation.output_folder);
 		strcat(filename_read, "results_");
 		strcat(filename_read, simulation.name);
@@ -1778,7 +1780,7 @@ output_to_orbit(cltbdy *bodies,
 		}
 
 		/* output files for orbital elements */
-		char filename_orbital[150];
+		char filename_orbital[300];
 		FILE *out_orbital;
 
 		/* names and opens output files for each body */
@@ -1890,7 +1892,7 @@ output_to_spin	(cltbdy *bodies,
     ssize_t	read;
 
 	/* input filename of first body */
-	char filename_read_first_body[150];
+	char filename_read_first_body[300];
 	strcpy(filename_read_first_body, simulation.output_folder);
 	strcat(filename_read_first_body, "results_");
 	strcat(filename_read_first_body, simulation.name);
@@ -1920,7 +1922,7 @@ output_to_spin	(cltbdy *bodies,
 			ssize_t	read_first_body;
 
 			/* input files of remaining bodies */
-			char filename_read[150];
+			char filename_read[300];
 			strcpy(filename_read, simulation.output_folder);
 			strcat(filename_read, "results_");
 			strcat(filename_read, simulation.name);
@@ -1936,7 +1938,7 @@ output_to_spin	(cltbdy *bodies,
 			}
 
 			/* output files for orientation variables */
-			char filename_orientation[150];
+			char filename_orientation[300];
 			FILE *out_orientation;
 
 			/* names and opens output files for each body */
@@ -1960,6 +1962,8 @@ output_to_spin	(cltbdy *bodies,
 			fprintf(out_orientation, " azi(°)"); // nutation angle
 			fprintf(out_orientation, " aziPIM(°)"); // nutation angle on Principal
 													 // Inertia Momenta (PIM) frame
+			fprintf(out_orientation, " J2"); // J2 on PIM frame
+			fprintf(out_orientation, " C22"); // C22 on PIM frame
 			fprintf(out_orientation, "\n");
 
 			// convertion units
@@ -2094,6 +2098,18 @@ output_to_spin	(cltbdy *bodies,
 				fprintf (out_orientation, " %.15e", 
 					ang_vel_body_frame_spherical[1] * rad_to_deg);
 
+				/* Stokes coefficients on Principal Inertia Momenta (PIM) frame */
+				double B[9];
+				square_matrix_times_square_matrix(B, bodies[i].b, Y_i);
+				square_matrix_times_square_matrix(B, Y_i_trans, B);
+				double B_diag_i[9];
+				calculate_diagonalized_square_matrix(B_diag_i, B);
+				double Iner_diag_i[9];
+				calculate_inertia_tensor(Iner_diag_i, bodies[i].I0, B_diag_i);
+				bodies[i].J2  = calculate_J2 (bodies[i].mass, bodies[i].R, Iner_diag_i);
+				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag_i);
+				fprintf (out_orientation, " %.15e %.15e", bodies[i].J2, bodies[i].C22);
+
 				/* next line */
 				fprintf(out_orientation, "\n");		
 			}
@@ -2124,16 +2140,16 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 		exit(22);
 	}
 	/* create figures dir */
-	char plot_folder[150];
+	char plot_folder[300];
 	strcpy(plot_folder, simulation.output_folder);
 	strcat(plot_folder, "/figures/");
 	struct stat st_plot = {0};
 	if (stat(plot_folder, &st_plot) == -1) {
 		mkdir(plot_folder, 0700);
 	}
-	char filename_get[150];
-	char filename_plot[150];
-	char filename_get_first_body[150];
+	char filename_get[300];
+	char filename_plot[300];
+	char filename_get_first_body[300];
 	/* get output filenames of first body */
 	strcpy(filename_get_first_body, simulation.output_folder);
 	strcat(filename_get_first_body, "results_");
@@ -2480,6 +2496,65 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			fprintf(gnuplotPipe, "set title \"Azimuthal angle of %s's angular velocity\"\n", bodies[i].name);
 			fprintf(gnuplotPipe, "plot \'%s\' u 1:9 w l lw 3", filename_get);
 			pclose(gnuplotPipe);
+			/* nutation frequency on Principal Inertia Momenta (PIM) frame */
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_nutation_PIM");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"Nutation angle on PIM(°)\"\n");
+			fprintf(gnuplotPipe, "set title \"Nutation angle on PIM of %s's angular velocity\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:10 w l lw 3", filename_get);
+			pclose(gnuplotPipe);
+			/* Stokes coefficients */
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_J2");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"J2\"\n");
+			fprintf(gnuplotPipe, "set title \"%s's J2\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:11 w l lw 3", filename_get);
+			pclose(gnuplotPipe);
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_C22");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"C22\"\n");
+			fprintf(gnuplotPipe, "set title \"%s's C22\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:12 w l lw 3", filename_get);
+			pclose(gnuplotPipe);	
 		} // if (bodies[i].point_mass == false)
 	} // end loop over bodies
 	/* reads output file of full system */

@@ -20,9 +20,16 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 .PHONY: run orbit spin plot all example_1 example_2 example_3 examples \
 		examples_parallel run_calibration clean clean_calibration clean_examples \
 		clean_slurm input_check
-.SILENT: tides examples_parallel clean clean_examples clean_slurm
+.SILENT: tides compile examples_parallel clean clean_examples clean_slurm
 
 tides: $(SRC_DIR)/main.c $(DEPENDENCIES)
+ifeq ($(CC),icc)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+					-march=native -Wall -Werror -diag-disable=10441)
+endif
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+
+compile: $(SRC_DIR)/main.c $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
@@ -43,28 +50,28 @@ plot: input_check
 
 all: input_check run orbit spin plot
 
-example_1:
-	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
-	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
+example_E:
+	$(eval EXAMPLE_NAME := Earth)
+	$(eval EXAMPLE_DIR := examples/E_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
-example_2:
+example_EM:
 	$(eval EXAMPLE_NAME := Earth-Moon system)
 	$(eval EXAMPLE_DIR := examples/EM_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
-example_3:
-	$(eval EXAMPLE_NAME := rigid Earth)
-	$(eval EXAMPLE_DIR := examples/E_example.dat)
+example_EMS:
+	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
+	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
 	@echo "Running $(EXAMPLE_NAME) example."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME) example."
 
-examples: example_1 example_2 example_3
+examples: example_E example_EM example_EMS
 
 examples_parallel:
 	@$(MAKE) -j examples

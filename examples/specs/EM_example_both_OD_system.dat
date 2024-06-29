@@ -10,9 +10,11 @@ S22         -9.0387e-7       5.86059e-10
 C21         -0.26674e-9      1.89313e-11
 S21         -1.78727e-9      1.51469e-11
 gamma_0     1.6890264199e+09 1.0
-alpha       3.7391869729e+09 1.0
-eta         6.3438043581e+06 1.0
-elements    0                0
+alpha       3.1532629135e+10 1.0
+eta         6.8261692222e+10 1.0
+elements    1                0
+alpha_1     4.1479208323e+09 1.0
+eta_1       1.4105412720e+05 1.0
 point_mass  no               yes
 deformable  yes              no
 prestress   yes              no

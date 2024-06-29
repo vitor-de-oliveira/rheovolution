@@ -434,6 +434,14 @@ calculate_diagonalized_square_matrix(double M_diag[], const double M[])
 	square_matrix_times_square_matrix(M_diag, P_inv, M);
 	square_matrix_times_square_matrix(M_diag, M_diag, P);
 
+	// set off-diagonal elements to zero by hand
+	M_diag[1] = 0.0;
+	M_diag[2] = 0.0;
+	M_diag[3] = 0.0;
+	M_diag[5] = 0.0;
+	M_diag[6] = 0.0;
+	M_diag[7] = 0.0;
+
 	return 0;
 }
 

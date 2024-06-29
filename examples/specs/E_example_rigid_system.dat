@@ -15,7 +15,7 @@ alpha       3.6657185262e+09
 eta         6.7205193094e+10
 elements    0
 point_mass  no     
-deformable  yes    
-prestress   yes    
-centrifugal yes        
-tidal       yes    
+deformable  no    
+prestress   no    
+centrifugal no        
+tidal       no    

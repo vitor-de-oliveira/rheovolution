@@ -3,5 +3,4 @@ input_folder        examples/specs/
 output_folder       examples/
 system_specs        EM_example_system.dat
 integration_specs   EM_example_integration.dat
-rheology_model      Maxwell
-number_of_bodies    2
+rheology_model      gen_Voigt
