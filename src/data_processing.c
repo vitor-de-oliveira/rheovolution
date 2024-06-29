@@ -1090,11 +1090,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* hierarchy conditions (just to be safe) */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		if ((*bodies)[i].deformable == false &&
-			(*bodies)[i].prestress == false)
-		{
-			(*bodies)[i].point_mass = true;
-		}
 		if ((*bodies)[i].point_mass == true)
 		{
 			(*bodies)[i].deformable = false;
@@ -1352,7 +1347,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
 
 		/* 3rd set of variables - I0 */
-		(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		if ((*bodies)[i].point_mass == true)
+		{
+			(*bodies)[i].I0 = 0.0;
+		}
+		else
+		{
+			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
+		}
 
 		/* Kelvin-Voigt elements */
 		if (strcmp(simulation.rheology_model, "Maxwell") == 0)
@@ -2614,7 +2616,7 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 				fprintf(gnuplotPipe, "set title \"%s's spin-orbit angle\"\n", bodies[i].name);
 				fprintf(gnuplotPipe, "plot \'%s\' u 1:14 w l lw 3", filename_get);
 				pclose(gnuplotPipe);
-			}
+			} // if (i > 0)
 		} // if (bodies[i].point_mass == false)
 	} // end loop over bodies
 	/* reads output file of full system */

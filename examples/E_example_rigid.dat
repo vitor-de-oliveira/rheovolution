@@ -1,6 +1,6 @@
-name                E_example
+name                E_example_rigid
 input_folder        examples/specs/
 output_folder       examples/
-system_specs        E_example_system.dat
+system_specs        E_example_rigid_system.dat
 integration_specs   E_example_integration.dat
 rheology_model      gen_Voigt

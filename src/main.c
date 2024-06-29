@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 	}
 
 	/* correction for the angular velocity's initial value */
-	int		omega_correction_number_of_iterates = 5;
+	int		omega_correction_number_of_iterates = 10; // 5
 	int		*omega_correction_on_body = *(&omega_correction_on_body);
 	double	*omega_correction_step = *(&omega_correction_step);
 	double 	*omega_correction_rot = *(&omega_correction_rot);
@@ -94,7 +94,7 @@ main(int argc, char *argv[])
 		// 				simulation.number_of_bodies,
 		// 				simulation.G);
 		// printf("%1.5e\n", simulation.omega_correction_t_final);
-		simulation.omega_correction_t_final = 50000.0;
+		simulation.omega_correction_t_final = 100.0; // 50000.0
 		simulation.omega_correction_counter = 0;
 		simulation_copy = simulation;
 		simulation.write_to_file = false;
@@ -137,8 +137,7 @@ main(int argc, char *argv[])
 					omega_correction_rot[i] += omega_correction_step[i];
 
 					copy_CelestialBody(&bodies[i], bodies_copy[i]);
-					bodies[i].rot = omega_correction_rot[i];
-
+					bodies[i].rot_ini = omega_correction_rot[i];
 				}
 				else
 				{

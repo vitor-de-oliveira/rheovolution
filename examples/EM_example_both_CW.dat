@@ -1,0 +1,6 @@
+name                EM_example_both_CW
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        EM_example_both_CW_system.dat
+integration_specs   EM_example_both_CW_integration.dat
+rheology_model      gen_Voigt

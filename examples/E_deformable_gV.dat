@@ -1,8 +1,0 @@
-name                E_deformable_gV
-input_folder        examples/specs/
-output_folder       examples/
-system_specs        E_deformable_gV_system.dat
-integration_specs   E_example_integration.dat
-rheology_model      gen_Voigt
-number_of_bodies    1
-omega_correction    no
