@@ -18,9 +18,9 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/data_processing.c
 
 .PHONY: run orbit spin plot all example_1 example_2 example_3 examples \
-		examples_parallel run_calibration clean clean_calibration clean_examples \
-		clean_slurm input_check
-.SILENT: tides examples_parallel clean clean_examples clean_slurm
+		examples_parallel tests tests_parallel run_calibration clean \ 
+		clean_calibration clean_examples clean_slurm input_check
+.SILENT: tides examples_parallel tests_parallel clean clean_examples clean_slurm
 
 tides: $(SRC_DIR)/main.c $(DEPENDENCIES)
 ifeq ($(CC),icc)
@@ -68,6 +68,32 @@ examples: example_1 example_2 example_3
 
 examples_parallel:
 	@$(MAKE) -j examples
+
+test_1:
+	$(eval EXAMPLE_NAME := test 1: rigid Earth)
+	$(eval EXAMPLE_DIR := examples/test_1.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+test_2:
+	$(eval EXAMPLE_NAME := test 2: Earth-Moon system)
+	$(eval EXAMPLE_DIR := examples/test_2.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+test_3:
+	$(eval EXAMPLE_NAME := test 3: Earth-Moon-Sun system)
+	$(eval EXAMPLE_DIR := examples/test_3.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+tests: test_1 test_2 test_3
+
+tests_parallel:
+	@$(MAKE) -j tests
 
 calibration: $(SRC_DIR)/calibration.c $(DEPENDENCIES)
 	$(eval TARGET = calibration)

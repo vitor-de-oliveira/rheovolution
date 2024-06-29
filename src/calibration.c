@@ -600,8 +600,8 @@ main(int argc, char *argv[])
 
 	calculate_Re_k2_Im_k2_from_k2_Q(&Re_k2, &Im_k2, k2, Q);
 
-	printf("Re_k2 = %1.5e\n", Re_k2);
-	printf("Im_k2 = %1.5e\n", Im_k2);
+	printf("Re_k2 = %1.10e\n", Re_k2);
+	printf("Im_k2 = %1.10e\n", Im_k2);
 
 	double tau_a, tau_b;
 
@@ -612,25 +612,29 @@ main(int argc, char *argv[])
 	double R = 1.1611796290e-05; // from main
 	double G = 4.0 * M_PI * M_PI;
 
-	double gamma = 7.6451149e8; // table 9 ragazzo 2022
-	double alpha_0 = 4.5751802e10; // table 9 ragazzo 2022
+	double gamma = pow((2.0 * M_PI) / (1.992 / (365.25 * 24.0)), 2.0); // table 9 ragazzo 2022
+	double alpha_0 = pow((2.0 * M_PI) / (0.2575 / (365.25 * 24.0)), 2.0);; // table 9 ragazzo 2022
+	
 	double gamma_0 = gamma + alpha_0;
 	double k0 = (3.0 * G * I0) / (gamma_0 * pow(R,5.0));
 
 	calculate_tau_a_tau_b(&tau_a, &tau_b,
 		k0, sigma, Re_k2, Im_k2);
 
-	printf("tau_a = %1.5e\n", tau_a);
-	printf("tau_b = %1.5e\n", tau_b);
+	printf("tau_a = %1.10e\n", tau_a);
+	printf("tau_b = %1.10e\n", tau_b);
 
 	double gamma0, alpha, eta;
 
 	calculate_gamma0_alpha_eta(&gamma0, &alpha, &eta,
 		tau_a, tau_b, k0, I0, R, G);
 
-	printf("gamma0 = %1.5e\n", gamma0);
-	printf("alpha = %1.5e\n", alpha);
-	printf("eta = %1.5e\n", eta);
+	printf("gamma0 = %1.10e\n", gamma0);
+	printf("alpha = %1.10e\n", alpha);
+	printf("eta = %1.10e\n", eta);
+
+	printf("Moon's sidereal period = %1.5e yr\n", (27.32 / 365.25));
+	printf("maxwell time = %1.5e yr\n", eta / alpha);
 
 	return 0;
 }

@@ -1211,6 +1211,18 @@ angle_between_spin_axis_and_angular_momentum(const cltbdy body)
 	return angle_between_two_vectors(body.omega, body.l);
 }
 
+double
+angle_between_relative_x_and_I1(const cltbdy body)
+{
+	double P[9];
+	calculate_eigenvectors_matrix(P, body.b);
+    double I1_on_body[] = {1.0, 0.0, 0.0};
+    double I1[3];
+    square_matrix_times_vector(I1, P, I1_on_body);
+
+	return angle_between_two_vectors(body.relative_x, I1);
+}
+
 int
 calculate_center_of_mass(double center_of_mass[3],
 				 		 const cltbdy *bodies,

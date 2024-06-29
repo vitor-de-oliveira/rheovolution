@@ -274,6 +274,9 @@ angle_between_spin_axis_and_figure_axis(const cltbdy body);
 double
 angle_between_spin_axis_and_angular_momentum(const cltbdy body);
 
+double
+angle_between_relative_x_and_I1(const cltbdy body);
+
 /* auxiliary functions */
 
 int
