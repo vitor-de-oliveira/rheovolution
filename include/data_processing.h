@@ -27,17 +27,17 @@ count_columns(const char *s);
 typedef struct SimulationInfo {
 
 	/* simlation id */
-	char	name[100];
+	char	name[300];
 
 	/* argument of main */
-	char	main_input[100];
+	char	main_input[300];
 
 	/* files location */
-	char	input_folder[100];
-	char	output_folder[100];
-	char	system_specs[100];
-	char	integration_specs[100];
-	char	dev_specs[100];
+	char	input_folder[300];
+	char	output_folder[300];
+	char	system_specs[300];
+	char	integration_specs[300];
+	char	dev_specs[300];
 
 	/* general specs */
 	double	G;							// gravitational parameter

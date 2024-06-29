@@ -82,12 +82,32 @@ int
 convert_parameters_gV	(gvrheo *gV);
 
 int
+calculate_Re_k2_Im_k2_from_k2_Q(double *Re_k2,
+								double *Im_k2,
+								double k2,
+								double Q);
+
+int
 calculate_tau_a_tau_b	(double *tau_a,
 						 double *tau_b,
 						 double k0,
 						 double sigma,
 						 double Re_k2,
 						 double Im_k2);
+
+int
+calculate_gamma0_alpha_eta (double *gamma0,
+						 	double *alpha,
+						 	double *eta,
+							double tau_a,
+							double tau_b,
+						 	double k0,
+						 	double I0,
+						 	double R,
+							double G);
+
+int
+moon_rheological_parameters	();
 
 int
 main(int argc, char *argv[])
@@ -561,6 +581,59 @@ main(int argc, char *argv[])
 	// Im_k2 = -0.022;
 
 	// double tau_a, tau_b;
+
+	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma_orb, Re_k2, Im_k2);
+
+	// printf("sigma*tau = %1.5e\n", sigma_orb*tau_b);
+
+	// double k_inf = k0*tau_a/tau_b;
+
+	// printf("k_inf = %1.5e\n", k_inf);
+
+	/* Moon */
+
+	// moon_rheological_parameters();
+
+	double Re_k2, Im_k2;
+
+	double k2 = 0.0236; // table 8 ragazzo 2022
+	double Q = 46.0; // table 8 ragazzo 2022
+
+	calculate_Re_k2_Im_k2_from_k2_Q(&Re_k2, &Im_k2, k2, Q);
+
+	printf("Re_k2 = %1.10e\n", Re_k2);
+	printf("Im_k2 = %1.10e\n", Im_k2);
+
+	// double k0 = 1.43; // table 8 ragazzo 2022 (kf)
+	double sigma = (2.0 * M_PI) / (27.32 / 365.25); // table 9 ragazzo 2022
+
+	double I0 = 1.9595922041e-18; // from main
+	double R = 1.1611796290e-05; // from main
+	double G = 4.0 * M_PI * M_PI;
+
+	double gamma = pow((2.0 * M_PI) / (1.992 / (365.25 * 24.0)), 2.0); // table 9 ragazzo 2022
+	double alpha_0 = pow((2.0 * M_PI) / (0.2575 / (365.25 * 24.0)), 2.0);; // table 9 ragazzo 2022
+	
+	double gamma_0 = gamma + alpha_0;
+	double k0 = (3.0 * G * I0) / (gamma_0 * pow(R,5.0));
+
+	calculate_tau_a_tau_b(&tau_a, &tau_b,
+		k0, sigma, Re_k2, Im_k2);
+
+	printf("tau_a = %1.10e\n", tau_a);
+	printf("tau_b = %1.10e\n", tau_b);
+
+	double gamma0, alpha, eta;
+
+	calculate_gamma0_alpha_eta(&gamma0, &alpha, &eta,
+		tau_a, tau_b, k0, I0, R, G);
+
+	printf("gamma0 = %1.10e\n", gamma0);
+	printf("alpha = %1.10e\n", alpha);
+	printf("eta = %1.10e\n", eta);
+
+	printf("Moon's sidereal period = %1.5e yr\n", (27.32 / 365.25));
+	printf("maxwell time = %1.5e yr\n", eta / alpha);
 
 	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma_orb, Re_k2, Im_k2);
 
@@ -1221,6 +1294,27 @@ convert_parameters_gV (gvrheo *gV)
 }
 
 int
+calculate_Re_k2_Im_k2_from_k2_Q(double *Re_k2,
+								double *Im_k2,
+								double k2,
+								double Q)
+{
+	double Re_k2_local;
+	double Im_k2_local;
+
+	double alpha = - 1.0 / sqrt(Q*Q - 1.0);
+	double beta = k2;
+
+	Re_k2_local = sqrt((beta*beta)/(1.0+alpha*alpha));
+	Im_k2_local = alpha * Re_k2_local;
+
+	*Re_k2 = Re_k2_local;
+	*Im_k2 = Im_k2_local;
+
+	return 0;
+}
+
+int
 calculate_tau_a_tau_b	(double *tau_a,
 						 double *tau_b,
 						 double k0,
@@ -1238,6 +1332,67 @@ calculate_tau_a_tau_b	(double *tau_a,
 
 	*tau_a = tau_a_local;
 	*tau_b = tau_b_local;
+
+	return 0;
+}
+
+int
+calculate_gamma0_alpha_eta (double *gamma0,
+						 	double *alpha,
+						 	double *eta,
+							double tau_a,
+							double tau_b,
+						 	double k0,
+						 	double I0,
+						 	double R,
+							double G)
+{
+	double gamma0_local;
+	double alpha_local;
+	double eta_local;
+
+	gamma0_local = (3.0 * G * I0) / (k0 * pow(R,5.0));
+	eta_local = gamma0_local * (tau_b - tau_a);
+	alpha_local = eta_local / tau_a;
+
+	*gamma0 = gamma0_local;
+	*alpha = alpha_local;
+	*eta = eta_local;
+
+	return 0;
+}
+
+
+int
+moon_rheological_parameters	()
+{
+	// from ragazzo 2022 chap 10
+
+	double EMRAT = 81.30056677276764;
+	double GMEMB = 8.997011394021228e-10; // au^3/day^2
+	double tauM = 0.09433233222702227; // day
+	double k2 = 0.023559;
+	double CT_MRT2 = 0.393140294559018;
+	// double Cc_MRT2 = 0.000275;
+	double C20T = -0.0002032125588518901;
+	// double C22T = 2.238295071767246e-5;
+	// double C20c = -4.342243760334537e-8;
+	// double C22c = 0.0;
+	// double kc_CT = 6.443479383181008e-9; // rad/day
+	double RT = 1738.0; // km
+	double au = 149597870.7; // km
+
+	GMEMB = GMEMB * 365.25 * 365.25; // au^3/yr^2
+	RT = RT / au; // au
+
+	double mu0 = 3.0 * (GMEMB / (1.0 + EMRAT)) * (CT_MRT2 + (2.0/3.0)*C20T) * (1.0 / (RT * RT * RT * k2));
+
+	tauM = tauM / 365.25;
+
+	double eta = tauM * mu0;
+
+	printf("mu0 = %1.10e\n", mu0);
+	printf("eta = %1.10e\n", eta);
 
 	return 0;
 }

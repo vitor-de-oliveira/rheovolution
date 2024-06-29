@@ -1,0 +1,7 @@
+name                test_2
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        test_2_system.dat
+integration_specs   test_2_integration.dat
+rheology_model      Maxwell
+number_of_bodies    2
