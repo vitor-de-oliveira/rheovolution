@@ -296,7 +296,7 @@ calculate_omega	(const int id,
 	/* method parameters */
 	int		counter_iterates = 0;
 	int		max_number_of_iterates = 100;
-	double 	max_error = 1e-8;
+	double 	max_error = 1.0e-8;
 	double	error = 1.0;
 	double 	omega[3], previous_omega[3];
 	copy_vector(omega, bodies[id].omega);

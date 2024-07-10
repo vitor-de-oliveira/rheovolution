@@ -617,6 +617,8 @@ main(int argc, char *argv[])
 	double gamma_0 = gamma + alpha_0;
 	double k0 = (3.0 * G * I0) / (gamma_0 * pow(R,5.0));
 
+	double tau_a, tau_b;
+
 	calculate_tau_a_tau_b(&tau_a, &tau_b,
 		k0, sigma, Re_k2, Im_k2);
 
