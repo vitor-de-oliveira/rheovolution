@@ -204,9 +204,10 @@ typedef struct CelestialBody {
 	double	p_me[5];			// main elements of prestress matrix 
 								// (inertial)
 
-	/* rotation quaternion */
-	double	q[4];				// quaternion which transforms
-								// from the body to the inertial frame 
+	// /* rotation quaternion */
+	// double	q[4];				// quaternion which transforms
+	// 							// from the body to the inertial frame 
+	/* rotation matrix */
 	double	Y[9];				// rotation matrix
 	double	Y_trans[9];			// rotation matrix transpose
 

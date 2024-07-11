@@ -1283,15 +1283,19 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		double	tau = (*bodies)[i].tau;
 		
 		/* 1st set of variables - x and x_dot */
-		double qr_1_I[4];
-		double qr_3_Omega[4];
+		// double qr_1_I[4];
+		// double qr_3_Omega[4];
+		double R_1_I[9];
+		double R_3_Omega[9];
 
 		if (i == 0)
 		{
 			null_vector((*bodies)[i].x);
 			null_vector((*bodies)[i].x_dot);
-			identity_quaternion(qr_1_I);		// for 2nd set of variables
-			identity_quaternion(qr_3_Omega);	// for 2nd set of variables
+			// identity_quaternion(qr_1_I);		// for 2nd set of variables
+			// identity_quaternion(qr_3_Omega);	// for 2nd set of variables
+			identity_matrix(R_1_I);			// for 2nd set of variables
+			identity_matrix(R_3_Omega);		// for 2nd set of variables
 		}
 		else
 		{
@@ -1307,42 +1311,73 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
 					0.0};
 
-			double qr_3_w[9];
-			rotation_quaternion_z(qr_3_w, w);
-			rotation_quaternion_x(qr_1_I, I);
-			rotation_quaternion_z(qr_3_Omega, Omega);
+			// double qr_3_w[9];
+			// rotation_quaternion_z(qr_3_w, w);
+			// rotation_quaternion_x(qr_1_I, I);
+			// rotation_quaternion_z(qr_3_Omega, Omega);
+			double R_3_w[9];
+			rotation_matrix_3d_z(R_3_w, w);
+			rotation_matrix_3d_x(R_1_I, I);
+			rotation_matrix_3d_z(R_3_Omega, Omega);
 
-			double full_rotation_orbit_quaternion[4];
-			quaternion_times_quaternion(full_rotation_orbit_quaternion,
-				qr_3_Omega, qr_1_I);
-			quaternion_times_quaternion(full_rotation_orbit_quaternion,
-				full_rotation_orbit_quaternion, qr_3_w);
+			// double full_rotation_orbit_quaternion[4];
+			// quaternion_times_quaternion(full_rotation_orbit_quaternion,
+			// 	qr_3_Omega, qr_1_I);
+			// quaternion_times_quaternion(full_rotation_orbit_quaternion,
+			// 	full_rotation_orbit_quaternion, qr_3_w);
+			double full_rotation_orbit[9];
+			square_matrix_times_square_matrix(full_rotation_orbit,
+				R_3_Omega, R_1_I);
+			square_matrix_times_square_matrix(full_rotation_orbit,
+				full_rotation_orbit, R_3_w);
 
-			rotate_vector_with_quaternion((*bodies)[i].x, 
-				full_rotation_orbit_quaternion, position_in_plane);
-			rotate_vector_with_quaternion((*bodies)[i].x_dot, 
-				full_rotation_orbit_quaternion, velocity_in_plane);
+			// rotate_vector_with_quaternion((*bodies)[i].x, 
+			// 	full_rotation_orbit_quaternion, position_in_plane);
+			// rotate_vector_with_quaternion((*bodies)[i].x_dot, 
+			// 	full_rotation_orbit_quaternion, velocity_in_plane);
+			square_matrix_times_vector((*bodies)[i].x, 
+				full_rotation_orbit, position_in_plane);
+			square_matrix_times_vector((*bodies)[i].x_dot, 
+				full_rotation_orbit, velocity_in_plane);
 		}
 
-		/* 2nd set of variables - omega and q */
-		double qr_3_psi[4];
-		rotation_quaternion_z(qr_3_psi, psi);
-		double qr_1_theta[4];
-		rotation_quaternion_x(qr_1_theta, theta);
-		double qr_3_phi[4];
-		rotation_quaternion_z(qr_3_phi, phi);
+		// /* 2nd set of variables - omega and q */
+		// double qr_3_psi[4];
+		// rotation_quaternion_z(qr_3_psi, psi);
+		// double qr_1_theta[4];
+		// rotation_quaternion_x(qr_1_theta, theta);
+		// double qr_3_phi[4];
+		// rotation_quaternion_z(qr_3_phi, phi);
+		/* 2nd set of variables - omega and Y */
+		double R_3_psi[9];
+		rotation_matrix_3d_z(R_3_psi, psi);
+		double R_1_theta[9];
+		rotation_matrix_3d_x(R_1_theta, theta);
+		double R_3_phi[9];
+		rotation_matrix_3d_z(R_3_phi, phi);
 
-		double full_rotation_body_quaternion[4];
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			qr_3_Omega, qr_1_I);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_3_psi);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_1_theta);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_3_phi);
+		// double full_rotation_body_quaternion[4];
+		// quaternion_times_quaternion(full_rotation_body_quaternion,
+		// 	qr_3_Omega, qr_1_I);
+		// quaternion_times_quaternion(full_rotation_body_quaternion,
+		// 	full_rotation_body_quaternion, qr_3_psi);
+		// quaternion_times_quaternion(full_rotation_body_quaternion,
+		// 	full_rotation_body_quaternion, qr_1_theta);
+		// quaternion_times_quaternion(full_rotation_body_quaternion,
+		// 	full_rotation_body_quaternion, qr_3_phi);
+		double full_rotation_body[9];
+		square_matrix_times_square_matrix(full_rotation_body,
+			R_3_Omega, R_1_I);
+		square_matrix_times_square_matrix(full_rotation_body,
+			full_rotation_body, R_3_psi);
+		square_matrix_times_square_matrix(full_rotation_body,
+			full_rotation_body, R_1_theta);
+		square_matrix_times_square_matrix(full_rotation_body,
+			full_rotation_body, R_3_phi);
 
-		copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
+		// copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
+		copy_square_matrix((*bodies)[i].Y, full_rotation_body);
+		transpose_square_matrix((*bodies)[i].Y_trans, (*bodies)[i].Y);	
 
 		initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
 
@@ -1441,7 +1476,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			P_i);
 
 		/* real deformation and prestress on inertial frame */
-		calculate_Y_and_Y_transpose(&(*bodies)[i]);
+		// calculate_Y_and_Y_transpose_via_quaternion(&(*bodies)[i]);
 		calculate_bs_me(&(*bodies)[i]);
 		calculate_p_me(&(*bodies)[i]);
 		
@@ -1526,7 +1561,12 @@ create_output_files	(const cltbdy *bodies,
 			fprintf(out[i], " b_11 b_12 b_13");
 			fprintf(out[i], " b_21 b_22 b_23");
 			fprintf(out[i], " b_31 b_32 b_33");
-			fprintf(out[i], " q_1 q_2 q_3 q_4");
+			// fprintf(out[i], " q_1 q_2 q_3 q_4");
+			fprintf(out[i], " Y_11 Y_12 Y_13");
+			fprintf(out[i], " Y_21 Y_22 Y_23");
+			fprintf(out[i], " Y_31 Y_32 Y_33");
+			// fprintf(out[i], " bs_me_1 bs_me_2 bs_me_3 bs_me_4 bs_me_5");
+			// fprintf(out[i], " p_me_1 p_me_2 p_me_3 p_me_4 p_me_5");
 		}
 		fprintf(out[i], "\n");
 	}
@@ -1600,9 +1640,25 @@ write_output(const cltbdy *bodies,
 				bodies[i].b[3], bodies[i].b[4], bodies[i].b[5],
 				bodies[i].b[6], bodies[i].b[7], bodies[i].b[8]);
 
-			/* quaternion */
-			fprintf (out[i], " %.14e %.14e %.14e %.14e", 
-				bodies[i].q[0], bodies[i].q[1], bodies[i].q[2], bodies[i].q[3]);
+			// /* quaternion */
+			// fprintf (out[i], " %.14e %.14e %.14e %.14e", 
+			// 	bodies[i].q[0], bodies[i].q[1], bodies[i].q[2], bodies[i].q[3]);
+
+			/* rotation matrix */
+			fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e %.14e %.14e %.14e %.14e",
+				bodies[i].Y[0], bodies[i].Y[1], bodies[i].Y[2],
+				bodies[i].Y[3], bodies[i].Y[4], bodies[i].Y[5],
+				bodies[i].Y[6], bodies[i].Y[7], bodies[i].Y[8]);
+
+			// /* Stokes matrix main elements */
+			// fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e", 
+			// 	bodies[i].bs_me[0], bodies[i].bs_me[1], bodies[i].bs_me[2],
+			// 	bodies[i].bs_me[3], bodies[i].bs_me[4]);
+
+			// /* Prestress matrix main elements */
+			// fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e", 
+			// 	bodies[i].p_me[0], bodies[i].p_me[1], bodies[i].p_me[2],
+			// 	bodies[i].p_me[3], bodies[i].p_me[4]);
 
 		}
 
@@ -1964,7 +2020,7 @@ output_to_spin	(cltbdy *bodies,
 													 // Inertia Momenta (PIM) frame
 			fprintf(out_orientation, " J2"); // J2 on PIM frame
 			fprintf(out_orientation, " C22"); // C22 on PIM frame
-			fprintf(out_orientation, " |q|");
+			// fprintf(out_orientation, " |q|");
 			fprintf(out_orientation, " soa(°)"); // angle relative coordinate and I1 
 												 // (spin-orbit angle)
 			fprintf(out_orientation, "\n");
@@ -2025,11 +2081,27 @@ output_to_spin	(cltbdy *bodies,
 					token = strtok_r(line_track, tok_del, &line_track);
 					bodies[i].b[j] = atof(token);
 				}
-				for (int j = 0; j < 4; j++)
+				// for (int j = 0; j < 4; j++)
+				// {
+				// 	token = strtok_r(line_track, tok_del, &line_track);
+				// 	bodies[i].q[j] = atof(token);
+				// }
+				for (int j = 0; j < 9; j++)
 				{
 					token = strtok_r(line_track, tok_del, &line_track);
-					bodies[i].q[j] = atof(token);
+					bodies[i].Y[j] = atof(token);
 				}
+				transpose_square_matrix(bodies[i].Y_trans, bodies[i].Y);
+				// for (int j = 0; j < 5; j++)
+				// {
+				// 	token = strtok_r(line_track, tok_del, &line_track);
+				// 	bodies[i].bs_me[j] = atof(token);
+				// }
+				// for (int j = 0; j < 5; j++)
+				// {
+				// 	token = strtok_r(line_track, tok_del, &line_track);
+				// 	bodies[i].p_me[j] = atof(token);
+				// }
 
 				/* relative coordinates */
 				if (i > 0)
@@ -2084,8 +2156,10 @@ output_to_spin	(cltbdy *bodies,
 
 				/* nutation frequency */
 				double Y_i[9], Y_i_trans[9];
-				rotation_matrix_from_quaternion(Y_i, bodies[i].q);
-				transpose_square_matrix(Y_i_trans, Y_i);		
+				// rotation_matrix_from_quaternion(Y_i, bodies[i].q);
+				copy_square_matrix(Y_i, bodies[i].Y);
+				// transpose_square_matrix(Y_i_trans, Y_i);	
+				copy_square_matrix(Y_i_trans, bodies[i].Y_trans);	
 				double ang_vel_body_frame[3];
 				square_matrix_times_vector(ang_vel_body_frame,
 					Y_i_trans, bodies[i].omega);
@@ -2118,8 +2192,8 @@ output_to_spin	(cltbdy *bodies,
 				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag_i);
 				fprintf (out_orientation, " %.14e %.14e", bodies[i].J2, bodies[i].C22);
 
-				/* norm of quaternion */
-				fprintf (out_orientation, " %.14e", norm_quaternion(bodies[i].q));
+				// /* norm of quaternion */
+				// fprintf (out_orientation, " %.14e", norm_quaternion(bodies[i].q));
 
 				/* angle between relative coordinate and I1 */
 				if (i > 0)
@@ -2574,26 +2648,26 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			fprintf(gnuplotPipe, "set title \"%s's C22\"\n", bodies[i].name);
 			fprintf(gnuplotPipe, "plot \'%s\' u 1:12 w l lw 3", filename_get);
 			pclose(gnuplotPipe);
-			/* quaternion norm */
-			strcpy(filename_plot, plot_folder);
-			strcat(filename_plot, "figure_");
-			strcat(filename_plot, simulation.name);
-			strcat(filename_plot, "_");
-			strcat(filename_plot, bodies[i].name);
-			strcat(filename_plot, "_quaternion_norm");
-			strcat(filename_plot, ".png");
-			gnuplotPipe = popen("gnuplot -persistent", "w");
-			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
-			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
-			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
-			fprintf(gnuplotPipe, "set border lw 2 \n");
-			fprintf(gnuplotPipe, "unset key\n");
-			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-			fprintf(gnuplotPipe, "set ylabel \"|q|\"\n");
-			fprintf(gnuplotPipe, "set title \"%s's quaternion norm\"\n", bodies[i].name);
-			fprintf(gnuplotPipe, "plot \'%s\' u 1:13 w l lw 3", filename_get);
-			pclose(gnuplotPipe);
+			// /* quaternion norm */
+			// strcpy(filename_plot, plot_folder);
+			// strcat(filename_plot, "figure_");
+			// strcat(filename_plot, simulation.name);
+			// strcat(filename_plot, "_");
+			// strcat(filename_plot, bodies[i].name);
+			// strcat(filename_plot, "_quaternion_norm");
+			// strcat(filename_plot, ".png");
+			// gnuplotPipe = popen("gnuplot -persistent", "w");
+			// fprintf(gnuplotPipe, "reset\n");
+			// fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			// fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			// fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			// fprintf(gnuplotPipe, "set border lw 2 \n");
+			// fprintf(gnuplotPipe, "unset key\n");
+			// fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			// fprintf(gnuplotPipe, "set ylabel \"|q|\"\n");
+			// fprintf(gnuplotPipe, "set title \"%s's quaternion norm\"\n", bodies[i].name);
+			// fprintf(gnuplotPipe, "plot \'%s\' u 1:13 w l lw 3", filename_get);
+			// pclose(gnuplotPipe);
 			if (i > 0)
 			{
 				/* spin-orbit angle */
@@ -2614,7 +2688,8 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"Spin-orbit angle(°)\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's spin-orbit angle\"\n", bodies[i].name);
-				fprintf(gnuplotPipe, "plot \'%s\' u 1:14 w l lw 3", filename_get);
+				// fprintf(gnuplotPipe, "plot \'%s\' u 1:14 w l lw 3", filename_get);
+				fprintf(gnuplotPipe, "plot \'%s\' u 1:13 w l lw 3", filename_get);				
 				pclose(gnuplotPipe);
 			} // if (i > 0)
 		} // if (bodies[i].point_mass == false)

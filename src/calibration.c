@@ -594,48 +594,48 @@ main(int argc, char *argv[])
 
 	// moon_rheological_parameters();
 
-	double Re_k2, Im_k2;
+	// double Re_k2, Im_k2;
 
-	double k2 = 0.0236; // table 8 ragazzo 2022
-	double Q = 46.0; // table 8 ragazzo 2022
+	// double k2 = 0.0236; // table 8 ragazzo 2022
+	// double Q = 46.0; // table 8 ragazzo 2022
 
-	calculate_Re_k2_Im_k2_from_k2_Q(&Re_k2, &Im_k2, k2, Q);
+	// calculate_Re_k2_Im_k2_from_k2_Q(&Re_k2, &Im_k2, k2, Q);
 
-	printf("Re_k2 = %1.10e\n", Re_k2);
-	printf("Im_k2 = %1.10e\n", Im_k2);
+	// printf("Re_k2 = %1.10e\n", Re_k2);
+	// printf("Im_k2 = %1.10e\n", Im_k2);
 
-	// double k0 = 1.43; // table 8 ragazzo 2022 (kf)
-	double sigma = (2.0 * M_PI) / (27.32 / 365.25); // table 9 ragazzo 2022
+	// // double k0 = 1.43; // table 8 ragazzo 2022 (kf)
+	// double sigma = (2.0 * M_PI) / (27.32 / 365.25); // table 9 ragazzo 2022
 
-	double I0 = 1.9595922041e-18; // from main
-	double R = 1.1611796290e-05; // from main
-	double G = 4.0 * M_PI * M_PI;
+	// double I0 = 1.9595922041e-18; // from main
+	// double R = 1.1611796290e-05; // from main
+	// double G = 4.0 * M_PI * M_PI;
 
-	double gamma = pow((2.0 * M_PI) / (1.992 / (365.25 * 24.0)), 2.0); // table 9 ragazzo 2022
-	double alpha_0 = pow((2.0 * M_PI) / (0.2575 / (365.25 * 24.0)), 2.0);; // table 9 ragazzo 2022
+	// double gamma = pow((2.0 * M_PI) / (1.992 / (365.25 * 24.0)), 2.0); // table 9 ragazzo 2022
+	// double alpha_0 = pow((2.0 * M_PI) / (0.2575 / (365.25 * 24.0)), 2.0);; // table 9 ragazzo 2022
 	
-	double gamma_0 = gamma + alpha_0;
-	double k0 = (3.0 * G * I0) / (gamma_0 * pow(R,5.0));
+	// double gamma_0 = gamma + alpha_0;
+	// double k0 = (3.0 * G * I0) / (gamma_0 * pow(R,5.0));
 
-	double tau_a, tau_b;
+	// double tau_a, tau_b;
 
-	calculate_tau_a_tau_b(&tau_a, &tau_b,
-		k0, sigma, Re_k2, Im_k2);
+	// calculate_tau_a_tau_b(&tau_a, &tau_b,
+	// 	k0, sigma, Re_k2, Im_k2);
 
-	printf("tau_a = %1.10e\n", tau_a);
-	printf("tau_b = %1.10e\n", tau_b);
+	// printf("tau_a = %1.10e\n", tau_a);
+	// printf("tau_b = %1.10e\n", tau_b);
 
-	double gamma0, alpha, eta;
+	// double gamma0, alpha, eta;
 
-	calculate_gamma0_alpha_eta(&gamma0, &alpha, &eta,
-		tau_a, tau_b, k0, I0, R, G);
+	// calculate_gamma0_alpha_eta(&gamma0, &alpha, &eta,
+	// 	tau_a, tau_b, k0, I0, R, G);
 
-	printf("gamma0 = %1.10e\n", gamma0);
-	printf("alpha = %1.10e\n", alpha);
-	printf("eta = %1.10e\n", eta);
+	// printf("gamma0 = %1.10e\n", gamma0);
+	// printf("alpha = %1.10e\n", alpha);
+	// printf("eta = %1.10e\n", eta);
 
-	printf("Moon's sidereal period = %1.5e yr\n", (27.32 / 365.25));
-	printf("maxwell time = %1.5e yr\n", eta / alpha);
+	// printf("Moon's sidereal period = %1.5e yr\n", (27.32 / 365.25));
+	// printf("maxwell time = %1.5e yr\n", eta / alpha);
 
 	// calculate_tau_a_tau_b(&tau_a, &tau_b, k0, sigma_orb, Re_k2, Im_k2);
 
@@ -665,6 +665,9 @@ main(int argc, char *argv[])
 
 	printf("CW Dt(s) = %1.10e\n", (tau_b_CW-tau_a_CW)*365.25*24.*60.*60.);
 	printf("CW tau(yr) = %1.10e\n", tau_b_CW);
+	printf("CW tau_e(yr) = %1.10e\n", tau_a_CW);
+	printf("CW sigma(yr^-1) = %1.10e\n", sigma_CW);
+	printf("CW sigma*tau = %1.10e\n", sigma_CW*tau_b_CW);
 
 	// orbital drift
 	double Re_k2_SD = 0.2811;
@@ -678,21 +681,24 @@ main(int argc, char *argv[])
 
 	printf("SD Dt(s) = %1.10e\n", (tau_b_SD-tau_a_SD)*365.25*24.*60.*60.);
 	printf("SD tau(yr) = %1.10e\n", tau_b_SD);
+	printf("SD tau_e(yr) = %1.10e\n", tau_a_SD);
+	printf("SD sigma(yr^-1) = %1.10e\n", sigma_SD);
+	printf("SD sigma*tau = %1.10e\n", sigma_SD*tau_b_SD);
 
 	gvrheo gV;
 
-	// int	   m = 0;
-	// double sigma_gV[] = {sigma_CW};
-	// double tau_a_gV[] = {tau_a_CW};
-	// double tau_b_gV[] = {tau_b_CW};
+	int	   m = 0;
+	double sigma_gV[] = {sigma_CW};
+	double tau_a_gV[] = {tau_a_CW};
+	double tau_b_gV[] = {tau_b_CW};
 	// double sigma_gV[] = {sigma_SD};
 	// double tau_a_gV[] = {tau_a_SD};
 	// double tau_b_gV[] = {tau_b_SD};
 
-	int	   m = 1;
-	double sigma_gV[] = {sigma_SD, sigma_CW};
-	double tau_a_gV[] = {tau_a_SD, tau_a_CW};
-	double tau_b_gV[] = {tau_b_SD, tau_b_CW};
+	// int	   m = 1;
+	// double sigma_gV[] = {sigma_SD, sigma_CW};
+	// double tau_a_gV[] = {tau_a_SD, tau_a_CW};
+	// double tau_b_gV[] = {tau_b_SD, tau_b_CW};
 
 	gV.m 	 = m;
 	gV.gamma = parameter_gamma_0(G, I0_earth, R_earth, k0);
@@ -716,52 +722,52 @@ main(int argc, char *argv[])
 		printf ("eta_%d = %1.10e\n", i+1, gV.eta_k[i]);
 	}
 
-	double sigma_reference = 1.0; // sigma_SD
-	double Re_k2_gV[] = {Re_k2_SD, Re_k2_CW};
-	double Im_k2_gV[] = {Im_k2_SD, Im_k2_CW};
+	// double sigma_reference = 1.0; // sigma_SD
+	// double Re_k2_gV[] = {Re_k2_SD, Re_k2_CW};
+	// double Im_k2_gV[] = {Im_k2_SD, Im_k2_CW};
 
-	FILE *out_1 = fopen("output/calibration_k2_reference_points.dat", "w");
-	for (int i = 0; i < gV.m + 1; i++)
-	{
-		fprintf(out_1, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma_gV[i] / sigma_reference, Re_k2_gV[i], -1.0 * Im_k2_gV[i],
-			sqrt(Re_k2_gV[i] * Re_k2_gV[i] + Im_k2_gV[i] * Im_k2_gV[i]));
-	}
-	fclose(out_1);
+	// FILE *out_1 = fopen("output/calibration_k2_reference_points.dat", "w");
+	// for (int i = 0; i < gV.m + 1; i++)
+	// {
+	// 	fprintf(out_1, "%1.15e %1.15e %1.15e %1.15e\n", 
+	// 		sigma_gV[i] / sigma_reference, Re_k2_gV[i], -1.0 * Im_k2_gV[i],
+	// 		sqrt(Re_k2_gV[i] * Re_k2_gV[i] + Im_k2_gV[i] * Im_k2_gV[i]));
+	// }
+	// fclose(out_1);
 
-	/* Love number as a function of frequency */
-	FILE *out_2 = fopen("output/calibration_k2_plot.dat", "w");
-	for (double sigma_loop = 1e-5; sigma_loop < 1e8; sigma_loop *= 1.01)
-	{
-		double tau_a_sigma, tau_b_sigma;
+	// /* Love number as a function of frequency */
+	// FILE *out_2 = fopen("output/calibration_k2_plot.dat", "w");
+	// for (double sigma_loop = 1e-5; sigma_loop < 1e8; sigma_loop *= 1.01)
+	// {
+	// 	double tau_a_sigma, tau_b_sigma;
 
-		double *C_and_D;
+	// 	double *C_and_D;
 
-		C_and_D = convert_parameters_gV_summations_C_and_D(gV, sigma_loop);
+	// 	C_and_D = convert_parameters_gV_summations_C_and_D(gV, sigma_loop);
 
-		tau_a_sigma = (gV.eta / gV.alpha + gV.eta * C_and_D[0]) 
-			/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
-		tau_b_sigma = (gV.eta / gV.alpha + gV.eta / gV.gamma + gV.eta * C_and_D[0]) 
-			/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
+	// 	tau_a_sigma = (gV.eta / gV.alpha + gV.eta * C_and_D[0]) 
+	// 		/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
+	// 	tau_b_sigma = (gV.eta / gV.alpha + gV.eta / gV.gamma + gV.eta * C_and_D[0]) 
+	// 		/ (1.0 + sigma_loop * sigma_loop * gV.eta * C_and_D[1]);
 
-		free(C_and_D);
+	// 	free(C_and_D);
 
-		double real_loop, imag_loop;
+	// 	double real_loop, imag_loop;
 
-		calculate_k2(&real_loop, &imag_loop, sigma_loop, k0, 
-			tau_b_sigma - tau_a_sigma, tau_b_sigma);
+	// 	calculate_k2(&real_loop, &imag_loop, sigma_loop, k0, 
+	// 		tau_b_sigma - tau_a_sigma, tau_b_sigma);
 		
-		fprintf(out_2, "%1.15e %1.15e %1.15e %1.15e\n", 
-			sigma_loop / sigma_reference, real_loop, -1.0 * imag_loop,
-			sqrt(real_loop * real_loop + imag_loop * imag_loop));
-	}
-	fclose(out_2);
+	// 	fprintf(out_2, "%1.15e %1.15e %1.15e %1.15e\n", 
+	// 		sigma_loop / sigma_reference, real_loop, -1.0 * imag_loop,
+	// 		sqrt(real_loop * real_loop + imag_loop * imag_loop));
+	// }
+	// fclose(out_2);
 
-	if (gV.m > 0)
-	{
-		free(gV.alpha_k);
-		free(gV.eta_k);
-	}
+	// if (gV.m > 0)
+	// {
+	// 	free(gV.alpha_k);
+	// 	free(gV.eta_k);
+	// }
 
 	return 0;
 }

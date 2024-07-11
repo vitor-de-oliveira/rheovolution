@@ -164,7 +164,8 @@ main(int argc, char *argv[])
 	}
 	
 	/* state variables */
-	int		dim_state_per_body_without_elements = 18;
+	// int		dim_state_per_body_without_elements = 18;
+	int		dim_state_per_body_without_elements = 33;	
 	int		dim_state = (dim_state_per_body_without_elements * simulation.number_of_bodies) + (5 * elements_total);
 	double 	y[dim_state];
 	int		elements_counter = 0;
@@ -185,9 +186,21 @@ main(int argc, char *argv[])
 		{
 			y[14 + dim_state_skip + j] = bodies[i].bk_me[j];
 		}
-		for (int j = 0; j < 4; j++)
+		// for (int j = 0; j < 4; j++)
+		// {
+		// 	y[14 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
+		// }
+		for (int j = 0; j < 9; j++)
 		{
-			y[14 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
+			y[14 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].Y[j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			y[23 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].bs_me[j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			y[28 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].p_me[j];
 		}
 		elements_counter += bodies[i].elements;
 	}
@@ -310,22 +323,35 @@ main(int argc, char *argv[])
 					bodies[i].bk_me[j] = y[14 + dim_state_skip + j];
 				}
 			}
-			for (int j = 0; j < 4; j++)
+			// for (int j = 0; j < 4; j++)
+			// {
+			// 	bodies[i].q[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
+			// }
+			// normalize_quaternion(bodies[i].q);
+			for (int j = 0; j < 9; j++)
 			{
-				bodies[i].q[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
+				bodies[i].Y[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
 			}
-			normalize_quaternion(bodies[i].q);
+			transpose_square_matrix(bodies[i].Y_trans, bodies[i].Y);	
+			for (int j = 0; j < 5; j++)
+			{
+				bodies[i].bs_me[j] = y[23 + 5 * bodies[i].elements + dim_state_skip + j];
+			}
+			for (int j = 0; j < 5; j++)
+			{
+				bodies[i].p_me[j] = y[28 + 5 * bodies[i].elements + dim_state_skip + j];
+			}
 			
 			elements_counter += bodies[i].elements;
 		}
 
-		/* update bs and ps */
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			calculate_Y_and_Y_transpose(&bodies[i]);
-			calculate_bs_me(&bodies[i]);
-			calculate_p_me(&bodies[i]);
-		}
+		// /* update bs and ps */
+		// for (int i = 0; i < simulation.number_of_bodies; i++)
+		// {
+		// 	calculate_Y_and_Y_transpose_via_quaternion(&bodies[i]);
+		// 	calculate_bs_me(&bodies[i]);
+		// 	calculate_p_me(&bodies[i]);
+		// }
 
 		/* update omega and b */
 		for (int i = 0; i < simulation.number_of_bodies; i++)

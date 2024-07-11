@@ -25,8 +25,8 @@ parameter_gamma_0	(const double G,
 					 const double R,
 					 const double k0);
 
-int
-calculate_Y_and_Y_transpose(cltbdy *body);
+// int
+// calculate_Y_and_Y_transpose_via_quaternion(cltbdy *body);
 
 int
 calculate_bs_me(cltbdy *body);

@@ -21,7 +21,8 @@ field_gV(double t,
 	bodies = (cltbdy *) malloc (number_of_bodies * sizeof(cltbdy));
 
 	int	dim_params_per_body_without_elements = 21;
-	int	dim_state_per_body_without_elements = 18;
+	// int	dim_state_per_body_without_elements = 18;
+	int	dim_state_per_body_without_elements = 33;
 	int elements_total, elements_counter = 0; 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
@@ -86,29 +87,44 @@ field_gV(double t,
 				bodies[i].bk_me[j] = y[14 + dim_state_skip + j];
 			}
 		}
-		for (int j = 0; j < 4; j++)
+		// for (int j = 0; j < 4; j++)
+		// {
+		// 	bodies[i].q[j] 
+		// 		= y[14 + 5 * bodies[i].elements + dim_state_skip + j];
+		// }
+		for (int j = 0; j < 9; j++)
 		{
-			bodies[i].q[j] 
-				= y[14 + 5 * bodies[i].elements + dim_state_skip + j];
+			bodies[i].Y[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
+		}
+		transpose_square_matrix(bodies[i].Y_trans, bodies[i].Y);
+		for (int j = 0; j < 5; j++)
+		{
+			bodies[i].bs_me[j] = y[23 + 5 * bodies[i].elements + dim_state_skip + j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			bodies[i].p_me[j] = y[28 + 5 * bodies[i].elements + dim_state_skip + j];
 		}
 		elements_counter += bodies[i].elements;
 	}
 	elements_total = elements_counter;
 
-	/* calculate bs and ps for every body */
-	for (int i = 0; i < number_of_bodies; i++)
-	{
-		calculate_Y_and_Y_transpose(&bodies[i]);
-		calculate_bs_me(&bodies[i]);
-		calculate_p_me(&bodies[i]);
-	}
+	// /* calculate bs and ps for every body */
+	// for (int i = 0; i < number_of_bodies; i++)
+	// {
+	// 	calculate_Y_and_Y_transpose_via_quaternion(&bodies[i]);
+	// 	calculate_bs_me(&bodies[i]);
+	// 	calculate_p_me(&bodies[i]);
+	// }
 
 	/* calculate omega and b for every body */
 	for (int i = 0; i < number_of_bodies; i++)
 	{
 		calculate_omega(i, bodies, number_of_bodies, G);
 		calculate_b(i, bodies, number_of_bodies, G);
+		// print_CelestialBody(bodies[i]);
 	}
+	// exit(87);
 
 	double component_x[number_of_bodies][3];
 	double component_x_dot[number_of_bodies][3];
@@ -133,7 +149,10 @@ field_gV(double t,
 			}
 		}
 	}
-	double component_q[number_of_bodies][4];
+	// double component_q[number_of_bodies][4];
+	double component_Y[number_of_bodies][9];
+	double component_bs_me[number_of_bodies][5];
+	double component_p_me[number_of_bodies][5];
 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
@@ -357,13 +376,37 @@ field_gV(double t,
 			1.0, omega_hat_comm_b_eta, 1.0, lambda_over_eta);
 		get_main_elements_traceless_symmetric_matrix(component_b_eta_me[i], component_b_eta);
 
-		// q component
-		double half_omega[3];
-		scale_vector(half_omega, 0.5, bodies[i].omega);
-		double quaternion_half_omega[4];
-		quaternion_from_vector(quaternion_half_omega, half_omega);
-		quaternion_times_quaternion(component_q[i],
-			quaternion_half_omega, bodies[i].q);
+		// // q component
+		// double half_omega[3];
+		// scale_vector(half_omega, 0.5, bodies[i].omega);
+		// double quaternion_half_omega[4];
+		// quaternion_from_vector(quaternion_half_omega, half_omega);
+		// quaternion_times_quaternion(component_q[i],
+		// 	quaternion_half_omega, bodies[i].q);
+
+		// Y component
+		square_matrix_times_square_matrix(component_Y[i], 
+			omega_hat, bodies[i].Y);
+
+		// bs component
+		double bs[9];
+		construct_traceless_symmetric_matrix(bs, bodies[i].bs_me);
+		double component_bs[] = { 0.0, 0.0, 0.0,
+								  0.0, 0.0, 0.0,
+								  0.0, 0.0, 0.0 };
+		commutator(component_bs, omega_hat, bs);
+		get_main_elements_traceless_symmetric_matrix(component_bs_me[i], 
+			component_bs);
+
+		// p component
+		double p[9];
+		construct_traceless_symmetric_matrix(p, bodies[i].p_me);
+		double component_p[] = { 0.0, 0.0, 0.0,
+								 0.0, 0.0, 0.0,
+								 0.0, 0.0, 0.0 };
+		commutator(component_p, omega_hat, p);
+		get_main_elements_traceless_symmetric_matrix(component_p_me[i], 
+			component_p);
 
 	} // end loop over bodies
 
@@ -393,10 +436,25 @@ field_gV(double t,
 					= component_bk_me[i][k][l];
 			}
 		}
-		for (int j = 0; j < 4; j++)
+		// for (int j = 0; j < 4; j++)
+		// {
+		// 	f[14 + 5 * bodies[i].elements + dim_state_skip + j]	
+		// 		= component_q[i][j];
+		// }
+		for (int j = 0; j < 9; j++)
 		{
 			f[14 + 5 * bodies[i].elements + dim_state_skip + j]	
-				= component_q[i][j];
+				= component_Y[i][j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			f[23 + 5 * bodies[i].elements + dim_state_skip + j]	
+				= component_bs_me[i][j];
+		}
+		for (int j = 0; j < 5; j++)
+		{
+			f[28 + 5 * bodies[i].elements + dim_state_skip + j]	
+				= component_p_me[i][j];
 		}
 		elements_counter += bodies[i].elements;
 	}

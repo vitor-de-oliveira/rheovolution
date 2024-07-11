@@ -37,13 +37,13 @@ parameter_gamma_0	(const double G,
 	return 3.0 * I0 * G / (pow(R, 5.0) * k0);
 }
 
-int
-calculate_Y_and_Y_transpose(cltbdy *body)
-{
-	rotation_matrix_from_quaternion((*body).Y, (*body).q);
-	transpose_square_matrix((*body).Y_trans, (*body).Y);
-	return 0;
-}
+// int
+// calculate_Y_and_Y_transpose_via_quaternion(cltbdy *body)
+// {
+// 	rotation_matrix_from_quaternion((*body).Y, (*body).q);
+// 	transpose_square_matrix((*body).Y_trans, (*body).Y);
+// 	return 0;
+// }
 
 int
 calculate_bs_me(cltbdy *body)
