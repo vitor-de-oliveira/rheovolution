@@ -90,9 +90,7 @@ main(int argc, char *argv[])
 			omega_correction_rot[i] = bodies[i].rot;
 		}
 		// simulation.omega_correction_t_final = 
-		// 	10.0 * largest_time_scale(bodies, 
-		// 				simulation.number_of_bodies,
-		// 				simulation.G);
+		// 	10.0 * find_largest_time_scale(bodies, simulation):
 		// printf("%1.5e\n", simulation.omega_correction_t_final);
 		simulation.omega_correction_t_final = 100.0; // 50000.0
 		simulation.omega_correction_counter = 0;
@@ -150,99 +148,46 @@ main(int argc, char *argv[])
 	/* initialize l and angular velocity */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		initialize_angular_velocity_on_z_axis(&bodies[i]);
-		calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
-		initialize_angular_velocity(&bodies[i]); // correct alignment
-		calculate_l(&bodies[i]);
+		if (bodies[i].point_mass == true)
+		{
+			nan_matrix(bodies[i].b);
+			nan_vector(bodies[i].l);
+		}
+		else
+		{
+			initialize_angular_velocity_on_z_axis(&bodies[i]);
+			calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
+			initialize_angular_velocity(&bodies[i]); // correct alignment
+			calculate_l(&bodies[i]);
+		}
 	}
 
-	/* total number of Voigt elements */
-	int	elements_total = 0;
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		elements_total += bodies[i].elements;
-	}
-	
-	/* state variables */
-	int		dim_state_per_body_without_elements = 18;
-	int		dim_state = (dim_state_per_body_without_elements * simulation.number_of_bodies) + (5 * elements_total);
-	double 	y[dim_state];
-	int		elements_counter = 0;
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		int	dim_state_skip = i * dim_state_per_body_without_elements + 5 * elements_counter;
-		for (int j = 0; j < 3; j++)
-		{
-			y[0 + dim_state_skip + j] = bodies[i].x[j];
-			y[3 + dim_state_skip + j] = bodies[i].x_dot[j];
-			y[6 + dim_state_skip + j] = bodies[i].l[j];
-		}
-		for (int j = 0; j < 5; j++)
-		{
-			y[9 + dim_state_skip + j] = bodies[i].b_eta_me[j];
-		}
-		for (int j = 0; j < 5 * bodies[i].elements; j++)
-		{
-			y[14 + dim_state_skip + j] = bodies[i].bk_me[j];
-		}
-		for (int j = 0; j < 4; j++)
-		{
-			y[14 + 5 * bodies[i].elements + dim_state_skip + j]	= bodies[i].q[j];
-		}
-		elements_counter += bodies[i].elements;
-	}
+	/* field parameters */
+	fldpar params = {simulation, bodies};
 
-	/* parameters */
-	int		dim_params_per_body_without_elements = 21;
-	int		dim_params = 4 + (dim_params_per_body_without_elements * simulation.number_of_bodies) + (2 * elements_total);
-	double	params[dim_params];
-	elements_counter = 0; 
-	params[0] = simulation.G;
-	params[1] = (double) simulation.number_of_bodies;
-	params[2] = (double) simulation.keplerian_motion;
-	params[3] = (double) simulation.two_bodies_aprox;
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		int	dim_params_skip = i * dim_params_per_body_without_elements + 2 * elements_counter;
-		params[4 + 0 + dim_params_skip] = (double) bodies[i].point_mass;
-		params[4 + 1 + dim_params_skip] = (double) bodies[i].prestress;
-		params[4 + 2 + dim_params_skip] = (double) bodies[i].centrifugal;
-		params[4 + 3 + dim_params_skip] = (double) bodies[i].tidal;
-		params[4 + 4 + dim_params_skip] = (double) bodies[i].deformable;
-		params[4 + 5 + dim_params_skip] = bodies[i].mass;
-		params[4 + 6 + dim_params_skip] = bodies[i].I0;
-		params[4 + 7 + dim_params_skip] = bodies[i].gamma_0;
-		params[4 + 8 + dim_params_skip] = bodies[i].alpha;
-		params[4 + 9 + dim_params_skip] = bodies[i].eta;
-		for (int j = 0; j < 5; j++)
-		{
-			params[4 + 10 + j + dim_params_skip] = bodies[i].Bs_me[j];
-		}
-		for (int j = 0; j < 5; j++)
-		{
-			params[4 + 15 + j + dim_params_skip] = bodies[i].P_me[j];
-		}
-		params[4 + 20 + dim_params_skip] = (double) bodies[i].elements;
-		for (int j = 0; j < bodies[i].elements; j++)
-		{
-			params[4 + 21 + dim_params_skip + j] = bodies[i].alpha_elements[j];
-		}
-		for (int j = 0; j < bodies[i].elements; j++)
-		{
-			params[4 + 22 + dim_params_skip + j + bodies[i].elements - 1] = bodies[i].eta_elements[j];
-		}
-		elements_counter += bodies[i].elements;		
-	}
+	/* state vector */
+	size_t	dim_state_vec;
+	double  *y;
+	mount_state_vector(&y, &dim_state_vec, params);
 
-	/* GSL variables */
-	const gsl_odeiv2_step_type * ode_type
-		= gsl_odeiv2_step_rk8pd; // gsl_odeiv2_step_rk8pd
-	gsl_odeiv2_step * ode_step
-    	= gsl_odeiv2_step_alloc (ode_type, dim_state);
-  	gsl_odeiv2_control * ode_control
-    	= gsl_odeiv2_control_y_new (simulation.eps_abs, simulation.eps_rel);
-  	gsl_odeiv2_evolve * ode_evolve
-    	= gsl_odeiv2_evolve_alloc (dim_state);
+	/* ODE numerical integrator (GSL) */
+	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
+	if (simulation.t_step_received == false)
+	{
+		simulation.t_step = find_shortest_time_scale(bodies, simulation) / 5.0;
+	}
+	simulation.t_step_min = simulation.t_step / 1000.0;
+	simulation.error_abs = 1.0e-13;
+	simulation.error_rel = 0.0;
+
+	// printf("%1.15e\n", simulation.t_step);
+
+	gsl_odeiv2_driver *d = 
+		gsl_odeiv2_driver_alloc_y_new(&sys, 
+			gsl_odeiv2_step_rk8pd, 0.5 * simulation.t_step, 
+			simulation.error_abs, simulation.error_rel);
+	gsl_odeiv2_driver_set_hmax(d, 1.1 * simulation.t_step);
+	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
 
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
@@ -250,6 +195,10 @@ main(int argc, char *argv[])
 	{
 		create_output_files(bodies, simulation, out);
 	}
+
+	/* determine data skip based on output size */
+	simulation.output_size = 100e6; // bytes
+	calculate_data_skip(&simulation, bodies);
 
 	/* integration loop */
 	simulation.counter = 0;	
@@ -264,7 +213,7 @@ main(int argc, char *argv[])
 	{
 		final_time = simulation.omega_correction_t_final;
 	}
-	// while (simulation.counter < 1) // for testing
+	// while (simulation.counter < 5) // for testing
 	while (simulation.t < final_time)
 	{
 		if (fabs(final_time-simulation.t) < simulation.t_step)
@@ -272,66 +221,45 @@ main(int argc, char *argv[])
 			simulation.t_step = final_time - simulation.t; // smaller last step
 		}
 
-	  	gsl_odeiv2_system sys = {field_gV, NULL, dim_state, params};
-	
-		int status = 
-			gsl_odeiv2_evolve_apply_fixed_step (ode_evolve, 
-				ode_control, ode_step, &sys, &simulation.t,
-				simulation.t_step, y);
+		int status = gsl_odeiv2_driver_apply (d, &simulation.t, 
+						simulation.t + simulation.t_step, y);
 
 		if (status != GSL_SUCCESS)
 		{
-			fprintf(stderr, "Error: GSL odeiv2 status = %d\n", status);
-			fprintf(stderr, "at time t = %1.5e\n", simulation.t);
-			fprintf(stderr, "Hint: try a lower time step.\n");
+			fprintf(stderr, "Error \"%d\"", status);
+			fprintf(stderr, " at time t = %1.5e\n", simulation.t);
 			break;
 		}
 
-		/* update variables */
-		elements_counter = 0; 
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			int	dim_state_skip = i * dim_state_per_body_without_elements + 5 * elements_counter;
-			
-			for (int j = 0; j < 3; j++)
-			{
-				bodies[i].x[j] 		= y[0 + dim_state_skip + j];
-				bodies[i].x_dot[j] 	= y[3 + dim_state_skip + j];
-				bodies[i].l[j] 		= y[6 + dim_state_skip + j];
-			}
-			for (int j = 0; j < 5; j++)
-			{
-				bodies[i].b_eta_me[j] = y[9 + dim_state_skip + j];
-			}
-			if (bodies[i].elements > 0)
-			{
-				for (int j = 0; j < 5 * bodies[i].elements; j++)
-				{
-					bodies[i].bk_me[j] = y[14 + dim_state_skip + j];
-				}
-			}
-			for (int j = 0; j < 4; j++)
-			{
-				bodies[i].q[j] = y[14 + 5 * bodies[i].elements + dim_state_skip + j];
-			}
-			normalize_quaternion(bodies[i].q);
-			
-			elements_counter += bodies[i].elements;
-		}
+		/* update bodies */
+		retrieve_state_vector (&bodies, y, simulation);
 
 		/* update bs and ps */
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
-			calculate_Y_and_Y_transpose(&bodies[i]);
-			calculate_bs_me(&bodies[i]);
-			calculate_p_me(&bodies[i]);
+			if (bodies[i].point_mass == false)
+			{
+				if (bodies[i].deformable == false)
+				{
+					calculate_Y_and_Y_transpose(&bodies[i]);
+					calculate_bs_me(&bodies[i]);
+				}
+				else if (bodies[i].prestress == true)
+				{
+					calculate_Y_and_Y_transpose(&bodies[i]);
+					calculate_p_me(&bodies[i]);
+				}
+			}
 		}
 
 		/* update omega and b */
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{		
-			calculate_omega(i, bodies, simulation.number_of_bodies, simulation.G);
-			calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
+			if (bodies[i].point_mass == false)
+			{
+				calculate_omega(i, bodies, simulation.number_of_bodies, simulation.G);
+				calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
+			}
 		}
 
 		/* write output */
@@ -357,16 +285,18 @@ main(int argc, char *argv[])
 		close_output_files(simulation, out);
 	}
 
-	/* free GSL variables */
-	gsl_odeiv2_evolve_free (ode_evolve);
-	gsl_odeiv2_control_free (ode_control);
-	gsl_odeiv2_step_free (ode_step);
+	/* free ODE driver (GSL) */
+	gsl_odeiv2_driver_free(d);
 
+	/* omega correction loop */
 	if (simulation.omega_correction == true)
 	{
 		simulation.omega_correction_counter++;
 		goto back_omega_correction;
 	}
+
+	/* free state vector */
+	free(y);
 
 	/* free Voigt elements */
 	for (int i = 0; i < simulation.number_of_bodies; i++)

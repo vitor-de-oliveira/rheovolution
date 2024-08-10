@@ -17,7 +17,7 @@
 
 #include "linear_algebra.h"
 #include "celestial_mechanics.h"
-#include "dynamical_system.h"
+#include "tidal_theory.h"
 
 int
 count_columns(const char *s);
@@ -26,7 +26,7 @@ count_columns(const char *s);
 
 typedef struct SimulationInfo {
 
-	/* simlation id */
+	/* simulation id */
 	char	name[300];
 
 	/* argument of main */
@@ -49,15 +49,20 @@ typedef struct SimulationInfo {
 	bool	two_bodies_aprox;			// removes interaction between
 										// orbiting bodies
 
-	/* numerical specs */
+	/* numerical specs given by user */
 	double	t_init;						// initial time
 	double	t_trans;					// transient time
 	double	t_final;					// final time
+	bool	t_step_received;			// true if user provided t_step
 	double	t_step;						// time step
-	double	eps_abs;					// absolute error
-	double	eps_rel;					// relative error
+
+	/* numerical specs defined by the program */
+	double	t_step_min;					// minimum time step
+	double	error_abs;					// absolute error
+	double	error_rel;					// relative error
 
 	/* output specs */
+	int		output_size;				// size of main output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
 
@@ -71,6 +76,9 @@ typedef struct SimulationInfo {
 } siminf;
 
 int
+print_SimulationInfo(siminf simulation);
+
+int
 parse_input(siminf *simulation,
 			const char input_file[]);
 
@@ -79,6 +87,12 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				 	 const siminf simulation);
 
 /* output handling */
+
+// calculates how much data to skip
+// based on file size of main output
+int
+calculate_data_skip (siminf *simulation,
+					 const cltbdy *bodies);
 
 int
 create_output_files	(const cltbdy *bodies,
@@ -117,5 +131,15 @@ output_to_spin	(cltbdy *bodies,
 int
 plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 								 const siminf simulation);
+
+// returns shortest time scale for given bodies
+double
+find_shortest_time_scale(const cltbdy *bodies,
+					 	 const siminf simulation);
+
+// returns largest time scale for given bodies
+double
+find_largest_time_scale(const cltbdy *bodies,
+					 	const siminf simulation);
 
 #endif

@@ -1,11 +1,21 @@
 #include "linear_algebra.h"
 
 int
-null_vector(double x[])
+null_vector(double x_null[])
 {
 	for (int i = 0; i < DIM_3; i++)
 	{
-		x[i] = 0.0;
+		x_null[i] = 0.0;
+	}
+	return 0;
+}
+
+int
+nan_vector(double x_nan[])
+{
+	for (int i = 0; i < DIM_3; i++)
+	{
+		x_nan[i] = NAN;
 	}
 	return 0;
 }
@@ -72,6 +82,18 @@ int
 normalize_vector(double x[])
 {
 	scale_vector(x, 1.0 / norm_vector(x), x);
+
+	return 0;
+}
+
+int
+projection_vector_a_on_b(double proj[],
+                         const double a[],
+                         const double b[])
+{
+	double a_dot_b = dot_product(a, b);
+	double b_dot_b = dot_product(b, b);
+	scale_vector(proj, a_dot_b / b_dot_b, b);
 
 	return 0;
 }
@@ -222,11 +244,21 @@ linear_combination_three_vector(double v[], const double a, const double x[],
 }
 
 int
-null_matrix(double N[])
+null_matrix(double M_null[])
 {
 	for (int i = 0; i < DIM_3*DIM_3; i++)
 	{
-		N[i] = 0.0;
+		M_null[i] = 0.0;
+	}
+	return 0;
+}
+
+int
+nan_matrix(double M_nan[])
+{
+	for (int i = 0; i < DIM_3*DIM_3; i++)
+	{
+		M_nan[i] = NAN;
 	}
 	return 0;
 }
@@ -664,12 +696,32 @@ normalize_quaternion(double q_to_normalize[])
 }
 
 int
-identity_quaternion(double qI[])
+identity_quaternion(double q_identity[])
 {
-	qI[0] = 1.0;
-	qI[1] = 0.0;
-	qI[2] = 0.0;
-	qI[3] = 0.0;
+	q_identity[0] = 1.0;
+	q_identity[1] = 0.0;
+	q_identity[2] = 0.0;
+	q_identity[3] = 0.0;
+	return 0;
+}
+
+int
+null_quaternion(double q_null[])
+{
+	q_null[0] = 0.0;
+	q_null[1] = 0.0;
+	q_null[2] = 0.0;
+	q_null[3] = 0.0;
+	return 0;
+}
+
+int
+nan_quaternion(double q_nan[])
+{
+	q_nan[0] = NAN;
+	q_nan[1] = NAN;
+	q_nan[2] = NAN;
+	q_nan[3] = NAN;
 	return 0;
 }
 

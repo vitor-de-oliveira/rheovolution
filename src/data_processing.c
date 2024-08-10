@@ -26,6 +26,43 @@ count_columns(const char *s)
 } 
 
 int
+print_SimulationInfo(siminf simulation)
+{
+	printf("name = %s\n", simulation.name);
+
+	printf("main input = %s\n", simulation.main_input);
+
+	printf("input folder = %s\n", simulation.input_folder);
+	printf("output folder = %s\n", simulation.output_folder);
+	printf("system specs = %s\n", simulation.system_specs);
+	printf("integration specs = %s\n", simulation.integration_specs);
+	printf("dev specs = %s\n", simulation.dev_specs);
+
+	printf("G = %1.10e\n", simulation.G);
+	printf("units = %s\n", simulation.units);
+	printf("rheology model = %s\n", simulation.rheology_model);
+	printf("number of bodies = %d\n", simulation.number_of_bodies);
+	printf("omega correction = %d\n", simulation.omega_correction);
+	printf("keplerian motion = %d\n", simulation.keplerian_motion);
+	printf("two bodies approx = %d\n", simulation.two_bodies_aprox);
+
+	printf("t init = %1.10e\n", simulation.t_init);
+	printf("t trans = %1.10e\n", simulation.t_trans);
+	printf("t final = %1.10e\n", simulation.t_final);
+	printf("t step received = %d\n", simulation.t_step_received);
+	printf("t step = %1.10e\n", simulation.t_step);
+	
+	printf("t step min = %1.10e\n", simulation.t_step_min);
+	printf("eps abs = %1.10e\n", simulation.error_abs);
+	printf("eps rel = %1.10e\n", simulation.error_rel);
+
+	printf("output size = %d\n", simulation.output_size);
+	printf("data skip = %d\n", simulation.data_skip);
+
+	return 0;
+}
+
+int
 parse_input(siminf *simulation,
 			const char input_file[])
 {
@@ -33,9 +70,9 @@ parse_input(siminf *simulation,
     char 	*line = NULL;
     size_t 	len = 0;
     ssize_t	read;
-	char 	first_col[100];
-	char 	second_col[100];
-	char	hold[100];
+	char 	first_col[300];
+	char 	second_col[300];
+	char	hold[300];
 	bool	rheology_model_received = false;
 	bool	dev_specs_file_received = false;
 	bool	number_of_bodies_received = false;
@@ -205,6 +242,10 @@ parse_input(siminf *simulation,
 		}
 		fclose(in_dev);	
 	}
+	else
+	{
+		strcpy(simulation->dev_specs, "Not received.");
+	}
 
 	/* check and set number of bodies */
 	FILE *in_col = fopen(simulation->system_specs, "r");
@@ -258,8 +299,14 @@ parse_input(siminf *simulation,
 		simulation->two_bodies_aprox = false;
 	}
 
+	/* presetting some values */
+	simulation->t_step_received = false;
+	simulation->t_step_min = NAN;
+	simulation->error_abs = NAN;
+	simulation->error_rel = NAN;
+
 	/* verification variables for integration input */
-	int 	number_integration_inputs = 7;
+	int 	number_integration_inputs = 3;
 	bool	input_integration_received[number_integration_inputs];
 	for (int i = 0; i < number_integration_inputs; i++)
 	{
@@ -289,22 +336,7 @@ parse_input(siminf *simulation,
 		else if (strcmp(first_col, "t_step(yr)") == 0)
 		{
 			simulation->t_step = atof(second_col);
-			input_integration_received[3] = true;
-		}
-		else if (strcmp(first_col, "eps_abs") == 0)
-		{
-			simulation->eps_abs = atof(second_col);
-			input_integration_received[4] = true;
-		}
-		else if (strcmp(first_col, "eps_rel") == 0)
-		{
-			simulation->eps_rel = atof(second_col);
-			input_integration_received[5] = true;
-		}
-		else if (strcmp(first_col, "data_skip") == 0)
-		{
-			simulation->data_skip = (int) atof(second_col);
-			input_integration_received[6] = true;
+			simulation->t_step_received = true;
 		}
 	}
 	fclose(in2);
@@ -815,14 +847,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	fclose(in1);
 
 	/* parameter input verification */
-	for (int i = 0; i < number_par_inputs; i++)
+	for (int n = 0; n < number_par_inputs; n++)
 	{
-		if(input_par_received[i] == false)
+		if(input_par_received[n] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
 			fprintf(stderr, "from %s.\n", simulation.system_specs);
 			fprintf(stderr, "Exiting the program now.\n");
-			// fprintf(stderr, "Missing input number %d\n", i); // debugging
+			// fprintf(stderr, "Missing input number %d\n", n); // debugging
 			exit(14);
 		}
 	}
@@ -938,9 +970,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		exit(14);
 	}
 	/* deformable variables input verification */
-	for (int i = 0; i < number_deformable_inputs; i++)
+	for (int n = 0; n < number_deformable_inputs; n++)
 	{
-		if(input_deformable_received[i] == false)
+		if(input_deformable_received[n] == false)
 		{
 			fprintf(stderr, "Error: there is at least one missing input ");
 			fprintf(stderr, "for the deformation variables ");
@@ -952,9 +984,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* Maxwell rheology input verification */
 	if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 	{
-		for (int i = 0; i < number_maxwell_inputs; i++)
+		for (int n = 0; n < number_maxwell_inputs; n++)
 		{
-			if(input_maxwell_received[i] == false)
+			if(input_maxwell_received[n] == false)
 			{
 				fprintf(stderr, "Error: there is at least one missing input ");
 				fprintf(stderr, "for the Maxwell rheology variables ");
@@ -963,14 +995,19 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				exit(14);
 			}
 		}
+		// zeroing Kelvin-Voigt elements
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			(*bodies)[i].elements = 0;
+		}
 	}
-	
+
 	/* Generalised Voigt rheology input verification and setting of elements */
 	if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
 	{
-		for (int i = 0; i < number_gV_inputs; i++)
+		for (int n = 0; n < number_gV_inputs; n++)
 		{
-			if(input_gV_received[i] == false)
+			if(input_gV_received[n] == false)
 			{
 				fprintf(stderr, "Error: there is at least one missing input ");
 				fprintf(stderr, "for the generalised Voigt rheology variables ");
@@ -984,6 +1021,10 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		int elements_max = 0;
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
+			if ((*bodies)[i].point_mass == true || (*bodies)[i].deformable == false)
+			{
+				(*bodies)[i].elements = 0;
+			}
 			if ((*bodies)[i].elements > 0)
 			{
 				(*bodies)[i].alpha_elements 
@@ -1099,25 +1140,41 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		}
 		else if ((*bodies)[i].deformable == false)
 		{
+			(*bodies)[i].prestress = false;
 			(*bodies)[i].centrifugal = false;
 			(*bodies)[i].tidal = false;
 		}
 	}
 
 	/* converting units and setting orbital period */
+	/* also transforming some values to nan */
 
 	double deg_to_rad = M_PI / 180.0;
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		(*bodies)[i].azi *= deg_to_rad;
-		(*bodies)[i].pol *= deg_to_rad;
-		(*bodies)[i].obl *= deg_to_rad;
-		(*bodies)[i].psi *= deg_to_rad;
-		(*bodies)[i].lib *= deg_to_rad;
-		(*bodies)[i].I *= deg_to_rad;
-		(*bodies)[i].M *= deg_to_rad;
-		(*bodies)[i].w *= deg_to_rad;
-		(*bodies)[i].Omega *= deg_to_rad;
+		if ((*bodies)[i].point_mass == true)
+		{
+			(*bodies)[i].azi = NAN;
+			(*bodies)[i].pol = NAN;
+			(*bodies)[i].obl = NAN;
+			(*bodies)[i].psi = NAN;
+			(*bodies)[i].lib = NAN;
+		}
+		else
+		{
+			(*bodies)[i].azi *= deg_to_rad;
+			(*bodies)[i].pol *= deg_to_rad;
+			(*bodies)[i].obl *= deg_to_rad;
+			(*bodies)[i].psi *= deg_to_rad;
+			(*bodies)[i].lib *= deg_to_rad;
+		}
+		if (i > 0)
+		{
+			(*bodies)[i].I *= deg_to_rad;
+			(*bodies)[i].M *= deg_to_rad;
+			(*bodies)[i].w *= deg_to_rad;
+			(*bodies)[i].Omega *= deg_to_rad;
+		}
 	}
 
 	if (strcmp(simulation.units, "SI") == 0)
@@ -1134,8 +1191,16 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			(*bodies)[i].mass *= Msun_to_kg;
 			(*bodies)[i].R *= km_to_m;
-			(*bodies)[i].rot *= day_to_s;
-			(*bodies)[i].rot_ini *= day_to_s;
+			if ((*bodies)[i].point_mass == true)
+			{
+				(*bodies)[i].rot = NAN;
+				(*bodies)[i].rot_ini = NAN;
+			}
+			else
+			{
+				(*bodies)[i].rot *= day_to_s;
+				(*bodies)[i].rot_ini *= day_to_s;
+			}
 			(*bodies)[i].a *= AU_to_m;
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
@@ -1143,7 +1208,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			if (i==0)
 			{
-				(*bodies)[i].orb = 0.0;	
+				(*bodies)[i].orb = NAN;	
 			}
 			else
 			{
@@ -1170,15 +1235,23 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			(*bodies)[i].R *= km_to_AU;
-			(*bodies)[i].rot *= day_to_year;
-			(*bodies)[i].rot_ini *= day_to_year;
+			if ((*bodies)[i].point_mass == true)
+			{
+				(*bodies)[i].rot = NAN;
+				(*bodies)[i].rot_ini = NAN;
+			}
+			else
+			{
+				(*bodies)[i].rot *= day_to_year;
+				(*bodies)[i].rot_ini *= day_to_year;
+			}
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
 				(*bodies)[i].Dt *= s_to_year;
 			}
 			if (i==0)
 			{
-				(*bodies)[i].orb = 0.0;	
+				(*bodies)[i].orb = NAN;	
 			}
 			else
 			{
@@ -1257,7 +1330,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	}
 	
 	/* calculating 4 sets of variables */
-	
+
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		double	m = (*bodies)[i].mass;
@@ -1285,81 +1358,92 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		/* 1st set of variables - x and x_dot */
 		double qr_1_I[4];
 		double qr_3_Omega[4];
-
-		if (i == 0)
+		if (simulation.number_of_bodies == 1)
 		{
-			null_vector((*bodies)[i].x);
-			null_vector((*bodies)[i].x_dot);
+			nan_vector((*bodies)[i].x);
+			nan_vector((*bodies)[i].x_dot);
 			identity_quaternion(qr_1_I);		// for 2nd set of variables
 			identity_quaternion(qr_3_Omega);	// for 2nd set of variables
 		}
 		else
 		{
-			double n = (2.0 * M_PI) / T;
-			double E = kepler_equation(e, M);
-			double r = a * (1.0 - e * cos(E));
-			double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
+			if (i == 0)
+			{
+				null_vector((*bodies)[i].x);
+				null_vector((*bodies)[i].x_dot);
+				identity_quaternion(qr_1_I);		// for 2nd set of variables
+				identity_quaternion(qr_3_Omega);	// for 2nd set of variables
+			}
+			else
+			{
+				double n = (2.0 * M_PI) / T;
+				double E = kepler_equation(e, M);
+				double r = a * (1.0 - e * cos(E));
+				double f = atan2(sqrt(1.0 - e * e) * sin(E), cos(E) - e);
 
-			double position_in_plane[] 
-				= {r * cos(f), r * sin(f), 0.0};
-			double velocity_in_plane[] 
-				= {-1.0 * n * a / sqrt(1.0 - e * e) * sin(f), 
-					n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
-					0.0};
+				double position_in_plane[] 
+					= {r * cos(f), r * sin(f), 0.0};
+				double velocity_in_plane[] 
+					= {-1.0 * n * a / sqrt(1.0 - e * e) * sin(f), 
+						n * a / sqrt(1.0 - e * e) * (e + cos(f)), 
+						0.0};
 
-			double qr_3_w[9];
-			rotation_quaternion_z(qr_3_w, w);
-			rotation_quaternion_x(qr_1_I, I);
-			rotation_quaternion_z(qr_3_Omega, Omega);
+				double qr_3_w[9];
+				rotation_quaternion_z(qr_3_w, w);
+				rotation_quaternion_x(qr_1_I, I);
+				rotation_quaternion_z(qr_3_Omega, Omega);
 
-			double full_rotation_orbit_quaternion[4];
-			quaternion_times_quaternion(full_rotation_orbit_quaternion,
-				qr_3_Omega, qr_1_I);
-			quaternion_times_quaternion(full_rotation_orbit_quaternion,
-				full_rotation_orbit_quaternion, qr_3_w);
+				double full_rotation_orbit_quaternion[4];
+				quaternion_times_quaternion(full_rotation_orbit_quaternion,
+					qr_3_Omega, qr_1_I);
+				quaternion_times_quaternion(full_rotation_orbit_quaternion,
+					full_rotation_orbit_quaternion, qr_3_w);
 
-			rotate_vector_with_quaternion((*bodies)[i].x, 
-				full_rotation_orbit_quaternion, position_in_plane);
-			rotate_vector_with_quaternion((*bodies)[i].x_dot, 
-				full_rotation_orbit_quaternion, velocity_in_plane);
+				rotate_vector_with_quaternion((*bodies)[i].x, 
+					full_rotation_orbit_quaternion, position_in_plane);
+				rotate_vector_with_quaternion((*bodies)[i].x_dot, 
+					full_rotation_orbit_quaternion, velocity_in_plane);
+			}
 		}
 
 		/* 2nd set of variables - omega and q */
-		double qr_3_psi[4];
-		rotation_quaternion_z(qr_3_psi, psi);
-		double qr_1_theta[4];
-		rotation_quaternion_x(qr_1_theta, theta);
-		double qr_3_phi[4];
-		rotation_quaternion_z(qr_3_phi, phi);
+		if ((*bodies)[i].point_mass == true)
+		{
+			nan_quaternion((*bodies)[i].q);
+			nan_vector((*bodies)[i].omega);
+		}
+		else
+		{
+			double qr_3_psi[4];
+			rotation_quaternion_z(qr_3_psi, psi);
+			double qr_1_theta[4];
+			rotation_quaternion_x(qr_1_theta, theta);
+			double qr_3_phi[4];
+			rotation_quaternion_z(qr_3_phi, phi);
 
-		double full_rotation_body_quaternion[4];
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			qr_3_Omega, qr_1_I);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_3_psi);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_1_theta);
-		quaternion_times_quaternion(full_rotation_body_quaternion,
-			full_rotation_body_quaternion, qr_3_phi);
+			double full_rotation_body_quaternion[4];
+			quaternion_times_quaternion(full_rotation_body_quaternion,
+				qr_3_Omega, qr_1_I);
+			quaternion_times_quaternion(full_rotation_body_quaternion,
+				full_rotation_body_quaternion, qr_3_psi);
+			quaternion_times_quaternion(full_rotation_body_quaternion,
+				full_rotation_body_quaternion, qr_1_theta);
+			quaternion_times_quaternion(full_rotation_body_quaternion,
+				full_rotation_body_quaternion, qr_3_phi);
 
-		copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
+			copy_quaternion((*bodies)[i].q, full_rotation_body_quaternion);
 
-		initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
+			initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
+		}
 
 		/* 3rd set of variables - I0 */
 		if ((*bodies)[i].point_mass == true)
 		{
-			(*bodies)[i].I0 = 0.0;
+			(*bodies)[i].I0 = NAN;
 		}
 		else
 		{
 			(*bodies)[i].I0 = (3.0 * rg - 2.0 * J2) * m * R * R / 3.0;
-		}
-
-		/* Kelvin-Voigt elements */
-		if (strcmp(simulation.rheology_model, "Maxwell") == 0)
-		{
-			(*bodies)[i].elements = 0;
 		}
 
 		/* 4th set of variables - gamma_0, alpha and eta */
@@ -1384,110 +1468,170 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].tau = NAN;
 			(*bodies)[i].Dt  = NAN;
 
-			(*bodies)[i].gamma_0 = 1.0;
-			(*bodies)[i].alpha 	 = 0.0;
-			(*bodies)[i].eta   	 = 1.0;
-
-			if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
-			{
-				for (int j = 0; j < (*bodies)[i].elements; j++)
-				{
-					(*bodies)[i].alpha_elements[j] = 0.0;
-					(*bodies)[i].eta_elements[j]   = 1.0;
-				}
-			}
+			(*bodies)[i].gamma_0 = NAN;
+			(*bodies)[i].alpha 	 = NAN;
+			(*bodies)[i].eta   	 = NAN;
 		}
 	} // end loop over bodies
+
+	/* redefine center of inertial frame to the center of mass */
+	if (simulation.number_of_bodies > 1)
+	{
+		double location_of_center_of_mass[3];
+		double velocity_of_center_of_mass[3];
+		calculate_center_of_mass(location_of_center_of_mass,
+			velocity_of_center_of_mass, *bodies, 
+			simulation.number_of_bodies);
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{
+			linear_combination_vector((*bodies)[i].x,
+				1.0, (*bodies)[i].x,
+				-1.0, location_of_center_of_mass);
+			linear_combination_vector((*bodies)[i].x_dot,
+				1.0, (*bodies)[i].x_dot,
+				-1.0, velocity_of_center_of_mass);
+		} // end loop over bodies
+	}
 
 	/* calculate Bs_me and P_me, and initialize b_eta and bk */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		/* real deformation on Tisserand frame */
-		double B_stokes_i[9];
-		body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
-		double B_stokes_diag_i[9];
-		calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
-			B_stokes_diag_i);
+		if ((*bodies)[i].point_mass == true)
+		{
+			double dummy_nan_matrix[9];
+			nan_matrix(dummy_nan_matrix);			
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
+				dummy_nan_matrix);
+			(*bodies)[i].rg  = NAN;
+			(*bodies)[i].J2  = NAN;
+			(*bodies)[i].C22 = NAN;
+			(*bodies)[i].S22 = NAN;
+			(*bodies)[i].C21 = NAN;
+			(*bodies)[i].S21 = NAN;
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].P_me,
+				dummy_nan_matrix);
+			nan_matrix((*bodies)[i].Y);
+			nan_matrix((*bodies)[i].Y_trans);
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].p_me,
+				dummy_nan_matrix);
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].bs_me,
+				dummy_nan_matrix);
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, 
+				dummy_nan_matrix);
+		}
+		else
+		{
+			/* real deformation on Tisserand frame */
+			double B_stokes_i[9];
+			body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
+			double B_stokes_diag_i[9];
+			calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
+			get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
+				B_stokes_diag_i);
 
-		/* update gravity field coefficients to */
-		/* the frame of principal inertia moments */
-		double Iner_diag[9];
-		calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
-		(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-		(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			/* update gravity field coefficients to */
+			/* the frame of principal inertia momenta */
+			double Iner_diag[9];
+			calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
+			(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 
-		/* prestress on Tisserand frame */
-		double P_i[9];	
-		null_matrix(P_i);
-		if ((*bodies)[i].prestress == true &&
-			(*bodies)[i].deformable == true)
-		{
-			double F_cent_mean_i[9];
-			double mean_omega = 2.0 * M_PI / (*bodies)[i].rot;
-			calculate_F_cent_mean(F_cent_mean_i, mean_omega);
-			double F_tide_mean_i[9];
-			null_matrix(F_tide_mean_i); // no permanent tide for now
-			linear_combination_three_square_matrix(P_i,
-				(*bodies)[i].gamma_0, B_stokes_diag_i,
-				-1.0, F_cent_mean_i,
-				-1.0, F_tide_mean_i);
-		}
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].P_me,
-			P_i);
+			/* prestress on Tisserand frame */
+			if ((*bodies)[i].prestress == false)
+			{
+				double dummy_nan_matrix[9];
+				nan_matrix(dummy_nan_matrix);
+				get_main_elements_traceless_symmetric_matrix((*bodies)[i].P_me,
+					dummy_nan_matrix);
+			}
+			else
+			{
+				double F_cent_mean_i[9];
+				double mean_omega = 2.0 * M_PI / (*bodies)[i].rot;
+				calculate_F_cent_mean(F_cent_mean_i, mean_omega);
+				double F_tide_mean_i[9];
+				null_matrix(F_tide_mean_i); // no permanent tide for now
+				double P_i[9];	
+				linear_combination_three_square_matrix(P_i,
+					(*bodies)[i].gamma_0, B_stokes_diag_i,
+					-1.0, F_cent_mean_i,
+					-1.0, F_tide_mean_i);
+				get_main_elements_traceless_symmetric_matrix((*bodies)[i].P_me,
+					P_i);
+			}
 
-		/* real deformation and prestress on inertial frame */
-		calculate_Y_and_Y_transpose(&(*bodies)[i]);
-		calculate_bs_me(&(*bodies)[i]);
-		calculate_p_me(&(*bodies)[i]);
-		
-		/* alloc and initialize bk at equilibrium */
-		if ((*bodies)[i].elements > 0)
-		{
-			(*bodies)[i].bk_me 
-				= (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
-		}
+			/* real deformation and prestress on inertial frame */
+			calculate_Y_and_Y_transpose(&(*bodies)[i]);
+			calculate_bs_me(&(*bodies)[i]);
+			if ((*bodies)[i].prestress == false)
+			{
+				double dummy_nan_matrix[9];
+				nan_matrix(dummy_nan_matrix);
+				get_main_elements_traceless_symmetric_matrix((*bodies)[i].p_me,
+					dummy_nan_matrix);
+			}
+			else
+			{
+				calculate_p_me(&(*bodies)[i]);
+			}
+			
+			/* alloc and initialize bk_me with zeroes */
+			if ((*bodies)[i].elements > 0)
+			{
+				(*bodies)[i].bk_me 
+					= (double *) calloc((*bodies)[i].elements * 5, sizeof(double));
+			}
 
-		/* initialize b_eta */
-		double f_cent_i[9];
-		null_matrix(f_cent_i);
-		if ((*bodies)[i].centrifugal == true)
-		{
-			calculate_f_cent(f_cent_i, (*bodies)[i].omega);
+			/* initialize b_eta_me */
+			if ((*bodies)[i].deformable == false)
+			{
+				double dummy_nan_matrix[9];
+				nan_matrix(dummy_nan_matrix);			
+				get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, 
+					dummy_nan_matrix);
+			}
+			else
+			{
+				double f_cent_i[9];
+				null_matrix(f_cent_i);
+				if ((*bodies)[i].centrifugal == true)
+				{
+					calculate_f_cent(f_cent_i, (*bodies)[i].omega);
+				}
+				double f_tide_i[9];
+				null_matrix(f_tide_i);
+				if ((*bodies)[i].tidal == true)
+				{
+					calculate_f_tide(f_tide_i, i, (*bodies), 
+						simulation.number_of_bodies, simulation.G);
+				}
+				double f_ps_i[9];
+				null_matrix(f_ps_i);
+				if ((*bodies)[i].prestress == true)
+				{
+					calculate_f_ps(f_ps_i, (*bodies)[i]);
+				}
+				double c_i = calculate_c((*bodies)[i]);
+				double b_eta_i[9];
+				null_matrix(b_eta_i);
+				if ((*bodies)[i].deformable == true)
+				{
+					double bs_i[9];
+					construct_traceless_symmetric_matrix(bs_i,
+						(*bodies)[i].bs_me);
+					linear_combination_four_square_matrix(b_eta_i,
+						c_i/(*bodies)[i].alpha, bs_i,
+						-1.0/(*bodies)[i].alpha, f_cent_i,
+						-1.0/(*bodies)[i].alpha, f_tide_i,
+						-1.0/(*bodies)[i].alpha, f_ps_i);
+				}
+				get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, b_eta_i);
+			}
 		}
-		double f_tide_i[9];
-		null_matrix(f_tide_i);
-		if ((*bodies)[i].tidal == true)
-		{
-			calculate_f_tide(f_tide_i, i, (*bodies), 
-				simulation.number_of_bodies, simulation.G);
-		}
-		double f_ps_i[9];
-		null_matrix(f_ps_i);
-		if ((*bodies)[i].prestress == true)
-		{
-			calculate_f_ps(f_ps_i, (*bodies)[i]);
-		}
-		double c_i = calculate_c((*bodies)[i]);
-		double b_eta_i[9];
-		null_matrix(b_eta_i);
-		if ((*bodies)[i].deformable == true)
-		{
-			double bs_i[9];
-			construct_traceless_symmetric_matrix(bs_i,
-				(*bodies)[i].bs_me);
-			linear_combination_four_square_matrix(b_eta_i,
-				 c_i/(*bodies)[i].alpha, bs_i,
-				-1.0/(*bodies)[i].alpha, f_cent_i,
-				-1.0/(*bodies)[i].alpha, f_tide_i,
-				-1.0/(*bodies)[i].alpha, f_ps_i);
-		}
-		get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, b_eta_i);
-		
 	} // end loop over bodies
 
 	/* for debugging */
@@ -1496,6 +1640,65 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	// 	print_CelestialBody((*bodies)[i]);
 	// }
 	// exit(99);
+
+	return 0;
+}
+
+int
+calculate_data_skip (siminf *simulation,
+					 const cltbdy *bodies)
+{
+	// checking type of bodies
+	bool extended = false;
+	bool deformable = false;
+	for (int i = 0; i < simulation->number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			extended = true;
+			if (bodies[i].deformable == true)
+			{
+				deformable = true;
+				break;
+			}
+		}
+	}
+
+	// calculating data size
+	int header_size = 0;
+	int data_size_for_each_line = 0;
+
+	// everything is in bytes
+	if (deformable == true)
+	{
+		header_size = 156;
+		data_size_for_each_line = 22 * 27 + 1;
+	}
+	else if (extended == true)
+	{
+		header_size = 154;
+		data_size_for_each_line = 22 * 26 + 1;
+	}
+	else
+	{
+		header_size = 75;
+		data_size_for_each_line = 22 * 10 + 1;
+	}
+
+	// determine data skip
+	int number_of_data_lines_in_file 
+		= (simulation->output_size - header_size) / data_size_for_each_line;
+	double integration_time = simulation->t_final - simulation->t_trans;
+	int number_of_steps = integration_time / simulation->t_step;
+	if (number_of_data_lines_in_file > number_of_steps)
+	{
+		simulation->data_skip = 1;
+	}
+	else
+	{
+		simulation->data_skip 
+			= number_of_steps / number_of_data_lines_in_file;
+	}
 
 	return 0;
 }
@@ -1527,6 +1730,10 @@ create_output_files	(const cltbdy *bodies,
 			fprintf(out[i], " b_21 b_22 b_23");
 			fprintf(out[i], " b_31 b_32 b_33");
 			fprintf(out[i], " q_1 q_2 q_3 q_4");
+			if (bodies[i].deformable == true)
+			{
+				fprintf(out[i], " D");
+			}
 		}
 		fprintf(out[i], "\n");
 	}
@@ -1539,10 +1746,9 @@ create_output_files	(const cltbdy *bodies,
 	strcat(filename, ".dat");
 	out[simulation.number_of_bodies] = fopen(filename, "w");
 	fprintf(out[simulation.number_of_bodies], "time(yr)");
-	fprintf(out[simulation.number_of_bodies], " x_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " y_com(AU)");
-	fprintf(out[simulation.number_of_bodies], " z_com(AU)");
 	fprintf(out[simulation.number_of_bodies], " |L|");
+	fprintf(out[simulation.number_of_bodies], " E");
+	fprintf(out[simulation.number_of_bodies], " E_dot");
 	fprintf(out[simulation.number_of_bodies], "\n");
 
 	return 0;
@@ -1553,6 +1759,8 @@ write_output(const cltbdy *bodies,
 			 const siminf simulation,
 			 FILE *out[])
 {
+	double E_dot = 0.0;
+
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		/* state variables */
@@ -1560,29 +1768,10 @@ write_output(const cltbdy *bodies,
 		/* time */
 		fprintf (out[i], "%.14e", simulation.t);
 
-		/* position, and velocity */
-		if (simulation.keplerian_motion == true)
-		{
-			fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e %.14e", 
-				bodies[i].x[0], bodies[i].x[1], bodies[i].x[2],
-				bodies[i].x_dot[0], bodies[i].x_dot[1], bodies[i].x_dot[2]);
-		}
-		else
-		{
-			// transform to body 1-centered system
-			double relative_x[3];
-			linear_combination_vector(relative_x,
-				1.0, bodies[i].x,
-				-1.0, bodies[0].x);
-			double relative_x_dot[3];
-			linear_combination_vector(relative_x_dot,
-				1.0, bodies[i].x_dot,
-				-1.0, bodies[0].x_dot);
-
-			fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e %.14e", 
-				relative_x[0], relative_x[1], relative_x[2],
-				relative_x_dot[0], relative_x_dot[1], relative_x_dot[2]);
-		}
+		/* position and velocity */
+		fprintf (out[i], " %.14e %.14e %.14e %.14e %.14e %.14e", 
+			bodies[i].x[0], bodies[i].x[1], bodies[i].x[2],
+			bodies[i].x_dot[0], bodies[i].x_dot[1], bodies[i].x_dot[2]);
 
 		if (bodies[i].point_mass == false)
 		{
@@ -1604,6 +1793,13 @@ write_output(const cltbdy *bodies,
 			fprintf (out[i], " %.14e %.14e %.14e %.14e", 
 				bodies[i].q[0], bodies[i].q[1], bodies[i].q[2], bodies[i].q[3]);
 
+			/* dissipation on body */
+			if (bodies[i].deformable == true)
+			{
+				double D_i = dissipation_function(bodies[i]);
+				fprintf (out[i], " %.14e", D_i);
+				E_dot -= 2.0 * D_i;
+			}
 		}
 
 		/* next line */
@@ -1616,21 +1812,18 @@ write_output(const cltbdy *bodies,
 	/* time */
 	fprintf (out[simulation.number_of_bodies], "%.14e", simulation.t);
 
-	/* location of center of mass */
-	double center_of_mass[3];
-	calculate_center_of_mass(center_of_mass, bodies, simulation.number_of_bodies, simulation.G);
-	double relative_center_of_mass[3];
-	linear_combination_vector(relative_center_of_mass,
-		1.0, center_of_mass,
-		-1.0, bodies[0].x);
-	fprintf (out[simulation.number_of_bodies], " %.14e", relative_center_of_mass[0]);
-	fprintf (out[simulation.number_of_bodies], " %.14e", relative_center_of_mass[1]);
-	fprintf (out[simulation.number_of_bodies], " %.14e", relative_center_of_mass[2]);
-
 	/* total angular momentum */
 	double l_total[3];
-	calculate_total_angular_momentum(l_total, bodies, simulation.number_of_bodies, simulation.G);
+	calculate_total_angular_momentum(l_total, bodies, simulation.number_of_bodies);
 	fprintf (out[simulation.number_of_bodies], " %.14e", norm_vector(l_total));
+
+	/* energy without deformation */
+	fprintf (out[simulation.number_of_bodies], " %.14e", 
+		total_energy_without_deformation(bodies, 
+			simulation.number_of_bodies, simulation.G));
+
+	/* total energy dissipation */
+	fprintf (out[simulation.number_of_bodies], " %.14e", E_dot);
 
 	/* next line */
 	fprintf(out[simulation.number_of_bodies], "\n");
@@ -1664,16 +1857,16 @@ write_simulation_overview	(const int time_spent_in_seconds,
 	strcat(filename, ".dat");
 
 	// simulation time
-	int sec, min, hr, days;
-	days = time_spent_in_seconds/(24*3600);
-	hr	= (time_spent_in_seconds - 24*3600*days) / 3600;
-	min = (time_spent_in_seconds - 24*3600*days - 3600*hr) / 60;
-	sec = (time_spent_in_seconds - 24*3600*days - 3600*hr - 60*min) / 1;
+	int sec, min, hr, day;
+	day = time_spent_in_seconds / (24*3600);
+	hr	= (time_spent_in_seconds - 24*3600*day) / 3600;
+	min = (time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
+	sec = (time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
 	FILE *out_sim_info;
 	out_sim_info = fopen(filename, "w");
 	fprintf(out_sim_info, "Time spent on simulation:");
 	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n\n",
-		days, hr, min, sec);
+		day, hr, min, sec);
 	fclose(out_sim_info);
 
 	// copy input files info
@@ -1800,6 +1993,7 @@ output_to_orbit(cltbdy *bodies,
 		fprintf(out_orbital, " M(°)");
 		fprintf(out_orbital, " w(°)");
 		fprintf(out_orbital, " Omega(°)");
+		fprintf(out_orbital, " x_orb(AU) y_orb(AU) z_orb(AU)");
 		fprintf(out_orbital, "\n");
 
 		// convertion units
@@ -1867,6 +2061,14 @@ output_to_orbit(cltbdy *bodies,
 
 			/* longitude of the ascending node */
 			fprintf (out_orbital, " %.14e", bodies[i].Omega * rad_to_deg);
+
+			/* position in 0-centered system */
+			double relative_x[3];
+			linear_combination_vector(relative_x,
+				1.0, bodies[i].x,
+				-1.0, bodies[0].x);
+			fprintf (out_orbital, " %.14e %.14e %.14e", 
+				relative_x[0], relative_x[1], relative_x[2]);
 
 			/* next line */
 			fprintf(out_orbital, "\n");		
@@ -1965,8 +2167,11 @@ output_to_spin	(cltbdy *bodies,
 			fprintf(out_orientation, " J2"); // J2 on PIM frame
 			fprintf(out_orientation, " C22"); // C22 on PIM frame
 			fprintf(out_orientation, " |q|");
-			fprintf(out_orientation, " soa(°)"); // angle relative coordinate and I1 
-												 // (spin-orbit angle)
+			if (i > 0)
+			{
+				fprintf(out_orientation, " soa(°)"); // angle relative coordinate 
+												 	 // and I1 (spin-orbit angle)
+			}
 			fprintf(out_orientation, "\n");
 
 			// convertion units
@@ -2031,17 +2236,6 @@ output_to_spin	(cltbdy *bodies,
 					bodies[i].q[j] = atof(token);
 				}
 
-				/* relative coordinates */
-				if (i > 0)
-				{
-					linear_combination_vector(bodies[i].relative_x,
-						1.0, bodies[i].x,
-						-1.0, bodies[0].x);
-					linear_combination_vector(bodies[i].relative_x_dot,
-						1.0, bodies[i].x_dot,
-						-1.0, bodies[0].x_dot);
-				}	
-
 				/* time */
 				fprintf (out_orientation, "%.14e", t);
 
@@ -2062,8 +2256,8 @@ output_to_spin	(cltbdy *bodies,
 				}
 				else
 				{
-					calculate_obliquity_on_orbit_from_angular_velocity(&bodies[i]);
-					// calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(&bodies[i]);
+					calculate_obliquity_on_orbit_from_angular_velocity(&bodies[i], bodies[0]);
+					// calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(&bodies[i], bodies[0]);
 				}	
 				fprintf (out_orientation, " %.14e", bodies[i].obl * rad_to_deg);
 
@@ -2124,8 +2318,7 @@ output_to_spin	(cltbdy *bodies,
 				/* angle between relative coordinate and I1 */
 				if (i > 0)
 				{
-					double soa;
-					soa = angle_between_relative_x_and_I1(bodies[i]);
+					double soa = angle_between_relative_x_and_I1(bodies[i], bodies[0]);
 					fprintf (out_orientation, " %.14e", soa * rad_to_deg);
 				}
 
@@ -2148,10 +2341,11 @@ int
 plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 								 const siminf simulation)
 {
-	/* suppresses warning messages by moving
-		* stderr to /dev/null
-		* should be used with care
-	*/
+	/*
+	 * suppresses warning messages by moving
+	 * stderr to /dev/null
+	 * should be used with care
+	**/
 	if(freopen("/dev/null", "w", stderr) == NULL)
 	{
 		fprintf(stderr, "Error: stderr could not be moved to\n");
@@ -2168,48 +2362,39 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 	}
 	char filename_get[300];
 	char filename_plot[300];
-	char filename_get_first_body[300];
-	/* get output filenames of first body */
-	strcpy(filename_get_first_body, simulation.output_folder);
-	strcat(filename_get_first_body, "results_");
-	strcat(filename_get_first_body, simulation.name);
-	strcat(filename_get_first_body, "_");
-	strcat(filename_get_first_body, bodies[0].name);
-	strcat(filename_get_first_body, ".dat");
 	FILE *gnuplotPipe;
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
-		/* get output filenames of each body */
-		strcpy(filename_get, simulation.output_folder);
-		strcat(filename_get, "results_");
-		strcat(filename_get, simulation.name);
-		strcat(filename_get, "_");
-		strcat(filename_get, bodies[i].name);
-		strcat(filename_get, ".dat");
-		/* plot outputs */
-		/* orbit */
-		if (i > 0)
+		if (bodies[i].point_mass == false && bodies[i].deformable == true)
 		{
+			/* get output files of each body */
+			strcpy(filename_get, simulation.output_folder);
+			strcat(filename_get, "results_");
+			strcat(filename_get, simulation.name);
+			strcat(filename_get, "_");
+			strcat(filename_get, bodies[i].name);
+			strcat(filename_get, ".dat");
+			/* plot outputs */
+			/* energy dissipation */
 			strcpy(filename_plot, plot_folder);
 			strcat(filename_plot, "figure_");
 			strcat(filename_plot, simulation.name);
 			strcat(filename_plot, "_");
 			strcat(filename_plot, bodies[i].name);
-			strcat(filename_plot, "_orbit");
+			strcat(filename_plot, "_energy_dissipation");
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
-			fprintf(gnuplotPipe, "set xlabel \"x(AU)\"\n");
-			fprintf(gnuplotPipe, "set ylabel \"y(AU)\"\n");
-			fprintf(gnuplotPipe, "set zlabel \"z(AU)\" rotate parallel\n");
-			fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
-			fprintf(gnuplotPipe, "splot \'%s\' u 2:3:4 w d, \'%s\' u 2:3:4 w p pt 7 ps 3", 
-				filename_get, filename_get_first_body);
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
+			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"D\"\n");
+			fprintf(gnuplotPipe, "set title \"%s's energy dissipation\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u 1:27 w l lw 3", filename_get);
 			pclose(gnuplotPipe);
 		}
 		/* reads output files of orbital elements of each body */
@@ -2233,11 +2418,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"a(AU)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's semi-major axis\"\n", bodies[i].name);
@@ -2253,11 +2439,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"e\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's eccentricity\"\n", bodies[i].name);
@@ -2273,11 +2460,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"I(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's inclination\"\n", bodies[i].name);
@@ -2293,11 +2481,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"M(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's mean anomaly\"\n", bodies[i].name);
@@ -2313,11 +2502,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"w(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's argument of periapsis\"\n", bodies[i].name);
@@ -2333,15 +2523,37 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"{/Symbol W}(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's longitude of the ascending node\"\n", bodies[i].name);
 			fprintf(gnuplotPipe, "plot \'%s\' u 1:7 w l lw 3", filename_get);
+			pclose(gnuplotPipe);
+			/* position in 0-centered system */
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_orbit");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set xlabel \"x_{orb}(AU)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"y_{orb}(AU)\"\n");
+			fprintf(gnuplotPipe, "set zlabel \"z_{orb}(AU)\" rotate parallel\n");
+			fprintf(gnuplotPipe, "set title \"%s's orbit\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "splot \'%s\' u 8:9:10 w d", filename_get);
 			pclose(gnuplotPipe);
 		} // end if i > 0
 		/* reads output files of orientation variables of each body */
@@ -2365,11 +2577,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"|angular velocity|(rad/yr)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's angular velocity\"\n", bodies[i].name);
@@ -2385,11 +2598,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"|l|\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's angular momentum\"\n", bodies[i].name);
@@ -2405,11 +2619,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"|b|\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's deformation\"\n", bodies[i].name);
@@ -2425,11 +2640,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"Obliquity(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's obliquity\"\n", bodies[i].name);
@@ -2445,11 +2661,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"wI3(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's wI3\"\n", bodies[i].name);
@@ -2465,11 +2682,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"wI3sf(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's wI3sf\"\n", bodies[i].name);
@@ -2485,11 +2703,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"wl(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's wl\"\n", bodies[i].name);
@@ -2505,11 +2724,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"Azimuthal angle(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"Azimuthal angle of %s's angular velocity\"\n", bodies[i].name);
@@ -2525,11 +2745,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"Nutation angle on PIM(°)\"\n");
 			fprintf(gnuplotPipe, "set title \"Nutation angle on PIM of %s's angular velocity\"\n", bodies[i].name);
@@ -2545,11 +2766,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"J2\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's J2\"\n", bodies[i].name);
@@ -2564,11 +2786,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"C22\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's C22\"\n", bodies[i].name);
@@ -2584,11 +2807,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			strcat(filename_plot, ".png");
 			gnuplotPipe = popen("gnuplot -persistent", "w");
 			fprintf(gnuplotPipe, "reset\n");
-			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 			fprintf(gnuplotPipe, "set border lw 2 \n");
 			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 			fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 			fprintf(gnuplotPipe, "set ylabel \"|q|\"\n");
 			fprintf(gnuplotPipe, "set title \"%s's quaternion norm\"\n", bodies[i].name);
@@ -2606,11 +2830,12 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 				strcat(filename_plot, ".png");
 				gnuplotPipe = popen("gnuplot -persistent", "w");
 				fprintf(gnuplotPipe, "reset\n");
-				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+				fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 				fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 				fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 				fprintf(gnuplotPipe, "set border lw 2 \n");
 				fprintf(gnuplotPipe, "unset key\n");
+				fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 				fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
 				fprintf(gnuplotPipe, "set ylabel \"Spin-orbit angle(°)\"\n");
 				fprintf(gnuplotPipe, "set title \"%s's spin-orbit angle\"\n", bodies[i].name);
@@ -2627,50 +2852,359 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 	strcat(filename_get, "full_system");
 	strcat(filename_get, ".dat");
 	/* plot outputs */
-	/* total angular momentum */
+	if (simulation.number_of_bodies > 1)
+	{
+		/* total angular momentum */
+		strcpy(filename_plot, plot_folder);
+		strcat(filename_plot, "figure_");
+		strcat(filename_plot, simulation.name);
+		strcat(filename_plot, "_");
+		strcat(filename_plot, "full_system");
+		strcat(filename_plot, "_total_angular_momentum");
+		strcat(filename_plot, ".png");
+		gnuplotPipe = popen("gnuplot -persistent", "w");
+		fprintf(gnuplotPipe, "reset\n");
+		fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+		fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+		fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+		fprintf(gnuplotPipe, "set border lw 2 \n");
+		fprintf(gnuplotPipe, "unset key\n");
+		fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
+		fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+		fprintf(gnuplotPipe, "set ylabel \"|Total angular momentum|\"\n");
+		fprintf(gnuplotPipe, "set title \"System's total angular momentum\"\n");
+		fprintf(gnuplotPipe, "plot \'%s\' u 1:2 w l lw 3", filename_get);
+		pclose(gnuplotPipe);
+		/* total angular momentum error */
+		strcpy(filename_plot, plot_folder);
+		strcat(filename_plot, "figure_");
+		strcat(filename_plot, simulation.name);
+		strcat(filename_plot, "_");
+		strcat(filename_plot, "full_system");
+		strcat(filename_plot, "_total_angular_momentum_error");
+		strcat(filename_plot, ".png");
+		gnuplotPipe = popen("gnuplot -persistent", "w");
+		fprintf(gnuplotPipe, "reset\n");
+		fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+		fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+		fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+		fprintf(gnuplotPipe, "set border lw 2 \n");
+		fprintf(gnuplotPipe, "unset key\n");
+		fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
+		fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
+		fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
+		fprintf(gnuplotPipe, "set ylabel \"Total angular momentum error\"\n");
+		fprintf(gnuplotPipe, "set title \"System's total angular momentum error\"\n");
+		fprintf(gnuplotPipe, "col = 2\n");
+		fprintf(gnuplotPipe, "row = 1\n");
+		fprintf(gnuplotPipe, "stats \'%s\' every ::row::row using col nooutput\n", filename_get);
+		fprintf(gnuplotPipe, "value=STATS_min\n");
+		fprintf(gnuplotPipe, "plot \'%s\' u 1:(abs($2-value)) w l lw 3", filename_get);
+		pclose(gnuplotPipe);
+	}
+	/* total energy without deformation */
 	strcpy(filename_plot, plot_folder);
 	strcat(filename_plot, "figure_");
 	strcat(filename_plot, simulation.name);
 	strcat(filename_plot, "_");
 	strcat(filename_plot, "full_system");
-	strcat(filename_plot, "_total_angular_momentum");
+	strcat(filename_plot, "_total_energy_without_deformation");
 	strcat(filename_plot, ".png");
 	gnuplotPipe = popen("gnuplot -persistent", "w");
 	fprintf(gnuplotPipe, "reset\n");
-	fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+	fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 	fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 	fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 	fprintf(gnuplotPipe, "set border lw 2 \n");
 	fprintf(gnuplotPipe, "unset key\n");
+	fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 	fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-	fprintf(gnuplotPipe, "set ylabel \"|Total angular momentum|\"\n");
-	fprintf(gnuplotPipe, "set title \"System's total angular momentum\"\n");
-	fprintf(gnuplotPipe, "plot \'%s\' u 1:5 w l lw 3", filename_get);
+	fprintf(gnuplotPipe, "set ylabel \"Total energy without deformation\"\n");
+	fprintf(gnuplotPipe, "set title \"System's total energy without deformation\"\n");
+	fprintf(gnuplotPipe, "plot \'%s\' u 1:3 w l lw 3", filename_get);
 	pclose(gnuplotPipe);
-	/* total angular momentum error */
+	/* total energy dissipation */
 	strcpy(filename_plot, plot_folder);
 	strcat(filename_plot, "figure_");
 	strcat(filename_plot, simulation.name);
 	strcat(filename_plot, "_");
 	strcat(filename_plot, "full_system");
-	strcat(filename_plot, "_total_angular_momentum_error");
+	strcat(filename_plot, "_total_energy_dissipation");
 	strcat(filename_plot, ".png");
 	gnuplotPipe = popen("gnuplot -persistent", "w");
 	fprintf(gnuplotPipe, "reset\n");
-	fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,50\"\n");
+	fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
 	fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
 	fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
 	fprintf(gnuplotPipe, "set border lw 2 \n");
 	fprintf(gnuplotPipe, "unset key\n");
+	fprintf(gnuplotPipe, "set format x %s\n", "\"%.1tx10^{%T}\"");
 	fprintf(gnuplotPipe, "set xlabel \"Time(yr)\"\n");
-	fprintf(gnuplotPipe, "set ylabel \"Total angular momentum error\"\n");
-	fprintf(gnuplotPipe, "set title \"System's total angular momentum error\"\n");
-	fprintf(gnuplotPipe, "col = 5\n");
-	fprintf(gnuplotPipe, "row = 1\n");
-	fprintf(gnuplotPipe, "stats \'%s\' every ::row::row using col nooutput\n", filename_get);
-	fprintf(gnuplotPipe, "value=STATS_min\n");
-	fprintf(gnuplotPipe, "plot \'%s\' u 1:(abs($5-value)) w l lw 3", filename_get);
+	fprintf(gnuplotPipe, "set ylabel \"Total energy dissipation\"\n");
+	fprintf(gnuplotPipe, "set title \"System's total energy dissipation\"\n");
+	fprintf(gnuplotPipe, "plot \'%s\' u 1:4 w l lw 3", filename_get);
 	pclose(gnuplotPipe);
 
 	return 0;
+}
+
+double
+find_shortest_time_scale(const cltbdy *bodies,
+						 const siminf simulation)
+{
+	// giant number for comparison
+	double giant_number = 1.0e20;
+
+	// define return variable
+    double shortest_time_scale = giant_number;
+
+	// orbit
+	bool	orbital_motion = false;
+    double 	shortest_orbital_period = giant_number;
+	if (simulation.number_of_bodies > 1)
+	{
+		shortest_orbital_period = bodies[1].orb;
+		orbital_motion = true;
+		shortest_time_scale = shortest_orbital_period;
+	}
+
+	// spin
+	bool	rotational_motion = false;
+	double	shortest_rotational_period = giant_number;
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			shortest_rotational_period = bodies[i].rot;
+			rotational_motion = true;
+			shortest_time_scale = shortest_rotational_period;
+			break;
+		}
+	}
+	
+	// rheology
+	bool	deformation = false;
+	double	shortest_relaxation_time = giant_number;
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].deformable == true)
+		{
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				shortest_relaxation_time = bodies[i].tau;
+			}
+			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{   
+				shortest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
+			}
+			deformation = true;
+			shortest_time_scale = shortest_relaxation_time;
+			break;
+		}
+	}
+
+	// loop over bodies
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+    {
+        // orbit
+		if (orbital_motion == true)
+		{
+			if (i > 0)
+			{
+				double body_orbital_period = bodies[i].orb;
+				if (body_orbital_period < shortest_orbital_period)
+				{
+					shortest_orbital_period = body_orbital_period;
+				}
+			}
+		}
+
+        // spin
+		if (rotational_motion == true)
+		{
+			if (bodies[i].point_mass == false)
+			{
+				double body_rotational_period = bodies[i].rot;
+				if (bodies[i].rot_ini < bodies[i].rot)
+				{
+					body_rotational_period = bodies[i].rot_ini;
+				}
+				if (body_rotational_period < shortest_rotational_period)
+				{
+					shortest_rotational_period = body_rotational_period;
+				}
+			}
+		}
+
+        // rheology
+		if (deformation == true)
+		{
+			double body_rheology_min_time = 0.0;
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				body_rheology_min_time = bodies[i].tau;
+			}
+			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{   
+				body_rheology_min_time = bodies[i].eta / bodies[i].alpha;
+				for (int j = 0; j < bodies[i].elements; j++)
+				{
+					double body_rheology_min_time_element 
+						= bodies[i].eta_elements[j] / bodies[i].alpha_elements[j];
+					if (body_rheology_min_time_element < body_rheology_min_time)
+					{
+						body_rheology_min_time = body_rheology_min_time_element;
+					}
+				}           
+			}
+			if (body_rheology_min_time < shortest_relaxation_time)
+			{
+				shortest_relaxation_time = body_rheology_min_time;
+			}
+		}
+    } // end loop over bodies
+
+    if (shortest_orbital_period < shortest_time_scale)
+    {
+        shortest_time_scale = shortest_orbital_period;
+    }
+    if (shortest_rotational_period < shortest_time_scale)
+    {
+        shortest_time_scale = shortest_rotational_period;
+    }
+    if (shortest_relaxation_time < shortest_time_scale)
+    {
+        shortest_time_scale = shortest_relaxation_time;
+    }
+
+    return shortest_time_scale;
+}
+
+double
+find_largest_time_scale(const cltbdy *bodies,
+						const siminf simulation)
+{
+	// define return variable
+    double largest_time_scale = 0.0;
+
+	// orbit
+	bool	orbital_motion = false;
+    double 	largest_orbital_period = 0.0;
+	if (simulation.number_of_bodies > 1)
+	{
+		largest_orbital_period = bodies[1].orb;
+		orbital_motion = true;
+		largest_time_scale = largest_orbital_period;
+	}
+
+	// spin
+	bool	rotational_motion = false;
+	double	largest_rotational_period = 0.0;
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			largest_rotational_period = bodies[i].rot;
+			rotational_motion = true;
+			largest_time_scale = largest_rotational_period;
+			break;
+		}
+	}
+	
+	// rheology
+	bool	deformation = false;
+	double	largest_relaxation_time = 0.0;
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].deformable == true)
+		{
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				largest_relaxation_time = bodies[i].tau;
+			}
+			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{   
+				largest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
+			}
+			deformation = true;
+			largest_time_scale = largest_relaxation_time;
+			break;
+		}
+	}
+
+	// loop over bodies
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+    {
+        // orbit
+		if (orbital_motion == true)
+		{
+			if (i > 0)
+			{
+				double body_orbital_period = bodies[i].orb;
+				if (body_orbital_period > largest_orbital_period)
+				{
+					largest_orbital_period = body_orbital_period;
+				}
+			}
+		}
+
+        // spin
+		if (rotational_motion == true)
+		{
+			if (bodies[i].point_mass == false)
+			{
+				double body_rotational_period = bodies[i].rot;
+				if (bodies[i].rot_ini > bodies[i].rot)
+				{
+					body_rotational_period = bodies[i].rot_ini;
+				}
+				if (body_rotational_period > largest_rotational_period)
+				{
+					largest_rotational_period = body_rotational_period;
+				}
+			}
+		}
+
+        // rheology
+		if (deformation == true)
+		{
+			double body_rheology_min_time = 0.0;
+			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
+			{
+				body_rheology_min_time = bodies[i].tau;
+			}
+			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
+			{   
+				body_rheology_min_time = bodies[i].eta / bodies[i].alpha;
+				for (int j = 0; j < bodies[i].elements; j++)
+				{
+					double body_rheology_min_time_element 
+						= bodies[i].eta_elements[j] / bodies[i].alpha_elements[j];
+					if (body_rheology_min_time_element > body_rheology_min_time)
+					{
+						body_rheology_min_time = body_rheology_min_time_element;
+					}
+				}           
+			}
+			if (body_rheology_min_time > largest_relaxation_time)
+			{
+				largest_relaxation_time = body_rheology_min_time;
+			}
+		}
+    } // end loop over bodies
+
+    if (largest_orbital_period > largest_time_scale)
+    {
+        largest_time_scale = largest_orbital_period;
+    }
+    if (largest_rotational_period > largest_time_scale)
+    {
+        largest_time_scale = largest_rotational_period;
+    }
+    if (largest_relaxation_time > largest_time_scale)
+    {
+        largest_time_scale = largest_relaxation_time;
+    }
+
+    return largest_time_scale;
 }
