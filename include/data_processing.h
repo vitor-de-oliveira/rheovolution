@@ -62,7 +62,7 @@ typedef struct SimulationInfo {
 	double	error_rel;					// relative error
 
 	/* output specs */
-	int		output_size;				// size of main output file
+	double 	output_size;				// size of main output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
 

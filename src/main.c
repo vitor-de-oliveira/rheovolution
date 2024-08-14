@@ -174,13 +174,11 @@ main(int argc, char *argv[])
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
 	if (simulation.t_step_received == false)
 	{
-		simulation.t_step = find_shortest_time_scale(bodies, simulation) / 5.0;
+		simulation.t_step = find_shortest_time_scale(bodies, simulation) / 2.0;
 	}
 	simulation.t_step_min = simulation.t_step / 1000.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
-
-	// printf("%1.15e\n", simulation.t_step);
 
 	gsl_odeiv2_driver *d = 
 		gsl_odeiv2_driver_alloc_y_new(&sys, 
@@ -197,7 +195,7 @@ main(int argc, char *argv[])
 	}
 
 	/* determine data skip based on output size */
-	simulation.output_size = 100e6; // bytes
+	simulation.output_size = 100.0e6; // bytes
 	calculate_data_skip(&simulation, bodies);
 
 	/* integration loop */

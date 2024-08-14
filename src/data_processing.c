@@ -56,7 +56,7 @@ print_SimulationInfo(siminf simulation)
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
 
-	printf("output size = %d\n", simulation.output_size);
+	printf("output size = %1.5e\n", simulation.output_size);
 	printf("data skip = %d\n", simulation.data_skip);
 
 	return 0;
@@ -1665,39 +1665,53 @@ calculate_data_skip (siminf *simulation,
 	}
 
 	// calculating data size
-	int header_size = 0;
-	int data_size_for_each_line = 0;
+	double header_size = 0.0;
+	double data_size_for_each_line = 0.0;
 
 	// everything is in bytes
 	if (deformable == true)
 	{
-		header_size = 156;
-		data_size_for_each_line = 22 * 27 + 1;
+		header_size = 156.0;
+		data_size_for_each_line = 22.0 * 27.0 + 1.0;
 	}
 	else if (extended == true)
 	{
-		header_size = 154;
-		data_size_for_each_line = 22 * 26 + 1;
+		header_size = 154.0;
+		data_size_for_each_line = 22.0 * 26.0 + 1.0;
 	}
 	else
 	{
-		header_size = 75;
-		data_size_for_each_line = 22 * 10 + 1;
+		header_size = 75.0;
+		data_size_for_each_line = 22.0 * 10.0 + 1.0;
 	}
 
 	// determine data skip
-	int number_of_data_lines_in_file 
+	double number_of_data_lines_in_file 
 		= (simulation->output_size - header_size) / data_size_for_each_line;
 	double integration_time = simulation->t_final - simulation->t_trans;
-	int number_of_steps = integration_time / simulation->t_step;
+	double number_of_steps = integration_time / simulation->t_step;
+
 	if (number_of_data_lines_in_file > number_of_steps)
 	{
 		simulation->data_skip = 1;
 	}
 	else
 	{
-		simulation->data_skip 
+		double data_skip_double 
 			= number_of_steps / number_of_data_lines_in_file;
+		if (data_skip_double < (double) INT_MAX)
+		{
+			simulation->data_skip = (int) data_skip_double;
+		}
+		else
+		{
+			fprintf(stderr, "Error: could not calculate a data skip");
+			fprintf(stderr, " to guarantee a max data size of %f mb.\n", 
+				simulation->output_size / 1e6);
+			fprintf(stderr, "Possible reason: final simulation time is");
+			fprintf(stderr, " probably much higher than time step.");
+			exit(13);
+		}
 	}
 
 	return 0;
