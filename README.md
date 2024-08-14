@@ -1,13 +1,13 @@
-# tides
-Software for numerically investigating the tidal evolution of celestial bodies based on the physical theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
+# RheoVolution
+Software for numerically investigating the dynamical evolution of deformable celestial bodies based on the tidal theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
 
-This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out by Vitor M. de Oliveira at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and at the Department of Physics of the University of Coimbra (Portugal), under the supervision of prof. Clodoaldo Ragazzo (IME/USP) and with the collaboration of prof. Alexandre Correia (CFisUC).
+This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out by Vitor M. de Oliveira at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and at the Centre for Physics of the University of Coimbra (Portugal), under the supervision of prof. Clodoaldo Ragazzo (IME/USP) and with the collaboration of prof. Alexandre Correia (CFisUC).
 
 Author: V. M. de Oliveira
 
 Contact: vitormo@ime.usp.br
 
-Last update on this file: January 4th 2024
+Last update on this file: August 14th 2024
 
 ## Important notes
 The software simulates the tidal evolution of any number of celestial bodies interacting gravitationally with each other. The rheology model adopted here is the generalized Voigt one, which can be reduced to the Maxwell model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 7th and 8th order with fixed stepsize from the GNU Scientific Library (GSL). It was developed and tested within the Linux enviroment (Ubuntu).
@@ -65,6 +65,10 @@ This command runs the program with the input files in the folder ``examples``, w
 Ragazzo, C., & Ruiz, L. S. (2015). Dynamics of an isolated, viscoelastic, self-gravitating body. _Celestial Mechanics and Dynamical Astronomy_, 122, 303-332.
 
 Ragazzo, C., & Ruiz, L. S. (2017). Viscoelastic tides: models for use in Celestial Mechanics. _Celestial Mechanics and Dynamical Astronomy_, 128, 19-59.
+
+Correia, A. C. M., Ragazzo, C., & Ruiz, L. S. (2018). The effects of deformation inertia (kinectic energy) in the orbital and spin evolution of close-in bodies. _Celestial Mechanics and Dynamical Astronomy_, 130, 1-30.
+
+Gevorgyan, Y., Boué, G., Ragazzo, C., Ruiz, L. S., & Correia, A. C. M. (2020). Andrade rheology in time domain. Application to Enceladus's disspation of energy due to forced libration. _Icarus_, 343, 113610.
 
 Ragazzo, C., Boué, G., Gevorgyan, Y., & Ruiz, L. S. (2022). Librations of a body composed of a deformable mantle and a fluid core. _Celestial Mechanics and Dynamical Astronomy_, 134(2), 10.
 
