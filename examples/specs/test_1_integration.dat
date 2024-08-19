@@ -1,4 +1,4 @@
 t_init(yr)          0.0
 t_trans(yr)         0.0
 t_final(yr)         10.0
-#t_step(yr)         2.73037864e-5
+t_step(yr)          2.73037864e-5

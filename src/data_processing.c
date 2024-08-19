@@ -49,9 +49,10 @@ print_SimulationInfo(siminf simulation)
 	printf("t init = %1.10e\n", simulation.t_init);
 	printf("t trans = %1.10e\n", simulation.t_trans);
 	printf("t final = %1.10e\n", simulation.t_final);
-	printf("t step received = %d\n", simulation.t_step_received);
 	printf("t step = %1.10e\n", simulation.t_step);
-	
+	printf("t step received = %d\n", simulation.t_step_received);
+
+	printf("t step init = %1.10e\n", simulation.t_step_init);
 	printf("t step min = %1.10e\n", simulation.t_step_min);
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
@@ -1934,8 +1935,7 @@ write_simulation_overview	(const int time_spent_in_seconds,
 
 	// parameters calculated by the code
 	FILE *out_sim_info_2;
-	out_sim_info_2 = fopen(filename, "w");
-	fprintf(out_sim_info_2, "Additional parameters:\n");
+	out_sim_info_2 = fopen(filename, "a");
 	fprintf(out_sim_info_2, "t_step(yr) = %1.10e\n", simulation.t_step);
 	fprintf(out_sim_info_2, "data_skip = %d\n\n", simulation.data_skip);
 	fclose(out_sim_info_2);

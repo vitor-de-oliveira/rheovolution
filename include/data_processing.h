@@ -53,10 +53,11 @@ typedef struct SimulationInfo {
 	double	t_init;						// initial time
 	double	t_trans;					// transient time
 	double	t_final;					// final time
-	bool	t_step_received;			// true if user provided t_step
 	double	t_step;						// time step
+	bool	t_step_received;			// true if user provided t_step
 
 	/* numerical specs defined by the program */
+	double 	t_step_init;				// initial time step
 	double	t_step_min;					// minimum time step
 	double	error_abs;					// absolute error
 	double	error_rel;					// relative error
