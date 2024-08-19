@@ -1932,6 +1932,14 @@ write_simulation_overview	(const int time_spent_in_seconds,
 		fclose(in3_to_copy);
 	}
 
+	// parameters calculated by the code
+	FILE *out_sim_info_2;
+	out_sim_info_2 = fopen(filename, "w");
+	fprintf(out_sim_info_2, "Additional parameters:\n");
+	fprintf(out_sim_info_2, "t_step(yr) = %1.10e\n", simulation.t_step);
+	fprintf(out_sim_info_2, "data_skip = %d\n\n", simulation.data_skip);
+	fclose(out_sim_info_2);
+
 	return 0;
 }
 
