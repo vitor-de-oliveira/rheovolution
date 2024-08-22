@@ -922,38 +922,46 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].pol = 0.0;
 		}
 	}
-	if(input_J2_received == false)
-	{
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{	
+		if(input_J2_received == false)
+		{
 			(*bodies)[i].J2 = 0.0;
 		}
-	}
-	if(input_C22_received == false)
-	{
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
+		else if (fabs((*bodies)[i].J2) <= 1.0e-13)
+		{
+			(*bodies)[i].J2 = 0.0;
+		}
+		if(input_C22_received == false)
+		{
 			(*bodies)[i].C22 = 0.0;
 		}
-	}
-	if(input_S22_received == false)
-	{
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
+		else if (fabs((*bodies)[i].C22) <= 1.0e-13)
+		{
+			(*bodies)[i].C22 = 0.0;
+		}
+		if(input_S22_received == false)
+		{
 			(*bodies)[i].S22 = 0.0;
 		}
-	}
-	if(input_C21_received == false)
-	{
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
+		else if (fabs((*bodies)[i].S22) <= 1.0e-13)
+		{
+			(*bodies)[i].S22 = 0.0;
+		}
+		if(input_C21_received == false)
+		{
 			(*bodies)[i].C21 = 0.0;
-		}	
-	}
-	if(input_S21_received == false)
-	{
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{	
+		}
+		else if (fabs((*bodies)[i].C21) <= 1.0e-13)
+		{
+			(*bodies)[i].C21 = 0.0;
+		}
+		if(input_S21_received == false)
+		{
+			(*bodies)[i].S21 = 0.0;
+		}
+		else if (fabs((*bodies)[i].S21) <= 1.0e-13)
+		{
 			(*bodies)[i].S21 = 0.0;
 		}
 	}
@@ -1546,25 +1554,35 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			null_matrix(B_stokes_i);
 			null_matrix(B_stokes_diag_i);
 			// initial non-elipsoidal configuration
-			if (((*bodies)[i].J2  > 1.0e-13) ||
-				((*bodies)[i].C22 > 1.0e-13) ||
-				((*bodies)[i].S22 > 1.0e-13) ||
-				((*bodies)[i].C21 > 1.0e-13) ||
-				((*bodies)[i].S21 > 1.0e-13))
+			if ((fabs((*bodies)[i].J2)  > 1.0e-13) ||
+				(fabs((*bodies)[i].C22) > 1.0e-13) ||
+				(fabs((*bodies)[i].S22) > 1.0e-13) ||
+				(fabs((*bodies)[i].C21) > 1.0e-13) ||
+				(fabs((*bodies)[i].S21) > 1.0e-13))
 			{
 				body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
-				calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
-				
-				/* update gravity field coefficients to */
-				/* the frame of principal inertia momenta */
-				double Iner_diag[9];
-				calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
-				(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-				(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-				(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-				(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-				(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-				(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+
+				if ((fabs((*bodies)[i].S22) > 1.0e-13) ||
+					(fabs((*bodies)[i].C21) > 1.0e-13) ||
+					(fabs((*bodies)[i].S21) > 1.0e-13))
+				{
+					calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
+					
+					/* update gravity field coefficients to */
+					/* the frame of principal inertia momenta */
+					double Iner_diag[9];
+					calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
+					(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+					(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+					(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+					(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+					(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+					(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				}
+				else
+				{
+					copy_square_matrix(B_stokes_diag_i, B_stokes_i);
+				}
 			}
 			get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
 				B_stokes_diag_i);
