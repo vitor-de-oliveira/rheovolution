@@ -403,7 +403,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	ssize_t read;
 
 	/* verification variables for input */
-	int 	number_par_inputs = 7;
+	int 	number_par_inputs = 5;
 	bool	input_par_received[number_par_inputs];
 	for (int i = 0; i < number_par_inputs; i++)
 	{
@@ -441,7 +441,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	/* verification variables for angular velocity vector */
 	bool	input_omega_azi_received = false;
 	bool	input_omega_pol_received = false;
-	/* verification variables for some stokes coefficients */
+	/* verification variables for Stokes coefficients */
+	bool	input_J2_received = false;
+	bool	input_C22_received = false;
 	bool	input_S22_received = false;
 	bool	input_C21_received = false;
 	bool	input_S21_received = false;
@@ -527,7 +529,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].J2 = atof(token);
 			}
-			input_par_received[4] = true;
+			input_J2_received = true;
 		}
 		else if (strcmp(token, "C22") == 0)
 		{
@@ -536,7 +538,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].C22 = atof(token);
 			}
-			input_par_received[5] = true;
+			input_C22_received = true;
 		}
 		else if (strcmp(token, "C21") == 0)
 		{
@@ -600,7 +602,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].a = atof(token);
 			}
-			input_par_received[6] = true;
+			input_par_received[4] = true;
 		}
 		else if (strcmp(token, "e") == 0)
 		{
@@ -918,6 +920,20 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		for (int i = 0; i < simulation.number_of_bodies; i++)
 		{
 			(*bodies)[i].pol = 0.0;
+		}
+	}
+	if(input_J2_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].J2 = 0.0;
+		}
+	}
+	if(input_C22_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].C22 = 0.0;
 		}
 	}
 	if(input_S22_received == false)
@@ -1495,6 +1511,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	}
 
 	/* calculate Bs_me and P_me, and initialize b_eta and bk */
+	/* also update or turn into NAN the Stokes coefficients */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if ((*bodies)[i].point_mass == true)
@@ -1524,22 +1541,33 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			/* real deformation on Tisserand frame */
 			double B_stokes_i[9];
-			body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
 			double B_stokes_diag_i[9];
-			calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
+			// initial spherical configuration
+			null_matrix(B_stokes_i);
+			null_matrix(B_stokes_diag_i);
+			// initial non-elipsoidal configuration
+			if (((*bodies)[i].J2  > 1.0e-13) ||
+				((*bodies)[i].C22 > 1.0e-13) ||
+				((*bodies)[i].S22 > 1.0e-13) ||
+				((*bodies)[i].C21 > 1.0e-13) ||
+				((*bodies)[i].S21 > 1.0e-13))
+			{
+				body_frame_deformation_from_stokes_coefficients(B_stokes_i, (*bodies)[i]);
+				calculate_diagonalized_square_matrix(B_stokes_diag_i, B_stokes_i);
+				
+				/* update gravity field coefficients to */
+				/* the frame of principal inertia momenta */
+				double Iner_diag[9];
+				calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
+				(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+				(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
+			}
 			get_main_elements_traceless_symmetric_matrix((*bodies)[i].Bs_me,
 				B_stokes_diag_i);
-
-			/* update gravity field coefficients to */
-			/* the frame of principal inertia momenta */
-			double Iner_diag[9];
-			calculate_inertia_tensor(Iner_diag, (*bodies)[i].I0, B_stokes_diag_i);
-			(*bodies)[i].rg  = calculate_rg ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].J2  = calculate_J2 ((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].C22 = calculate_C22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].S22 = calculate_S22((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].C21 = calculate_C21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
-			(*bodies)[i].S21 = calculate_S21((*bodies)[i].mass, (*bodies)[i].R, Iner_diag);
 
 			/* prestress on Tisserand frame */
 			if ((*bodies)[i].prestress == false)
