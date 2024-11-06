@@ -5,6 +5,7 @@ input/
 output/
 output_*/
 tests/
+tests_*/
 .vscode/
 nohup.out
 nohup_*.out

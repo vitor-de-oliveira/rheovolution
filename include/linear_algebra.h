@@ -23,7 +23,10 @@
 /* vector */
 
 int
-null_vector(double x[]);
+null_vector(double x_null[]);
+
+int
+nan_vector(double x_nan[]);
 
 int
 print_vector(const double x[]);
@@ -42,6 +45,11 @@ scale_vector(double ax[], const double a, const double x[]);
 
 int
 normalize_vector(double x[]);
+
+int
+projection_vector_a_on_b(double proj[],
+                         const double a[],
+                         const double b[]);
 
 int
 cartesian_to_spherical_coordinates  (double v_spherical[],
@@ -73,7 +81,10 @@ linear_combination_three_vector(double v[], const double a, const double x[],
 /* square matrix */
 
 int
-null_matrix(double N[]);
+null_matrix(double M_null[]);
+
+int
+nan_matrix(double M_nan[]);
 
 int
 identity_matrix(double I[]);
@@ -178,7 +189,13 @@ int
 normalize_quaternion(double q_to_normalize[]);
 
 int
-identity_quaternion(double qI[]);
+identity_quaternion(double q_identity[]);
+
+int
+null_quaternion(double q_null[]);
+
+int
+nan_quaternion(double q_nan[]);
 
 int
 quaternion_from_vector(double qv[4], const double v[3]);

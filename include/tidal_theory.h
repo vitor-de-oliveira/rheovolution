@@ -85,7 +85,14 @@ calculate_omega	(const int id,
 int
 calculate_total_angular_momentum(double l_total[3],
 				 		 		 const cltbdy *bodies,
-			 	 		 		 const int number_of_bodies,
-			 	 		 		 const double G);
+			 	 		 		 const int number_of_bodies);
+
+double
+total_energy_without_deformation(const cltbdy *bodies,
+			 	 			 	 const int number_of_bodies,
+							 	 const double G);
+
+double
+dissipation_function(const cltbdy body);
 
 #endif

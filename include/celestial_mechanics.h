@@ -214,10 +214,6 @@ typedef struct CelestialBody {
 	double	omega[3];			// angular velocity
 	double	b[9];				// deformation matrix
 
-	/* relative motion (arbitraty frame) */
-	double	relative_x[3];
-	double	relative_x_dot[3];
-
 } cltbdy;
 
 /* copies CelestialBody */
@@ -257,13 +253,15 @@ int
 calculate_obliquity_free_body_from_angular_velocity(cltbdy *body);
 
 int
-calculate_obliquity_on_orbit_from_angular_velocity(cltbdy *body);
+calculate_obliquity_on_orbit_from_angular_velocity  (cltbdy *body,
+                                                     const cltbdy body_ref);
 
 int
 calculate_obliquity_free_body_from_figure_axis_of_solid_frame(cltbdy *body);
 
 int
-calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body);
+calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body,
+                                                             const cltbdy body_ref);
 
 double
 angle_between_spin_axis_and_figure_axis_of_solid_frame(const cltbdy body);
@@ -275,19 +273,15 @@ double
 angle_between_spin_axis_and_angular_momentum(const cltbdy body);
 
 double
-angle_between_relative_x_and_I1(const cltbdy body);
+angle_between_relative_x_and_I1(const cltbdy body,
+                                const cltbdy body_ref);
 
 /* auxiliary functions */
 
 int
-calculate_center_of_mass(double center_of_mass[3],
+calculate_center_of_mass(double location_of_center_of_mass[3],
+                         double velocity_of_center_of_mass[3],
 				 		 const cltbdy *bodies,
-			 	 		 const int number_of_bodies,
-			 	 		 const double G);
-
-double
-largest_time_scale	(const cltbdy *bodies,
-			 	 	 const int number_of_bodies,
-			 	 	 const double G);
+			 	 		 const int number_of_bodies);
 
 #endif

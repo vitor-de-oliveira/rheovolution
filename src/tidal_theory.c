@@ -231,16 +231,17 @@ calculate_b	(const int id,
 			 const double G)
 {
 	/**
-	 * if body is a point mass, b equals 0 
+	 * if body is a point mass, b is NAN 
 	 * if body is not deformable, b equals to bs
 	**/
 	if (bodies[id].point_mass == true)
 	{
-		null_matrix(bodies[id].b);
+		nan_matrix(bodies[id].b);
 	}
 	else if (bodies[id].deformable == false)
 	{
-		construct_traceless_symmetric_matrix(bodies[id].b, bodies[id].bs_me);
+		construct_traceless_symmetric_matrix(bodies[id].b, 
+			bodies[id].bs_me);
 	}
 	else
 	{
@@ -414,13 +415,13 @@ calculate_omega	(const int id,
 			1.0, omega_minus_previous_omega,
 			1.0, previous_omega);
 
-		// error = norm_vector(omega_minus_previous_omega) / 
-		//			norm_vector(previous_omega);
+		error = norm_vector(omega_minus_previous_omega) / 
+					norm_vector(previous_omega);
 		
-		error = norm_vector(omega_minus_previous_omega);
+		// error = norm_vector(omega_minus_previous_omega);
 
 		/* for testing */
-		// printf("iter = %d error = %1.5e\n", i+1, error);
+		// printf("iter = %d error = %1.5e\n", counter_iterates, error);
 
 		gsl_permutation_free (p);
 
@@ -443,8 +444,7 @@ calculate_omega	(const int id,
 int
 calculate_total_angular_momentum(double l_total[3],
 				 		 		 const cltbdy *bodies,
-			 	 		 		 const int number_of_bodies,
-			 	 		 		 const double G)
+			 	 		 		 const int number_of_bodies)
 {
 	null_vector(l_total);
 
@@ -453,13 +453,135 @@ calculate_total_angular_momentum(double l_total[3],
 		double x_cross_x_dot[3];
 		cross_product(x_cross_x_dot, bodies[i].x, bodies[i].x_dot);
 		double l_total_component[3];
-		linear_combination_vector(l_total_component,
-			1.0, bodies[i].l,
-			bodies[i].mass, x_cross_x_dot);
+		scale_vector(l_total_component, bodies[i].mass, x_cross_x_dot);
+		if (bodies[i].point_mass == false)
+		{
+			linear_combination_vector(l_total_component,
+				1.0, l_total_component,
+				1.0, bodies[i].l);
+		}
 		linear_combination_vector(l_total,
 			1.0, l_total,
 			1.0, l_total_component);
 	}
 
 	return 0;
+}
+
+double
+total_energy_without_deformation(const cltbdy *bodies,
+			 	 			 	 const int number_of_bodies,
+							 	 const double G)
+{
+	double E_translational = 0.0;
+	if (number_of_bodies != 1)
+	{
+		for (int i = 0; i < number_of_bodies; i++)
+		{
+			E_translational += bodies[i].mass 
+				* norm_squared_vector(bodies[i].x_dot);
+		}
+		E_translational *= 0.5;
+	}
+
+	double E_gravitational = 0.0;
+	if (number_of_bodies > 1)
+	{
+		for (int i = 0; i < number_of_bodies - 1; i++)
+		{
+			for (int j = i + 1; j < number_of_bodies; j++)
+			{
+				double x_ij[3];
+				linear_combination_vector(x_ij,
+					1.0, bodies[i].x,
+					-1.0, bodies[j].x);
+				E_gravitational += bodies[i].mass * bodies[j].mass
+					/ norm_vector(x_ij);
+			}
+		}
+		E_gravitational *= -1.0 * G;
+	}
+
+	double E_rotational = 0.0;
+	for (int i = 0; i < number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			double omega_hat[9];
+			hat_map(omega_hat, bodies[i].omega);
+			E_rotational += 0.5 * bodies[i].I0 
+				* norm_squared_square_matrix(omega_hat);
+				// I HAVE TO ADD DEFORMATION HERE AS WELL
+		}
+	}
+
+	return E_translational + E_gravitational + E_rotational;
+}
+
+double
+dissipation_function(const cltbdy body)
+{
+	double D = 0.0;
+
+	double b_eta[9];
+	construct_traceless_symmetric_matrix(b_eta, body.b_eta_me);
+	double lambda[9];
+	linear_combination_square_matrix(lambda, 
+		body.alpha, body.b, -1.0 * body.alpha, b_eta);
+
+	if (body.elements > 0)
+	{
+		double	bk_me_2d_array[body.elements][5];
+		double	bk[body.elements][9];
+		for (int k = 0; k < body.elements; k++)
+		{
+			for (int l = 0; l < 5; l++)
+			{
+				bk_me_2d_array[k][l] = body.bk_me[l + (k*5)];
+
+			}
+			construct_traceless_symmetric_matrix(bk[k], bk_me_2d_array[k]);
+
+			// update lambda
+			linear_combination_square_matrix(lambda, 
+				1.0, lambda, -1.0 * body.alpha, bk[k]);
+		}
+
+		for (int k = 0; k < body.elements; k++)
+		{
+			double minus_bk_over_tau_elements[9];
+			scale_square_matrix(minus_bk_over_tau_elements, 
+				-1.0 * body.alpha_elements[k] / body.eta_elements[k],
+				bk[k]);
+			double lambda_over_eta_elements[9];
+			scale_square_matrix(lambda_over_eta_elements,
+				1.0 / body.eta_elements[k], lambda);
+
+			/* Y * \dot{B}_{e_k} * Y^T */
+			double Y_B_k_dot_T_trans[9];
+			linear_combination_square_matrix(Y_B_k_dot_T_trans,
+				1.0, minus_bk_over_tau_elements,
+				1.0, lambda_over_eta_elements);
+
+			/* ||\dot{B}_{e_k}||^2 = ||Y \dot{B}_{e_k} Y^T||^2 */
+			double norm_squared_B_k_dot 
+				= norm_squared_square_matrix(Y_B_k_dot_T_trans);
+
+			D += body.I0 * (0.5 * body.eta_elements[k] * norm_squared_B_k_dot);
+		}
+
+	} // end if body.elements > 0
+
+	/* Y * \dot{B}_eta * Y^T */
+	double Y_B_eta_dot_T_trans[9];
+	scale_square_matrix(Y_B_eta_dot_T_trans,
+		1.0 / body.eta, lambda);
+
+	/* ||\dot{B}_eta||^2 = ||Y \dot{B}_eta Y^T||^2 */
+	double norm_squared_B_eta_dot 
+		= norm_squared_square_matrix(Y_B_eta_dot_T_trans);
+
+	D += body.I0 * (0.5 * body.eta * norm_squared_B_eta_dot);
+
+	return D;
 }

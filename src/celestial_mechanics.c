@@ -369,16 +369,20 @@ calculate_argument_of_periapsis (const double G,
 
     // argument of periapsis
     double w;
+    // cosine of argument of periapsis
+    // double cos_w;
 
     if (e < 1e-15)
     {
         w = 0.0;
+        // cos_w = 1.0;
     }
     else
     {
         if (I < 1e-15)
         {
             w = acos(e_vec[0] / e);
+            // cos_w = e_vec[0] / e;
         }
         else
         {
@@ -388,6 +392,7 @@ calculate_argument_of_periapsis (const double G,
             cross_product(n, z_vec, h);
 
             w = acos(dot_product(n, e_vec) / (norm_vector(n) * norm_vector(e_vec)));
+            // cos_w = dot_product(n, e_vec) / (norm_vector(n) * norm_vector(e_vec));
         }
         if (e_vec[2] < 0.0)
         {
@@ -396,6 +401,7 @@ calculate_argument_of_periapsis (const double G,
     }
 
     return w;
+    // return cos_w;
 }
 
 double
@@ -530,12 +536,6 @@ copy_CelestialBody	(cltbdy *body_dest,
         body_dest->b[i] = body_src.b[i];
     }
 
-    for (int i = 0; i < 3; i++)
-    {
-        body_dest->relative_x[i] = body_src.relative_x[i];
-        body_dest->relative_x_dot[i] = body_src.relative_x_dot[i];
-    }
-
     return 0;
 }
 
@@ -578,6 +578,10 @@ print_CelestialBody(cltbdy body)
 	printf("%1.10e\n", body.rot);
 	printf("rot_ini = ");	
 	printf("%1.10e\n", body.rot_ini);
+	printf("azi = ");	
+	printf("%1.10e\n", body.azi);
+	printf("pol = ");	
+	printf("%1.10e\n", body.pol);
 
 	printf("I0 = ");	
 	printf("%1.10e\n", body.I0);
@@ -654,10 +658,6 @@ print_CelestialBody(cltbdy body)
 	print_vector(body.x_dot);
 	printf("l = ");
 	print_vector(body.l);
-	double p[9];
-	construct_traceless_symmetric_matrix(p, body.p_me);
-	printf("p = \n");
-	print_square_matrix(p);
 	double b_eta[9];
 	construct_traceless_symmetric_matrix(b_eta, body.b_eta_me);
 	printf("b_eta = \n");
@@ -678,23 +678,34 @@ print_CelestialBody(cltbdy body)
 		}
 	}
 	
+    double Bs[9];
+	construct_traceless_symmetric_matrix(Bs, body.Bs_me);
+	printf("Bs = \n");
+	print_square_matrix(Bs);
+    double P[9];
+	construct_traceless_symmetric_matrix(P, body.P_me);
+	printf("P = \n");
+	print_square_matrix(P);
     double bs[9];
 	construct_traceless_symmetric_matrix(bs, body.bs_me);
 	printf("bs = \n");
 	print_square_matrix(bs);
+	double p[9];
+	construct_traceless_symmetric_matrix(p, body.p_me);
+	printf("p = \n");
+	print_square_matrix(p);
 
 	printf("q = \n");
 	print_quaternion(body.q);
+	printf("Y = \n");
+	print_square_matrix(body.Y);
+	printf("Y_trans = \n");
+	print_square_matrix(body.Y_trans);
 
 	printf("omega = ");
 	print_vector(body.omega);
 	printf("b = \n");
 	print_square_matrix(body.b);
-
-    printf("relative_x = ");
-	print_vector(body.relative_x);
-	printf("relative_x_dot = ");
-	print_vector(body.relative_x_dot);
 
 	return 0;
 }
@@ -1140,10 +1151,20 @@ calculate_obliquity_free_body_from_angular_velocity(cltbdy *body)
 }
 
 int
-calculate_obliquity_on_orbit_from_angular_velocity(cltbdy *body)
+calculate_obliquity_on_orbit_from_angular_velocity  (cltbdy *body,
+                                                     const cltbdy body_ref)
 {
+    double relative_x[3];
+	linear_combination_vector(relative_x,
+		1.0, (*body).x,
+		-1.0, body_ref.x);
+	double relative_x_dot[3];
+	linear_combination_vector(relative_x_dot,
+		1.0, (*body).x_dot,
+		-1.0, body_ref.x_dot);
+
     double h[3]; // orbital momentum vector
-    cross_product(h, body->relative_x, body->relative_x_dot);
+    cross_product(h, relative_x, relative_x_dot);
 
     body->obl = angle_between_two_vectors(body->omega, h);
 
@@ -1166,10 +1187,20 @@ calculate_obliquity_free_body_from_figure_axis_of_solid_frame(cltbdy *body)
 }
 
 int
-calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body)
+calculate_obliquity_on_orbit_from_figure_axis_of_solid_frame(cltbdy *body,
+                                                             const cltbdy body_ref)
 {
+    double relative_x[3];
+	linear_combination_vector(relative_x,
+		1.0, (*body).x,
+		-1.0, body_ref.x);
+	double relative_x_dot[3];
+	linear_combination_vector(relative_x_dot,
+		1.0, (*body).x_dot,
+		-1.0, body_ref.x_dot);
+
     double h[3]; // orbital momentum vector
-    cross_product(h, body->relative_x, body->relative_x_dot);
+    cross_product(h, relative_x, relative_x_dot);
 
     double figure_axis_on_body[] = {0.0, 0.0, 1.0};
     double figure_axis[3];
@@ -1212,88 +1243,48 @@ angle_between_spin_axis_and_angular_momentum(const cltbdy body)
 }
 
 double
-angle_between_relative_x_and_I1(const cltbdy body)
+angle_between_relative_x_and_I1(const cltbdy body,
+                                const cltbdy body_ref)
 {
+    double relative_x[3];
+	linear_combination_vector(relative_x,
+		1.0, body.x,
+		-1.0, body_ref.x);
+
 	double P[9];
 	calculate_eigenvectors_matrix(P, body.b);
     double I1_on_body[] = {1.0, 0.0, 0.0};
     double I1[3];
     square_matrix_times_vector(I1, P, I1_on_body);
 
-	return angle_between_two_vectors(body.relative_x, I1);
+	return angle_between_two_vectors(relative_x, I1);
 }
 
 int
-calculate_center_of_mass(double center_of_mass[3],
+calculate_center_of_mass(double location_of_center_of_mass[3],
+                         double velocity_of_center_of_mass[3],
 				 		 const cltbdy *bodies,
-			 	 		 const int number_of_bodies,
-			 	 		 const double G)
+			 	 		 const int number_of_bodies)
 {
-	double sum_of_masses = 0.0;
 	double sum_of_masses_times_positions[] = {0.0,0.0,0.0};
+    double sum_of_masses_times_velocities[] = {0.0,0.0,0.0};
+	double total_mass = 0.0;
 
 	for (int i = 0; i < number_of_bodies; i++)
 	{
-		sum_of_masses += bodies[i].mass;
-		double mass_times_position[3];
-		scale_vector(mass_times_position, bodies[i].mass, bodies[i].x);
 		linear_combination_vector(sum_of_masses_times_positions,
 			1.0, sum_of_masses_times_positions,
-			1.0, mass_times_position);
-	}
+			bodies[i].mass, bodies[i].x);
+		linear_combination_vector(sum_of_masses_times_velocities,
+			1.0, sum_of_masses_times_velocities,
+			bodies[i].mass, bodies[i].x_dot);
+        total_mass += bodies[i].mass;
+    }
 
-	scale_vector(center_of_mass, 
-		1.0 / sum_of_masses, sum_of_masses_times_positions);
+	scale_vector(location_of_center_of_mass, 
+		1.0 / total_mass, sum_of_masses_times_positions);
+	scale_vector(velocity_of_center_of_mass, 
+		1.0 / total_mass, sum_of_masses_times_velocities);
 
 	return 0;
-}
-
-double
-largest_time_scale	(const cltbdy *bodies,
-			 	 	 const int number_of_bodies,
-			 	 	 const double G)
-{
-    double largest = 0.0;
-    double largest_orbital_period = 0.0;
-    double largest_rotational_period = 0.0;
-    double largest_rheology_time_scale = 0.0;
-
-    for (int i = 0; i < number_of_bodies; i++)
-    {
-        if (i > 0)
-        {
-            double body_orbital_period = 
-                kepler_period(bodies[0].mass, bodies[i].mass, 
-                    G, bodies[i].a);
-            if (body_orbital_period > largest_orbital_period)
-            {
-                largest_orbital_period = body_orbital_period;
-            }
-        }
-        double body_rotational_period = bodies[i].rot;
-        if (body_rotational_period > largest_rotational_period)
-        {
-            largest_rotational_period = body_rotational_period;
-        }
-        double body_rheology_max_time = bodies[i].tau;
-        if (body_rheology_max_time > largest_rheology_time_scale)
-        {
-            largest_rheology_time_scale = body_rheology_max_time;
-        }
-    }
-
-    if (largest_orbital_period > largest)
-    {
-        largest = largest_orbital_period;
-    }
-    if (largest_rotational_period > largest)
-    {
-        largest = largest_rotational_period;
-    }
-    if (largest_rheology_time_scale > largest)
-    {
-        largest = largest_rheology_time_scale;
-    }
-
-    return largest;
 }

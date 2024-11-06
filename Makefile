@@ -8,8 +8,7 @@ TARGET = tides
 
 CC = cc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
-		 -march=native -Wall -Werror -Wpedantic \
-#		 -fsanitize=address
+		 -march=native -Wall -Werror -Wpedantic
 
 DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/celestial_mechanics.c \
@@ -35,6 +34,20 @@ ifeq ($(CC),icc)
 					-march=native -Wall -Werror -diag-disable=10441)
 endif
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+
+debug: $(SRC_DIR)/main.c $(DEPENDENCIES)
+ifeq ($(CC),icc)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+					-march=native -Wall -Werror -diag-disable=10441)
+endif
+	$(CC) $(CFLAGS) -g -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+
+sanitize: $(SRC_DIR)/main.c $(DEPENDENCIES)
+ifeq ($(CC),icc)
+	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
+					-march=native -Wall -Werror -diag-disable=10441)
+endif
+	$(CC) $(CFLAGS) -fsanitize=address -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
 
 run: input_check
 	./$(TARGET) $(INPUT)
