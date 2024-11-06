@@ -171,49 +171,22 @@ main(int argc, char *argv[])
 	mount_state_vector(&y, &dim_state_vec, params);
 
 	/* defining additional simulation parameters */
-
-	double shortest_time_scale = find_shortest_time_scale(bodies, simulation);
-	simulation.t_step_init = 0.0;
-
 	if (simulation.t_step_received == false)
 	{
-		simulation.t_step = shortest_time_scale;
+		simulation.t_step = find_shortest_time_scale(bodies, simulation);
 	}
 	simulation.t_step_init = simulation.t_step / 5.0;
 	simulation.t_step_min = simulation.t_step / 100.0;
-	// simulation.t_step_min = find_shortest_time_scale(bodies, simulation) / 1000.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
 
-	// simulation.t_step = 2.7e-4;
-	// simulation.t_step = 5.49324e-4;
-
-	// printf("simulation.t_step = %1.5e\n", simulation.t_step);
-	// exit(99);
-
-	/* ODE numerical integrator (GSL) */
-
+	/* set ODE numerical integrator (GSL) */
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
-	// gsl_odeiv2_driver *d = 
-	// 	gsl_odeiv2_driver_alloc_y_new(&sys, 
-	// 		gsl_odeiv2_step_rk8pd, 0.5 * simulation.t_step, 
-	// 		simulation.error_abs, simulation.error_rel);
 	gsl_odeiv2_driver *d = 
 		gsl_odeiv2_driver_alloc_y_new(&sys, 
 			gsl_odeiv2_step_rk8pd, simulation.t_step_init, 
 			simulation.error_abs, simulation.error_rel);
-	// gsl_odeiv2_driver_set_hmax(d, 1.1 * simulation.t_step);
-	// gsl_odeiv2_driver_set_hmax(d, simulation.t_step);
 	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
-	// const gsl_odeiv2_step_type * T
-	// 	= gsl_odeiv2_step_rk8pd;
-	// gsl_odeiv2_step * s
-	// 	= gsl_odeiv2_step_alloc (T, dim_state_vec);
-	// gsl_odeiv2_control * c
-	// 	= gsl_odeiv2_control_y_new (simulation.error_abs, 
-	// 		simulation.error_rel);
-	// gsl_odeiv2_evolve * e
-	// 	= gsl_odeiv2_evolve_alloc (dim_state_vec);
 
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
@@ -249,10 +222,6 @@ main(int argc, char *argv[])
 
 		int status = gsl_odeiv2_driver_apply (d, &simulation.t, 
 						simulation.t + simulation.t_step, y);
-		// int status = gsl_odeiv2_evolve_apply (e, c, s, &sys, 
-		// 	&simulation.t, final_time, &simulation.t_step, y);
-		// printf("t = %1.5e t_step = %1.5e\n", 
-		// 	simulation.t, simulation.t_step);
 
 		if (status != GSL_SUCCESS)
 		{
@@ -317,9 +286,6 @@ main(int argc, char *argv[])
 
 	/* free ODE driver (GSL) */
 	gsl_odeiv2_driver_free(d);
-	// gsl_odeiv2_evolve_free (e);
-	// gsl_odeiv2_control_free (c);
-	// gsl_odeiv2_step_free (s);
 
 	/* omega correction loop */
 	if (simulation.omega_correction == true)
