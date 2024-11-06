@@ -2062,6 +2062,7 @@ output_to_orbit(cltbdy *bodies,
 		fprintf(out_orbital, " w(°)");
 		fprintf(out_orbital, " Omega(°)");
 		fprintf(out_orbital, " x_orb(AU) y_orb(AU) z_orb(AU)");
+		fprintf(out_orbital, " |omega_orbit|");
 		fprintf(out_orbital, "\n");
 
 		// convertion units
@@ -2130,13 +2131,30 @@ output_to_orbit(cltbdy *bodies,
 			/* longitude of the ascending node */
 			fprintf (out_orbital, " %.14e", bodies[i].Omega * rad_to_deg);
 
-			/* position in 0-centered system */
-			double relative_x[3];
-			linear_combination_vector(relative_x,
-				1.0, bodies[i].x,
-				-1.0, bodies[0].x);
-			fprintf (out_orbital, " %.14e %.14e %.14e", 
-				relative_x[0], relative_x[1], relative_x[2]);
+			if (i > 0)
+			{
+				/* position in 0-centered system */
+				double relative_x[3];
+				linear_combination_vector(relative_x,
+					1.0, bodies[i].x,
+					-1.0, bodies[0].x);
+				fprintf (out_orbital, " %.14e %.14e %.14e", 
+					relative_x[0], relative_x[1], relative_x[2]);
+
+				/* orbital frequency */
+				double relative_x_dot[3];
+				linear_combination_vector(relative_x_dot,
+					1.0, bodies[i].x_dot,
+					-1.0, bodies[0].x_dot);	
+				double relative_x_cross_relative_x_dot[3];
+				cross_product(relative_x_cross_relative_x_dot, 
+					relative_x, relative_x_dot);
+				double orbital_frequency[3];
+				scale_vector(orbital_frequency, 
+					1.0 / norm_squared_vector(relative_x),
+					relative_x_cross_relative_x_dot);
+				fprintf (out_orbital, " %.14e", norm_vector(orbital_frequency));
+			}
 
 			/* next line */
 			fprintf(out_orbital, "\n");		
