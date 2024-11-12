@@ -1,6 +1,0 @@
-name                Mercury_2_no_ps
-input_folder        examples/specs/
-output_folder       examples/
-system_specs        Mercury_2_no_ps_system.dat
-integration_specs   Mercury_integration.dat
-rheology_model      Maxwell

@@ -3,7 +3,6 @@ mass(Msun)	3.0035e-6
 R(km)		6371.0
 rot(day)	0.99727 
 pol(deg)    4.04695e-5 
-a(AU)       
 rg			0.3308 
 J2          1082.63e-6
 C22         1.57462e-6 
@@ -11,13 +10,10 @@ S22         -9.0387e-7
 C21         -0.26674e-9
 S21         -1.78727e-9 	
 gamma_0     1.6890264199e+09
-alpha       3.1532629135e+10
-eta         6.8261692222e+10
-elements    1
-alpha_1     4.1479208323e+09
-eta_1       1.4105412720e+05
+alpha       3.6657185262e+09
+eta         6.7205193094e+10
 point_mass  no     
 deformable  yes    
 prestress   yes    
 centrifugal yes        
-tidal       yes    
+tidal       yes

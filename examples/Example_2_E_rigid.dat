@@ -1,0 +1,5 @@
+name                Example_2_E_rigid
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        Example_2_E_rigid_system.dat
+integration_specs   Examples_2_and_3_E_integration.dat

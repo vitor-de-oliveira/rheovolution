@@ -1,6 +1,0 @@
-name                EM_example_both_OD
-input_folder        examples/specs/
-output_folder       examples/
-system_specs        EM_example_both_OD_system.dat
-integration_specs   EM_example_both_OD_integration.dat
-rheology_model      gen_Voigt

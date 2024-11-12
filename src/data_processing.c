@@ -277,9 +277,7 @@ parse_input(siminf *simulation,
 	/* check rheology model */
 	if (rheology_model_received == false)
 	{
-		fprintf(stderr, "Error: did not receive rheology model ");
-		fprintf(stderr, "from %s.\n", simulation->main_input);
-		exit(13);
+		strcpy(simulation->rheology_model, "gen_Voigt");
 	}
 
 	/* check and set omega correction */
@@ -403,22 +401,18 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	ssize_t read;
 
 	/* verification variables for input */
-	int 	number_par_inputs = 5;
-	bool	input_par_received[number_par_inputs];
-	for (int i = 0; i < number_par_inputs; i++)
-	{
-		input_par_received[i] = false;
-	}
+	bool	input_mass_received = false;
+	bool 	input_R_received = false;
 	bool	input_orb_received = false;
+	bool	input_rot_received = false;
 	bool	input_initial_rot_received = false;
 	/* verification variables for names and deformable settings */
 	bool	input_name_received = false;
-	int 	number_deformable_inputs = 5; 
-	bool	input_deformable_received[number_deformable_inputs];
-	for (int i = 0; i < number_deformable_inputs; i++)
-	{
-		input_deformable_received[i] = false;
-	}
+	bool	input_point_mass_received = false;
+	bool	input_deformable_received = false;
+	bool	input_prestress_received = false;
+	bool	input_centrifugal_received = false;
+	bool	input_tidal_received = false;
 	/* verification variables for rheology */
 	int 	number_maxwell_inputs = 3;
 	bool	input_maxwell_received[number_maxwell_inputs];
@@ -426,13 +420,15 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	{
 		input_maxwell_received[i] = false;
 	}
-	int 	number_gV_inputs = 4;
+	int 	number_gV_inputs = 3;
 	bool	input_gV_received[number_gV_inputs];
 	for (int i = 0; i < number_gV_inputs; i++)
 	{
 		input_gV_received[i] = false;
 	}
-	/* verification variables for some orbital parameters */
+	bool	input_elements_received = false;
+	/* verification variables for orbital parameters */
+	bool	input_a_received = false;
 	bool	input_e_received = false;
 	bool	input_I_received = false;
 	bool	input_M_received = false;
@@ -442,6 +438,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	bool	input_omega_azi_received = false;
 	bool	input_omega_pol_received = false;
 	/* verification variables for Stokes coefficients */
+	bool	input_rg_received = false;
 	bool	input_J2_received = false;
 	bool	input_C22_received = false;
 	bool	input_S22_received = false;
@@ -475,7 +472,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].mass = atof(token);
 			}
-			input_par_received[0] = true;
+			input_mass_received = true;
 		}
 		else if (strcmp(token, "orb(day)") == 0)
 		{
@@ -493,7 +490,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].rot = atof(token);
 			}
-			input_par_received[1] = true;
+			input_rot_received = true;
 		}
 		else if (strcmp(token, "rot_ini(day)") == 0)
 		{
@@ -511,7 +508,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].R = atof(token);
 			}
-			input_par_received[2] = true;
+			input_R_received = true;
 		}
 		else if (strcmp(token, "rg") == 0)
 		{
@@ -520,7 +517,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].rg = atof(token);
 			}
-			input_par_received[3] = true;
+			input_rg_received = true;
 		}
 		else if (strcmp(token, "J2") == 0)
 		{
@@ -602,7 +599,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].a = atof(token);
 			}
-			input_par_received[4] = true;
+			input_a_received = true;
 		}
 		else if (strcmp(token, "e") == 0)
 		{
@@ -672,51 +669,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_omega_pol_received = true;
 		}
-		else if (strcmp(token, "centrifugal") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				if (strcmp(token, "yes") == 0)
-				{
-					(*bodies)[i].centrifugal = true;
-				}
-				else if (strcmp(token, "no") == 0)
-				{
-					(*bodies)[i].centrifugal = false;
-				}
-				else
-				{
-					printf("%s\n", token);
-					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for centrifugal variable\n");
-					exit(14);
-				}
-			}
-			input_deformable_received[0] = true;
-		}
-		else if (strcmp(token, "tidal") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				if (strcmp(token, "yes") == 0)
-				{
-					(*bodies)[i].tidal = true;
-				}
-				else if (strcmp(token, "no") == 0)
-				{
-					(*bodies)[i].tidal = false;
-				}
-				else
-				{
-					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for tidal variable\n");
-					exit(14);
-				}
-			}
-			input_deformable_received[1] = true;
-		}
 		else if (strcmp(token, "point_mass") == 0)
 		{
 			for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -737,29 +689,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					exit(14);
 				}
 			}
-			input_deformable_received[2] = true;
-		}
-		else if (strcmp(token, "prestress") == 0)
-		{
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				token = strtok(NULL, tok_del);
-				if (strcmp(token, "yes") == 0)
-				{
-					(*bodies)[i].prestress = true;
-				}
-				else if (strcmp(token, "no") == 0)
-				{
-					(*bodies)[i].prestress = false;
-				}
-				else
-				{
-					fprintf(stderr, "Please provide yes or no ");
-					fprintf(stderr, "for prestress variable\n");
-					exit(14);
-				}
-			}
-			input_deformable_received[3] = true;
+			input_point_mass_received = true;
 		}
 		else if (strcmp(token, "deformable") == 0)
 		{
@@ -781,7 +711,74 @@ fill_in_bodies_data	(cltbdy	**bodies,
 					exit(14);
 				}
 			}
-			input_deformable_received[4] = true;
+			input_deformable_received = true;
+		}
+		else if (strcmp(token, "prestress") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].prestress = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].prestress = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for prestress variable\n");
+					exit(14);
+				}
+			}
+			input_prestress_received = true;
+		}
+		else if (strcmp(token, "centrifugal") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].centrifugal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].centrifugal = false;
+				}
+				else
+				{
+					printf("%s\n", token);
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for centrifugal variable\n");
+					exit(14);
+				}
+			}
+			input_centrifugal_received = true;
+		}
+		else if (strcmp(token, "tidal") == 0)
+		{
+			for (int i = 0; i < simulation.number_of_bodies; i++)
+			{
+				token = strtok(NULL, tok_del);
+				if (strcmp(token, "yes") == 0)
+				{
+					(*bodies)[i].tidal = true;
+				}
+				else if (strcmp(token, "no") == 0)
+				{
+					(*bodies)[i].tidal = false;
+				}
+				else
+				{
+					fprintf(stderr, "Please provide yes or no ");
+					fprintf(stderr, "for tidal variable\n");
+					exit(14);
+				}
+			}
+			input_tidal_received = true;
 		}
 		else if (strcmp(token, "k0") == 0)
 		{
@@ -844,22 +841,25 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].elements = atoi(token);
 			}
-			input_gV_received[3] = true;
+			input_elements_received = true;
 		}
 	}
 	fclose(in1);
 
 	/* parameter input verification */
-	for (int n = 0; n < number_par_inputs; n++)
+	if(input_mass_received == false)
 	{
-		if(input_par_received[n] == false)
-		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", simulation.system_specs);
-			fprintf(stderr, "Exiting the program now.\n");
-			// fprintf(stderr, "Missing input number %d\n", n); // debugging
-			exit(14);
-		}
+		fprintf(stderr, "Error: mass missing ");
+		fprintf(stderr, "from %s.\n", simulation.system_specs);
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(14);
+	}
+	if(input_a_received == false && simulation.number_of_bodies != 1)
+	{
+		fprintf(stderr, "Error: semi-major axis missing ");
+		fprintf(stderr, "from %s.\n", simulation.system_specs);
+		fprintf(stderr, "Exiting the program now.\n");
+		exit(14);
 	}
 	if(input_initial_rot_received == false)
 	{
@@ -986,6 +986,14 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].lib = 0.0;
 		}
 	}
+	/* elements input verification */
+	if(input_elements_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].elements = 0;
+		}
+	}
 	/* name input verification */
 	if (input_name_received == false)
 	{
@@ -995,29 +1003,99 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		exit(14);
 	}
 	/* deformable variables input verification */
-	for (int n = 0; n < number_deformable_inputs; n++)
+	if(input_point_mass_received == false)
 	{
-		if(input_deformable_received[n] == false)
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].point_mass = true;
+		}
+	}
+	if(input_deformable_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].deformable = false;
+		}
+	}
+	if(input_prestress_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].prestress = false;
+		}
+	}
+	if(input_centrifugal_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].centrifugal = false;
+		}
+	}
+	if(input_tidal_received == false)
+	{
+		for (int i = 0; i < simulation.number_of_bodies; i++)
+		{	
+			(*bodies)[i].tidal = false;
+		}
+	}
+	bool	all_point_masses = true;
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{	
+		if((*bodies)[i].point_mass == false)
 		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "for the deformation variables ");
+			all_point_masses = false;
+			break;
+		}
+	}
+	if (all_point_masses == false)
+	{
+		/* Essential input verification for non-point masses */
+		if(input_rot_received == false)
+		{
+			fprintf(stderr, "Error: rotational period missing ");
+			fprintf(stderr, "from %s.\n", simulation.system_specs);
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(14);
+		}
+		if(input_R_received == false)
+		{
+			fprintf(stderr, "Error: radius missing ");
+			fprintf(stderr, "from %s.\n", simulation.system_specs);
+			fprintf(stderr, "Exiting the program now.\n");
+			exit(14);
+		}
+		if(input_rg_received == false)
+		{
+			fprintf(stderr, "Error: rg missing ");
 			fprintf(stderr, "from %s.\n", simulation.system_specs);
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(14);
 		}
 	}
+	bool	any_deformable = false;
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{	
+		if((*bodies)[i].deformable == true)
+		{
+			any_deformable = true;
+			break;
+		}
+	}
 	/* Maxwell rheology input verification */
 	if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 	{
-		for (int n = 0; n < number_maxwell_inputs; n++)
-		{
-			if(input_maxwell_received[n] == false)
+		if (any_deformable == true)	
+		{	
+			for (int n = 0; n < number_maxwell_inputs; n++)
 			{
-				fprintf(stderr, "Error: there is at least one missing input ");
-				fprintf(stderr, "for the Maxwell rheology variables ");
-				fprintf(stderr, "from %s.\n", simulation.system_specs);
-				fprintf(stderr, "Exiting the program now.\n");
-				exit(14);
+				if(input_maxwell_received[n] == false)
+				{
+					fprintf(stderr, "Error: there is at least one missing input ");
+					fprintf(stderr, "for the Maxwell rheology variables ");
+					fprintf(stderr, "from %s.\n", simulation.system_specs);
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(14);
+				}
 			}
 		}
 		// zeroing Kelvin-Voigt elements
@@ -1026,19 +1104,21 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].elements = 0;
 		}
 	}
-
 	/* Generalised Voigt rheology input verification and setting of elements */
 	if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
 	{
-		for (int n = 0; n < number_gV_inputs; n++)
-		{
-			if(input_gV_received[n] == false)
+		if (any_deformable == true)	
+		{	
+			for (int n = 0; n < number_gV_inputs; n++)
 			{
-				fprintf(stderr, "Error: there is at least one missing input ");
-				fprintf(stderr, "for the generalised Voigt rheology variables ");
-				fprintf(stderr, "from %s.\n", simulation.system_specs);
-				fprintf(stderr, "Exiting the program now.\n");
-				exit(14);
+				if(input_gV_received[n] == false)
+				{
+					fprintf(stderr, "Error: there is at least one missing input ");
+					fprintf(stderr, "for the generalised Voigt rheology variables ");
+					fprintf(stderr, "from %s.\n", simulation.system_specs);
+					fprintf(stderr, "Exiting the program now.\n");
+					exit(14);
+				}
 			}
 		}
 

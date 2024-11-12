@@ -1,6 +1,0 @@
-name                EMS_extended_gV_with_mu0_example
-input_folder        examples/specs/
-output_folder       examples/
-system_specs        EMS_extended_gV_with_mu0_example_system.dat
-integration_specs   EMS_extended_gV_example_integration.dat
-rheology_model      gen_Voigt

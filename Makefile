@@ -2,9 +2,9 @@ MAKEFLAGS += --no-print-directory
 INCLUDE_DIR = ./include
 SRC_DIR = ./src
 SHELL := /bin/bash
-LIBS = -lgsl -lgslcblas -lm
+LIBS = -l:libgsl.so.27 -l:libgslcblas.so.0 -lm
 
-TARGET = tides
+TARGET = rheo
 
 CC = cc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
@@ -16,12 +16,15 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 				$(SRC_DIR)/dynamical_system.c \
 				$(SRC_DIR)/data_processing.c
 
-.PHONY: compile run orbit spin plot all example_1 example_2 example_3 \
+.PHONY: compile run orbit spin plot all example_1_EMS \ 
+	example_2_E_rigid example_3_E_deformable example_4_EM_Maxwell \ 
+	example_5_EM_Burgers_wobble example_6_EM_Burgers_drift \
     examples examples_parallel tests tests_parallel run_calibration \
     clean clean_calibration clean_examples clean_slurm input_check
-.SILENT: tides compile examples_parallel tests_parallel clean clean_examples clean_slurm
+.SILENT: rheo compile examples_parallel tests_parallel clean \ 
+	clean_examples clean_slurm
 
-tides: $(SRC_DIR)/main.c $(DEPENDENCIES)
+rheo: $(SRC_DIR)/main.c $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
@@ -63,57 +66,52 @@ plot: input_check
 
 all: input_check run orbit spin plot
 
-example_E:
-	$(eval EXAMPLE_NAME := Earth)
-	$(eval EXAMPLE_DIR := examples/E_example.dat)
-	@echo "Running $(EXAMPLE_NAME) example."
+example_1_EMS:
+	$(eval EXAMPLE_NAME := Example 1: Earth-Moon-Sun system)
+	$(eval EXAMPLE_DIR := examples/Example_1_EMS.dat)
+	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME) example."
+	@echo "Finished running $(EXAMPLE_NAME)."
 
-example_EM:
-	$(eval EXAMPLE_NAME := Earth-Moon system)
-	$(eval EXAMPLE_DIR := examples/EM_example.dat)
-	@echo "Running $(EXAMPLE_NAME) example."
+example_2_E_rigid:
+	$(eval EXAMPLE_NAME := Example 2: Rigid Earth)
+	$(eval EXAMPLE_DIR := examples/Example_2_E_rigid.dat)
+	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME) example."
+	@echo "Finished running $(EXAMPLE_NAME)."
 
-example_EMS:
-	$(eval EXAMPLE_NAME := Earth-Moon-Sun system)
-	$(eval EXAMPLE_DIR := examples/EMS_example.dat)
-	@echo "Running $(EXAMPLE_NAME) example."
+example_3_E_deformable:
+	$(eval EXAMPLE_NAME := Example 3: Deformable Earth with Maxwell rheology - Chandler Wobble)
+	$(eval EXAMPLE_DIR := examples/Example_3_E_deformable.dat)
+	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME) example."
+	@echo "Finished running $(EXAMPLE_NAME)."
 
-examples: example_E example_EM example_EMS
+example_4_EM_Maxwell:
+	$(eval EXAMPLE_NAME := Example 4: Earth-Moon system with Maxwell rheology - lunar drift)
+	$(eval EXAMPLE_DIR := examples/Example_4_EM.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+example_5_EM_Burgers_wobble:
+	$(eval EXAMPLE_NAME := Example 5: Earth-Moon system with Burgers rheology - Chandler Wobble)
+	$(eval EXAMPLE_DIR := examples/Example_5_EM_Burgers_Chandler_Wobble.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+example_6_EM_Burgers_drift:
+	$(eval EXAMPLE_NAME := Example 6: Earth-Moon system with Burgers rheology - lunar drift)
+	$(eval EXAMPLE_DIR := examples/Example_6_EM_Burgers_Moon_orbital_drift.dat)
+	@echo "Running $(EXAMPLE_NAME)."
+	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@echo "Finished running $(EXAMPLE_NAME)."
+
+examples: example_1_EMS example_2_E_rigid example_3_E_deformable example_4_EM_Maxwell example_5_EM_Burgers_wobble example_6_EM_Burgers_drift
 
 examples_parallel:
 	@$(MAKE) -j examples
-
-test_1:
-	$(eval EXAMPLE_NAME := test 1: rigid Earth)
-	$(eval EXAMPLE_DIR := examples/test_1.dat)
-	@echo "Running $(EXAMPLE_NAME)."
-	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME)."
-
-test_2:
-	$(eval EXAMPLE_NAME := test 2: Earth-Moon system)
-	$(eval EXAMPLE_DIR := examples/test_2.dat)
-	@echo "Running $(EXAMPLE_NAME)."
-	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME)."
-
-test_3:
-	$(eval EXAMPLE_NAME := test 3: Earth-Moon-Sun system)
-	$(eval EXAMPLE_DIR := examples/test_3.dat)
-	@echo "Running $(EXAMPLE_NAME)."
-	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
-	@echo "Finished running $(EXAMPLE_NAME)."
-
-tests: test_1 test_2 test_3
-
-tests_parallel:
-	@$(MAKE) -j tests
 
 calibration: $(SRC_DIR)/calibration.c $(DEPENDENCIES)
 	$(eval TARGET = calibration)

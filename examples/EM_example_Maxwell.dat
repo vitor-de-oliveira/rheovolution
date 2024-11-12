@@ -1,6 +1,0 @@
-name                EM_example_Maxwell
-input_folder        examples/specs/
-output_folder       examples/
-system_specs        EM_example_Maxwell_system.dat
-integration_specs   EM_example_integration.dat
-rheology_model      Maxwell

@@ -1,0 +1,6 @@
+name                Example_5_EM_Burgers_Chandler_Wobble
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        Examples_5_and_6_EM_Burgers_system.dat
+integration_specs   Examples_2_and_3_E_integration.dat
+number_of_bodies    1
