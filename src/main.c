@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	double  *y;
 	mount_state_vector(&y, &dim_state_vec, params);
 
-	/* defining additional simulation parameters */
+	/* define additional simulation parameters */
 	if (simulation.t_step_received == false)
 	{
 		simulation.t_step = find_shortest_time_scale(bodies, simulation);
@@ -77,6 +77,7 @@ main(int argc, char *argv[])
 	simulation.t_step_min = simulation.t_step / 100.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
+	simulation.largest_output_size = 100.0e6; // bytes
 
 	/* set ODE numerical integrator (GSL) */
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
@@ -90,27 +91,23 @@ main(int argc, char *argv[])
 	FILE *out[simulation.number_of_bodies + 1];
 	create_output_files(bodies, simulation, out);
 
-	/* determine data skip based on output size */
-	simulation.output_size = 100.0e6; // bytes
+	/* determine data skip based on largest output size */
 	calculate_data_skip(&simulation, bodies);
 
 	/* integration loop */
 	simulation.counter = 0;	
 	simulation.t = simulation.t_init;
-	double	final_time;
-	int	loop_counter = 0;
-	final_time = simulation.t_final;
-	// while (simulation.counter < 5) // for testing
-	while (simulation.t < final_time)
+	while (simulation.t < simulation.t_final)
 	{
-		if (fabs(final_time-simulation.t) < simulation.t_step)
+		/* determine final stepsize */
+		if (fabs(simulation.t_final-simulation.t) < simulation.t_step)
 		{
-			simulation.t_step = final_time - simulation.t; // smaller last step
+			simulation.t_step = simulation.t_final - simulation.t;
 		}
 
+		/* evolve system via driver */
 		int status = gsl_odeiv2_driver_apply (d, &simulation.t, 
 						simulation.t + simulation.t_step, y);
-
 		if (status != GSL_SUCCESS)
 		{
 			fprintf(stderr, "Error \"%d\"", status);
@@ -118,7 +115,7 @@ main(int argc, char *argv[])
 			break;
 		}
 
-		/* update bodies */
+		/* update bodies info */
 		retrieve_state_vector (&bodies, y, simulation);
 
 		/* update bs and ps */
@@ -159,8 +156,6 @@ main(int argc, char *argv[])
 			simulation.counter++;
 		}
 
-		loop_counter++;
-
 	} // end while (simulation.t < final_time)
 
 	/* close output files */
@@ -172,7 +167,7 @@ main(int argc, char *argv[])
 	/* free state vector */
 	free(y);
 
-	/* free Voigt elements */
+	/* free array of celestial bodies */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if (bodies[i].elements > 0)
@@ -182,8 +177,6 @@ main(int argc, char *argv[])
 			free(bodies[i].bk_me);
 		}
 	}
-
-	/* free array of celestial bodies */
 	free(bodies);
 
 	/* stop clock */

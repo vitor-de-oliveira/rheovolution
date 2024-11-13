@@ -62,7 +62,7 @@ typedef struct SimulationInfo {
 	double	error_rel;					// relative error
 
 	/* output specs */
-	double 	output_size;				// size of main output file
+	double 	largest_output_size;		// size of the largest output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
 	int		time_spent_in_seconds;		// real simulation time in sec
