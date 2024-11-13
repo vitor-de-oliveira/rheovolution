@@ -60,108 +60,6 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* correction for the angular velocity's initial value */
-	int		omega_correction_number_of_iterates = 10; // 5
-	int		*omega_correction_on_body = *(&omega_correction_on_body);
-	double	*omega_correction_step = *(&omega_correction_step);
-	double 	*omega_correction_rot = *(&omega_correction_rot);
-	double	*omega_correction_rot_after_simulation = *(&omega_correction_rot_after_simulation);
-	siminf	simulation_copy = *(&simulation_copy);
-	cltbdy	*bodies_copy = *(&bodies_copy);
-	if (simulation.omega_correction == true)
-	{
-		omega_correction_on_body = (int *) malloc(simulation.number_of_bodies * sizeof(int));
-		omega_correction_step = (double *) malloc(simulation.number_of_bodies * sizeof(double));
-		omega_correction_rot = (double *) malloc(simulation.number_of_bodies * sizeof(double));
-		omega_correction_rot_after_simulation = (double *) malloc(simulation.number_of_bodies * sizeof(double));
-		bodies_copy = (cltbdy *) malloc(simulation.number_of_bodies * sizeof(cltbdy));
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			bodies_copy[i] = create_and_copy_CelestialBody(bodies[i]);
-			if (bodies[i].point_mass == false &&
-				bodies[i].deformable == true)
-			{
-				omega_correction_on_body[i] = 1;
-			}
-			else
-			{
-				omega_correction_on_body[i] = 0;
-			}
-			omega_correction_rot[i] = bodies[i].rot;
-		}
-		// simulation.omega_correction_t_final = 
-		// 	10.0 * find_largest_time_scale(bodies, simulation):
-		// printf("%1.5e\n", simulation.omega_correction_t_final);
-		simulation.omega_correction_t_final = 100.0; // 50000.0
-		simulation.omega_correction_counter = 0;
-		simulation_copy = simulation;
-		simulation.write_to_file = false;
-		simulation.keplerian_motion = true;
-	}
-
-	back_omega_correction:;
-
-	if (simulation.omega_correction == true)
-	{
-		if (simulation.omega_correction_counter > 0) // already run once
-		{
-			simulation.t_step = simulation_copy.t_step;
-			if (simulation.omega_correction_counter == omega_correction_number_of_iterates)
-			{
-				simulation.omega_correction = false;
-				simulation.write_to_file = true;
-				simulation.keplerian_motion = simulation_copy.keplerian_motion;
-			}
-			for (int i = 0; i < simulation.number_of_bodies; i++)
-			{
-				if (omega_correction_on_body[i] == 1)
-				{
-					omega_correction_rot_after_simulation[i] 
-						= 2.0 * M_PI / norm_vector(bodies[i].omega);
-
-					if (simulation.omega_correction_counter == 1) // defines first step
-					{
-						omega_correction_step[i] = 
-							bodies_copy[i].rot - omega_correction_rot_after_simulation[i];
-					}
-					else
-					{
-						double aux = bodies_copy[i].rot - omega_correction_rot_after_simulation[i];
-						if (omega_correction_step[i] * aux < 0.0)
-						{
-							omega_correction_step[i] /= -2.1;
-						}
-					}
-					omega_correction_rot[i] += omega_correction_step[i];
-
-					copy_CelestialBody(&bodies[i], bodies_copy[i]);
-					bodies[i].rot_ini = omega_correction_rot[i];
-				}
-				else
-				{
-					copy_CelestialBody(&bodies[i], bodies_copy[i]);
-				}
-			}
-		}
-	}
-
-	/* initialize l and angular velocity */
-	for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		if (bodies[i].point_mass == true)
-		{
-			nan_matrix(bodies[i].b);
-			nan_vector(bodies[i].l);
-		}
-		else
-		{
-			initialize_angular_velocity_on_z_axis(&bodies[i]);
-			calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
-			initialize_angular_velocity(&bodies[i]); // correct alignment
-			calculate_l(&bodies[i]);
-		}
-	}
-
 	/* field parameters */
 	fldpar params = {simulation, bodies};
 
@@ -190,10 +88,7 @@ main(int argc, char *argv[])
 
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
-	if (simulation.write_to_file == true)
-	{
-		create_output_files(bodies, simulation, out);
-	}
+	create_output_files(bodies, simulation, out);
 
 	/* determine data skip based on output size */
 	simulation.output_size = 100.0e6; // bytes
@@ -204,14 +99,7 @@ main(int argc, char *argv[])
 	simulation.t = simulation.t_init;
 	double	final_time;
 	int	loop_counter = 0;
-	if (simulation.omega_correction == false)
-	{
-		final_time = simulation.t_final;
-	}
-	else
-	{
-		final_time = simulation.omega_correction_t_final;
-	}
+	final_time = simulation.t_final;
 	// while (simulation.counter < 5) // for testing
 	while (simulation.t < final_time)
 	{
@@ -262,16 +150,13 @@ main(int argc, char *argv[])
 		}
 
 		/* write output */
-		if (simulation.write_to_file == true)
+		if (simulation.t > simulation.t_trans)
 		{
-			if (simulation.t > simulation.t_trans)
+			if (simulation.counter % simulation.data_skip == 0)
 			{
-				if (simulation.counter % simulation.data_skip == 0)
-				{
-					write_output(bodies, simulation, out);
-				}
-				simulation.counter++;
+				write_output(bodies, simulation, out);
 			}
+			simulation.counter++;
 		}
 
 		loop_counter++;
@@ -279,20 +164,10 @@ main(int argc, char *argv[])
 	} // end while (simulation.t < final_time)
 
 	/* close output files */
-	if (simulation.write_to_file == true)
-	{
-		close_output_files(simulation, out);
-	}
+	close_output_files(simulation, out);
 
 	/* free ODE driver (GSL) */
 	gsl_odeiv2_driver_free(d);
-
-	/* omega correction loop */
-	if (simulation.omega_correction == true)
-	{
-		simulation.omega_correction_counter++;
-		goto back_omega_correction;
-	}
 
 	/* free state vector */
 	free(y);
@@ -311,34 +186,13 @@ main(int argc, char *argv[])
 	/* free array of celestial bodies */
 	free(bodies);
 
-	if (simulation.omega_correction == true)
-	{
-		free(omega_correction_on_body);
-		free(omega_correction_step);
-		free(omega_correction_rot);
-		free(omega_correction_rot_after_simulation);
-		for (int i = 0; i < simulation.number_of_bodies; i++)
-		{
-			if (bodies_copy[i].elements > 0)
-			{
-				free(bodies_copy[i].alpha_elements);
-				free(bodies_copy[i].eta_elements);	
-				free(bodies_copy[i].bk_me);
-			}
-		}
-		free(bodies_copy);
-	}
-
 	/* stop clock */
 	end_time = clock();
 	int time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
 	/* write overview file */
-	if (simulation.write_to_file == true)
-	{
-		write_simulation_overview(time_spent_in_seconds, simulation);
-	}
+	write_simulation_overview(time_spent_in_seconds, simulation);
 
 	return 0;
 }

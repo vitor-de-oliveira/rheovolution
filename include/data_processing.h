@@ -44,7 +44,6 @@ typedef struct SimulationInfo {
 	char	units[100];					// units used for simulation
 	char	rheology_model[100];		// system file type
 	int		number_of_bodies;			// number of bodies to be used
-	bool	omega_correction;			// corrects initial angular velocity
 	bool	keplerian_motion;			// restricts all orbits to keplerian
 	bool	two_bodies_aprox;			// removes interaction between
 										// orbiting bodies
@@ -70,9 +69,6 @@ typedef struct SimulationInfo {
 	/* auxiliary variables */
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
-	int		omega_correction_counter;
-	double	omega_correction_t_final;
-	bool	write_to_file;
 
 } siminf;
 

@@ -42,7 +42,6 @@ print_SimulationInfo(siminf simulation)
 	printf("units = %s\n", simulation.units);
 	printf("rheology model = %s\n", simulation.rheology_model);
 	printf("number of bodies = %d\n", simulation.number_of_bodies);
-	printf("omega correction = %d\n", simulation.omega_correction);
 	printf("keplerian motion = %d\n", simulation.keplerian_motion);
 	printf("two bodies approx = %d\n", simulation.two_bodies_aprox);
 
@@ -77,7 +76,6 @@ parse_input(siminf *simulation,
 	bool	rheology_model_received = false;
 	bool	dev_specs_file_received = false;
 	bool	number_of_bodies_received = false;
-	bool	omega_correction_received = false;
 	bool	keplerian_motion_received = false;
 	bool	two_bodies_aprox_received = false;
 
@@ -154,25 +152,6 @@ parse_input(siminf *simulation,
 		{
 			simulation->number_of_bodies = atoi(second_col);
 			number_of_bodies_received = true;
-		}
-		else if (strcmp(first_col, "omega_correction") == 0)
-		{
-			if (strcmp(second_col, "yes") == 0)
-			{
-				simulation->omega_correction = true;
-			}
-			else if (strcmp(second_col, "no") == 0)
-			{
-				simulation->omega_correction = false;
-			}
-			else
-			{
-				printf("%s\n", second_col);
-				fprintf(stderr, "Please provide yes or no ");
-				fprintf(stderr, "for omega correction\n");
-				exit(14);
-			}
-			omega_correction_received = true;
 		}
 		else if (strcmp(first_col, "keplerian_motion") == 0)
 		{
@@ -280,12 +259,6 @@ parse_input(siminf *simulation,
 		strcpy(simulation->rheology_model, "gen_Voigt");
 	}
 
-	/* check and set omega correction */
-	if (omega_correction_received == false)
-	{
-		simulation->omega_correction = false;
-	}
-
 	/* check and set keplerian motion */
 	if (keplerian_motion_received == false)
 	{
@@ -350,9 +323,6 @@ parse_input(siminf *simulation,
 			exit(13);
 		}
 	}
-
-	/* always initialize write to file as true */
-	simulation->write_to_file = true;
 
 	/* gravitational constant */
 	simulation->G = 4.0 * M_PI * M_PI; // AU Msun year
@@ -1758,6 +1728,23 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				}
 				get_main_elements_traceless_symmetric_matrix((*bodies)[i].b_eta_me, b_eta_i);
 			}
+		}
+	} // end loop over bodies
+
+	/* calculate b, and initialize l and angular velocity */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if ((*bodies)[i].point_mass == true)
+		{
+			nan_matrix((*bodies)[i].b);
+			nan_vector((*bodies)[i].l);
+		}
+		else
+		{
+			initialize_angular_velocity_on_z_axis(&(*bodies)[i]);
+			calculate_b(i, (*bodies), simulation.number_of_bodies, simulation.G);
+			initialize_angular_velocity(&(*bodies)[i]); // correct alignment
+			calculate_l(&(*bodies)[i]);
 		}
 	} // end loop over bodies
 
