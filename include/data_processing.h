@@ -65,6 +65,7 @@ typedef struct SimulationInfo {
 	double 	output_size;				// size of main output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
+	int		time_spent_in_seconds;		// real simulation time in sec
 
 	/* auxiliary variables */
 	int		counter;					// counter for data skipping
@@ -106,8 +107,7 @@ close_output_files	(const siminf simulation,
 					 FILE *out[]);
 
 int
-write_simulation_overview	(const int time_spent_in_seconds,
-							 const siminf simulation);
+write_simulation_overview	(const siminf simulation);
 
 // reads the output of the program
 // and calculates orbital elements

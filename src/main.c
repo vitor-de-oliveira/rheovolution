@@ -188,11 +188,11 @@ main(int argc, char *argv[])
 
 	/* stop clock */
 	end_time = clock();
-	int time_spent_in_seconds 
+	simulation.time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
 	/* write overview file */
-	write_simulation_overview(time_spent_in_seconds, simulation);
+	write_simulation_overview(simulation);
 
 	return 0;
 }

@@ -1972,8 +1972,7 @@ close_output_files	(const siminf simulation,
 }
 
 int
-write_simulation_overview	(const int time_spent_in_seconds,
-							 const siminf simulation)
+write_simulation_overview	(const siminf simulation)
 {
 	// creates info file
 	char filename[300];
@@ -1986,10 +1985,10 @@ write_simulation_overview	(const int time_spent_in_seconds,
 
 	// simulation time
 	int sec, min, hr, day;
-	day = time_spent_in_seconds / (24*3600);
-	hr	= (time_spent_in_seconds - 24*3600*day) / 3600;
-	min = (time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
-	sec = (time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
+	day = simulation.time_spent_in_seconds / (24*3600);
+	hr	= (simulation.time_spent_in_seconds - 24*3600*day) / 3600;
+	min = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
+	sec = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
 	FILE *out_sim_info;
 	out_sim_info = fopen(filename, "w");
 	fprintf(out_sim_info, "Time spent on simulation:");
