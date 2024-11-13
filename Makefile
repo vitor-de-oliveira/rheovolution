@@ -6,6 +6,8 @@ LIBS = -l:libgsl.so.27 -l:libgslcblas.so.0 -lm
 
 TARGET = rheo
 
+MAIN = main.c
+
 CC = cc
 CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 		 -march=native -Wall -Werror -Wpedantic
@@ -19,38 +21,38 @@ DEPENDENCIES =  $(SRC_DIR)/linear_algebra.c \
 .PHONY: compile run orbit spin plot all example_1_EMS \ 
 	example_2_E_rigid example_3_E_deformable example_4_EM_Maxwell \ 
 	example_5_EM_Burgers_wobble example_6_EM_Burgers_drift \
-    examples examples_parallel tests tests_parallel run_calibration \
-    clean clean_calibration clean_examples clean_slurm input_check
+    examples examples_parallel tests tests_parallel \
+    clean clean_examples clean_slurm input_check
 .SILENT: rheo compile examples_parallel tests_parallel clean \ 
 	clean_examples clean_slurm
 
-rheo: $(SRC_DIR)/main.c $(DEPENDENCIES)
+rheo: $(SRC_DIR)/$(MAIN) $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
 endif
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/$(MAIN) $(DEPENDENCIES) $(LIBS)
 
-compile: $(SRC_DIR)/main.c $(DEPENDENCIES)
+compile: $(SRC_DIR)/$(MAIN) $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
 endif
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/$(MAIN) $(DEPENDENCIES) $(LIBS)
 
-debug: $(SRC_DIR)/main.c $(DEPENDENCIES)
+debug: $(SRC_DIR)$(MAIN) $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
 endif
-	$(CC) $(CFLAGS) -g -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+	$(CC) $(CFLAGS) -g -o $(TARGET) $(SRC_DIR)/$(MAIN) $(DEPENDENCIES) $(LIBS)
 
-sanitize: $(SRC_DIR)/main.c $(DEPENDENCIES)
+sanitize: $(SRC_DIR)/$(MAIN) $(DEPENDENCIES)
 ifeq ($(CC),icc)
 	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
 					-march=native -Wall -Werror -diag-disable=10441)
 endif
-	$(CC) $(CFLAGS) -fsanitize=address -o $(TARGET) $(SRC_DIR)/main.c $(DEPENDENCIES) $(LIBS)
+	$(CC) $(CFLAGS) -fsanitize=address -o $(TARGET) $(SRC_DIR)/$(MAIN) $(DEPENDENCIES) $(LIBS)
 
 run: input_check
 	./$(TARGET) $(INPUT)
@@ -113,24 +115,7 @@ examples: example_1_EMS example_2_E_rigid example_3_E_deformable example_4_EM_Ma
 examples_parallel:
 	@$(MAKE) -j examples
 
-calibration: $(SRC_DIR)/calibration.c $(DEPENDENCIES)
-	$(eval TARGET = calibration)
-ifeq ($(CC),icc)
-	$(eval CFLAGS = -std=c11 -I$(INCLUDE_DIR) -D_XOPEN_SOURCE -O3 \
-					-march=native -Wall -Werror -diag-disable=10441)
-	./$(TARGET)
-endif
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC_DIR)/calibration.c $(DEPENDENCIES) $(LIBS)
-
-run_calibration:
-	$(eval TARGET = calibration)
-	./$(TARGET)
-
 clean:
-	-rm -f $(TARGET)
-
-clean_calibration:
-	$(eval TARGET = calibration)
 	-rm -f $(TARGET)
 
 clean_examples:

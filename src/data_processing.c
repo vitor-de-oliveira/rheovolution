@@ -56,7 +56,7 @@ print_SimulationInfo(siminf simulation)
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
 
-	printf("output size = %1.5e\n", simulation.output_size);
+	printf("output size = %1.5e\n", simulation.largest_output_size);
 	printf("data skip = %d\n", simulation.data_skip);
 
 	return 0;
@@ -1801,7 +1801,7 @@ calculate_data_skip (siminf *simulation,
 
 	// determine data skip
 	double number_of_data_lines_in_file 
-		= (simulation->output_size - header_size) / data_size_for_each_line;
+		= (simulation->largest_output_size - header_size) / data_size_for_each_line;
 	double integration_time = simulation->t_final - simulation->t_trans;
 	double number_of_steps = integration_time / simulation->t_step;
 
@@ -1821,7 +1821,7 @@ calculate_data_skip (siminf *simulation,
 		{
 			fprintf(stderr, "Error: could not calculate a data skip");
 			fprintf(stderr, " to guarantee a max data size of %f mb.\n", 
-				simulation->output_size / 1e6);
+				simulation->largest_output_size / 1e6);
 			fprintf(stderr, "Possible reason: final simulation time is");
 			fprintf(stderr, " probably much higher than time step.");
 			exit(13);
