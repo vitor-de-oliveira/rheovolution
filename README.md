@@ -6,22 +6,22 @@ Lucas Ruiz.
 This work is part of a postdoctoral project from the São Paulo Research 
 Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out 
 by Vitor M. de Oliveira at the Institute of Mathematics and Statistics 
-of the University of São Paulo (Brazil) and at the Centre for Physics 
-of the University of Coimbra (Portugal), under the supervision of prof. 
-Clodoaldo Ragazzo (IME/USP) and with the collaboration of prof. Alexandre 
+of the University of São Paulo (Brazil) and the Centre for Physics 
+of the University of Coimbra (Portugal), under the supervision of Prof. 
+Clodoaldo Ragazzo (IME/USP) and with the collaboration of Prof. Alexandre 
 Correia (CFisUC).
 
 >Author: V. M. de Oliveira
 >
 >Contact: <vitormo@ime.usp.br>
 >
->Last update on this file: November 11th 2024
+>Last update on this file: November 13, 2024
 
 ## Important notes
 
 ### Description
 
-This program simulates the tidal evolution of any number of celestial bodies 
+This program simulates the tidal evolution of celestial bodies 
 interacting gravitationally with each other. The rheological model adopted 
 here is based on the generalised Voigt viscoelastic model, which can be 
 reduced to the Maxwell viscoelastic model. 
@@ -36,7 +36,7 @@ The tidal theory used here deals with the celestial bodies' deformation in
 the time domain. For more information, please check the following article:
 
 >de Oliveira, V. M., Ragazzo, C., Correia, A. C. M. (2024). RheoVolution: 
-an N-body simulator for tidally evolving bodies with complex rheological 
+An N-body simulator for tidally evolving bodies with complex rheological 
 models. *Astronomy & Astrophysics*, to be published.
 
 ## Building from source
@@ -65,7 +65,7 @@ make
 ### User inputs
 
 The user needs to provide the program with a ``configuration_file.dat``, 
-which should specify the simulation id, the location of the input files, 
+which should specify the simulation name, the location of the input files, 
 the location for the output files, and the name of the input files 
 containing system and integration specifications. This information should 
 be provided in a specific format (see examples folder and files therein).
@@ -94,7 +94,7 @@ following manner:
 
 ### Output
 
-A folder named ``output_id`` containing the simulation data is created at 
+A folder named ``output_name`` containing the simulation data is created at 
 the location provided by the user in the configuration file. This data 
 contains the time evolution of each of the bodies' dynamical variables.
 
@@ -123,7 +123,7 @@ evolution of the main variables in the system via
 ./rheo configuration_file.dat plot
 ```
 
-The plot command uses the software ``Gnuplot`` and it stores the ouput 
+The plot command uses the software ``Gnuplot`` and it stores the output 
 in a subfolder named ``figures``.
 
 ### Using make
@@ -148,12 +148,12 @@ make all INPUT=configuration_file.dat
 
 This project contains six examples, whose configuration files can be 
 found in the ``examples`` folder. These examples should work as a guide 
-for using the code and also serve as benchmark to check if the program 
-is working properly in the user's computer.
+for using the code and also serve as a benchmark to check if the program 
+is working properly on the user's computer.
 
 ### Example 1 - Earth-Moon-Sun system
 
-This example simulates the dynamics of a system containing Earth, Moon, and 
+This example simulates the dynamics of a system containing the Earth, the Moon, and the 
 Sun, all of which are treated as point masses. The main feature to be 
 observed here is the lunar precession period of 18 months, which can be 
 seen in the "I (°) vs Time (yr)" plot, where "I" is the lunar orbital 
@@ -169,7 +169,7 @@ inclination. See "figure_Example_1_EMS_Moon_inclination.png" in the output of Ex
 This example simulates the dynamics of a rigid Earth with no external 
 perturbations. The main dynamical feature to be seen here is Earth's 
 nutation period, which would amount to 10 months if Earth was a rigid 
-ellispoid. Such value can be seen in the "Azimuthal angle (°) vs Time (yr)" 
+ellipsoid. Such value can be seen in the "Azimuthal angle (°) vs Time (yr)" 
 plot. See "figure_Example_2_E_rigid_Earth_azimuthal_angle.png" in the output of Example 2.
 
 <p align="center">
@@ -188,19 +188,19 @@ deformable body. In this case, Earth's nutation period such be approximately
     width="400" height="400">
 </p>
 
-The enlargment of Earth's nutation period due to its elastic properties is 
-called *Chandler Wobble*. Such effect was used to calibrate Earth in this 
+The enlargement of Earth's nutation period due to its elastic properties is 
+called *Chandler Wobble*. Such an effect was used to calibrate Earth in this 
 example.
 
 ### Example 4 - Earth-Moon system with Maxwell rheology
 
-This example simulates the dynamics a system containing the Earth and the 
+This example simulates the dynamics of a system containing the Earth and the 
 Moon, where the Earth is a deformable extended body rotating with no 
-obliquity and the Moon is a point mass orbiting the Earth in a 
+obliquity, and the Moon is a point mass orbiting the Earth in a 
 Keplerian orbit with zero eccentricity. The feature of interest here is the 
 increase in the distance between the Earth and the Moon at a rate of about 
 3.8 cm/yr. Such effect was used to calibrate Earth's rheology in this 
-situtation, and can be observed in the "a (AU) vs Time (yr)" plot, 
+situation and it can be observed in the "a (AU) vs Time (yr)" plot, 
 where "a" is the orbit's semi-major axis. See "figure_Example_4_EM_Maxwell_Moon_semi_major_axis.png" in the output of Example 4.
 
 <p align="center">
@@ -210,7 +210,7 @@ where "a" is the orbit's semi-major axis. See "figure_Example_4_EM_Maxwell_Moon_
 
 ### Example 5 - Earth-Moon system with Burgers rheology - Chandler Wobble
 
-This and the next examples simulate the Earth-Moon system, with Earth as a deformable body and Moon as a point-mass, but using a more complex rheological model for the Earth called Burgers model. Here, both Chandler Wobble and lunar drift were used to calibrate Earth's rheology. This example is run using the same integration specifications as those of Example 3. We may observe here the Chandler Wobble. See "figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png" in the output of Example 5.
+This and the next examples simulate the Earth-Moon system, with the Earth as a deformable body and the Moon as a point-mass, but using a more complex rheological model for the Earth called the Burgers model. Here, both Chandler Wobble and lunar drift were used to calibrate Earth's rheology. This example is run using the same integration specifications as those of Example 3. We may observe here the Chandler Wobble. See "figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png" in the output of Example 5.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png" 
