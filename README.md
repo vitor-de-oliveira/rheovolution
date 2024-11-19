@@ -122,59 +122,69 @@ This project contains six examples, whose configuration files can be found in th
 
 ### Example 1 - Earth-Moon-Sun system (examples/Example_1_EMS.dat)
 
-This example simulates the dynamics of a system containing the Earth, the Moon, and the Sun, all of which are treated as point masses. The main feature to be observed here is the lunar precession period of 18 months, which can be seen in the "I (°) vs Time (yr)" plot, where "I" is the lunar orbital inclination. See "examples/output_Example_1_EMS/figures/figure_Example_1_EMS_Moon_inclination.png".
+This example simulates the dynamics of a system containing the Earth, the Moon, and the Sun, all of which are treated as point masses. The main feature to be observed here is the lunar precession period of 18 months, which can be seen in the "I (°) vs Time (yr)" plot, where "I" is the lunar orbital inclination.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_1_EMS_Moon_inclination.png" 
     width="400" height="400">
 </p>
 
+See "examples/output_Example_1_EMS/figures/figure_Example_1_EMS_Moon_inclination.png".
+
 ### Example 2 - Isolated rigid Earth (examples/Example_2_E_rigid.dat)
 
-This example simulates the dynamics of a rigid Earth with no external perturbations. The main dynamical feature to be seen here is Earth's nutation period, which would amount to 10 months if Earth was a rigid ellipsoid. Such value can be seen in the "Azimuthal angle (°) vs Time (yr)" plot. See "examples/output_Example_2_E_rigid/figures/figure_Example_2_E_rigid_Earth_azimuthal_angle.png".
+This example simulates the dynamics of a rigid Earth with no external perturbations. The main dynamical feature to be seen here is Earth's nutation period, which would amount to 10 months if Earth was a rigid ellipsoid. Such value can be seen in the "Azimuthal angle (°) vs Time (yr)" plot.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_2_E_rigid_Earth_azimuthal_angle.png" 
     width="400" height="400">
 </p>
 
+ See "examples/output_Example_2_E_rigid/figures/figure_Example_2_E_rigid_Earth_azimuthal_angle.png".
+
 ### Example 3 - Isolated deformable Earth with Maxwell rheology (examples/Example_3_E_deformable.dat)
 
-This example simulates the same system as before but with Earth now a deformable body. In this case, Earth's nutation period such be approximately 433 days. See "examples/output_Example_3_E_deformable/figures/figure_Example_3_E_deformable_Earth_azimuthal_angle.png".
+This example simulates the same system as before but with Earth now a deformable body. In this case, Earth's nutation period such be approximately 433 days. The enlargement of Earth's nutation period due to its elastic properties is called *Chandler Wobble*. Such an effect was used to calibrate Earth in this example.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_3_E_deformable_Earth_azimuthal_angle.png" 
     width="400" height="400">
 </p>
 
-The enlargement of Earth's nutation period due to its elastic properties is called *Chandler Wobble*. Such an effect was used to calibrate Earth in this example.
+See "examples/output_Example_3_E_deformable/figures/figure_Example_3_E_deformable_Earth_azimuthal_angle.png".
 
 ### Example 4 - Earth-Moon system with Maxwell rheology (examples/Example_4_EM.dat)
 
-This example simulates the dynamics of a system containing the Earth and the Moon, where the Earth is a deformable extended body rotating with no obliquity, and the Moon is a point mass orbiting the Earth in a Keplerian orbit with zero eccentricity. The feature of interest here is the increase in the distance between the Earth and the Moon at a rate of about 3.8 cm/yr. Such effect was used to calibrate Earth's rheology in this situation and it can be observed in the "a (AU) vs Time (yr)" plot, where "a" is the orbit's semi-major axis. See "examples/output_Example_4_EM/figures/figure_Example_4_EM_Maxwell_Moon_semi_major_axis.png".
+This example simulates the dynamics of a system containing the Earth and the Moon, where the Earth is a deformable extended body rotating with no obliquity, and the Moon is a point mass orbiting the Earth in a Keplerian orbit with zero eccentricity. The feature of interest here is the increase in the distance between the Earth and the Moon at a rate of about 3.8 cm/yr. Such effect was used to calibrate Earth's rheology in this situation and it can be observed in the "a (AU) vs Time (yr)" plot, where "a" is the orbit's semi-major axis.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_4_EM_Maxwell_Moon_semi_major_axis.png" 
     width="400" height="400">
 </p>
 
+See "examples/output_Example_4_EM/figures/figure_Example_4_EM_Maxwell_Moon_semi_major_axis.png".
+
 ### Example 5 - Earth-Moon system with Burgers rheology - Chandler Wobble (examples/Example_5_EM_Burgers_Chandler_Wobble.dat)
 
-This and the next examples simulate the Earth-Moon system, with the Earth as a deformable body and the Moon as a point-mass, but using a more complex rheological model for the Earth called the Burgers model. Here, both Chandler Wobble and lunar drift were used to calibrate Earth's rheology. This example is run using the same integration specifications as those of Example 3. We may observe here the Chandler Wobble. See "examples/output_Example_5_EM_Burgers_Chandler_Wobble/figures/figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png".
+This and the next examples simulate the Earth-Moon system, with the Earth as a deformable body and the Moon as a point-mass, but using a more complex rheological model for the Earth called the Burgers model. Here, both Chandler Wobble and lunar drift were used to calibrate Earth's rheology. This example is run using the same integration specifications as those of Example 3. We may observe here the Chandler Wobble.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png" 
     width="400" height="400">
 </p>
 
+See "examples/output_Example_5_EM_Burgers_Chandler_Wobble/figures/figure_Example_5_EM_Burgers_Chandler_Wobble_Earth_azimuthal_angle.png".
+
 ### Example 6 - Earth-Moon system with Burgers rheology - Moon's orbital drift (examples/Example_6_EM_Burgers_Moon_orbital_drift.dat)
 
-This example is run using the same integration specifications as those of Example 4. We may observe here the lunar orbital drift. See "examples/output_Example_6_EM_Burgers_Moon_orbital_drift/figures/figure_Example_6_EM_Burgers_Moon_orbital_drift_Moon_semi_major_axis.png"
+This example is run using the same integration specifications as those of Example 4. We may observe here the lunar orbital drift.
 
 <p align="center">
     <img src="examples/benchmark/figure_Example_6_EM_Burgers_Moon_orbital_drift_Moon_semi_major_axis.png" 
     width="400" height="400">
 </p>
+
+See "examples/output_Example_6_EM_Burgers_Moon_orbital_drift/figures/figure_Example_6_EM_Burgers_Moon_orbital_drift_Moon_semi_major_axis.png"
 
 ### Using make
 
