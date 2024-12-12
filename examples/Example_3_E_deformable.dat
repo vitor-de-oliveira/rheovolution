@@ -1,0 +1,5 @@
+name                Example_3_E_deformable
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        Example_3_E_deformable_system.dat
+integration_specs   Examples_2_and_3_E_integration.dat

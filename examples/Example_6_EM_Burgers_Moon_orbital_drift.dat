@@ -1,0 +1,5 @@
+name                Example_6_EM_Burgers_Moon_orbital_drift
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        Examples_5_and_6_EM_Burgers_system.dat
+integration_specs   Example_4_EM_integration.dat

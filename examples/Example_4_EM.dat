@@ -1,0 +1,5 @@
+name                Example_4_EM
+input_folder        examples/specs/
+output_folder       examples/
+system_specs        Example_4_EM_system.dat
+integration_specs   Example_4_EM_integration.dat
