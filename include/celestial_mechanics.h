@@ -71,10 +71,6 @@ double
 calculate_S21(const double m, const double R, const double I[9]);
 
 /* orbital elements from state vectors */
-/* taken from text based on Vallado, 2007 */
-/* Fundamentals of Astrodynamics and Applications */
-/* Also based on transformations on lib orbital */
-/* by RazerM (github) */
 
 double
 calculate_semi_major_axis   (const double G,

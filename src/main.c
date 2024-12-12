@@ -97,17 +97,18 @@ main(int argc, char *argv[])
 	/* integration loop */
 	simulation.counter = 0;	
 	simulation.t = simulation.t_init;
+	simulation.h = simulation.t_step;
 	while (simulation.t < simulation.t_final)
 	{
 		/* determine final stepsize */
 		if (fabs(simulation.t_final-simulation.t) < simulation.t_step)
 		{
-			simulation.t_step = simulation.t_final - simulation.t;
+			simulation.h = simulation.t_final - simulation.t;
 		}
 
 		/* evolve system via driver */
 		int status = gsl_odeiv2_driver_apply (d, &simulation.t, 
-						simulation.t + simulation.t_step, y);
+						simulation.t + simulation.h, y);
 		if (status != GSL_SUCCESS)
 		{
 			fprintf(stderr, "Error \"%d\"", status);

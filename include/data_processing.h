@@ -70,6 +70,7 @@ typedef struct SimulationInfo {
 	/* auxiliary variables */
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
+	double	h;							// time step in integration loop
 
 } siminf;
 

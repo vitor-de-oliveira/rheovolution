@@ -122,14 +122,14 @@ This project contains six examples, whose configuration files can be found in th
 
 ### Example 1 - Earth-Moon-Sun system (examples/Example_1_EMS.dat)
 
-This example simulates the dynamics of a system containing the Earth, the Moon, and the Sun, all of which are treated as point masses. The main feature to be observed here is the lunar precession period of 18 months, which can be seen in the "I (°) vs Time (yr)" plot, where "I" is the lunar orbital inclination.
+This example simulates the dynamics of a system containing the Earth, the Moon, and the Sun, all of which are treated as point masses. The main feature to be observed here is the lunar precession period of 18 months, which can be seen in the "Ω (°) vs Time (yr)" plot, where "Ω" is the lunar longitude of the ascending node.
 
 <p align="center">
-    <img src="examples/benchmark/figure_Example_1_EMS_Moon_inclination.png" 
+    <img src="examples/benchmark/figure_Example_1_EMS_Moon_longitude_of_the_asceding_node.png" 
     width="400" height="400">
 </p>
 
-See "examples/output_Example_1_EMS/figures/figure_Example_1_EMS_Moon_inclination.png".
+See "examples/output_Example_1_EMS/figures/figure_Example_1_EMS_Moon_longitude_of_the_asceding_node.png".
 
 ### Example 2 - Isolated rigid Earth (examples/Example_2_E_rigid.dat)
 

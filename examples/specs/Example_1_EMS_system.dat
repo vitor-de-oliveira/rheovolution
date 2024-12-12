@@ -1,6 +1,6 @@
 Name		Earth		Moon		Sun		
-mass(Msun)	3.00317e-6	3.69464e-8	1.00		
-a(AU)					2.56955e-3	1.0000		
+mass(Msun)	3.00317e-6	3.69464e-8	1.0		
+a(AU)					2.56955e-3	1.0		
 e						0.0549		0.0167		
-I(deg)					0.0000		-5.145		
+I(deg)					5.145		0.0		
 point_mass  yes         yes         yes
