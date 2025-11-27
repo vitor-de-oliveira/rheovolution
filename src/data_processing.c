@@ -56,7 +56,7 @@ print_SimulationInfo(siminf simulation)
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
 
-	printf("output size = %1.5e\n", simulation.largest_output_size);
+	printf("largest output size = %1.5e\n", simulation.largest_output_size);
 	printf("data skip = %d\n", simulation.data_skip);
 
 	return 0;
@@ -276,6 +276,7 @@ parse_input(siminf *simulation,
 	simulation->t_step_min = NAN;
 	simulation->error_abs = NAN;
 	simulation->error_rel = NAN;
+	simulation->data_skip = 1;
 
 	/* verification variables for integration input */
 	int 	number_integration_inputs = 3;
@@ -309,6 +310,10 @@ parse_input(siminf *simulation,
 		{
 			simulation->t_step = atof(second_col);
 			simulation->t_step_received = true;
+		}
+		else if (strcmp(first_col, "data_skip") == 0)
+		{
+			simulation->data_skip = atof(second_col);
 		}
 	}
 	fclose(in2);
@@ -1805,17 +1810,16 @@ calculate_data_skip (siminf *simulation,
 	double integration_time = simulation->t_final - simulation->t_trans;
 	double number_of_steps = integration_time / simulation->t_step;
 
-	if (number_of_data_lines_in_file > number_of_steps)
-	{
-		simulation->data_skip = 1;
-	}
-	else
+	if (number_of_data_lines_in_file < number_of_steps)
 	{
 		double data_skip_double 
 			= number_of_steps / number_of_data_lines_in_file;
 		if (data_skip_double < (double) INT_MAX)
 		{
-			simulation->data_skip = (int) data_skip_double;
+			if (simulation->data_skip < (int) data_skip_double)
+			{
+				simulation->data_skip = (int) data_skip_double;
+			}
 		}
 		else
 		{
@@ -1823,7 +1827,7 @@ calculate_data_skip (siminf *simulation,
 			fprintf(stderr, " to guarantee a max data size of %f mb.\n", 
 				simulation->largest_output_size / 1e6);
 			fprintf(stderr, "Possible reason: final simulation time is");
-			fprintf(stderr, " probably much higher than time step.");
+			fprintf(stderr, " probably much longer than time step.");
 			exit(13);
 		}
 	}
