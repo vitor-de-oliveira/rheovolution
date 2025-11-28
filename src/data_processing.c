@@ -1987,22 +1987,17 @@ write_simulation_overview	(const siminf simulation)
 	strcat(filename, "sim_info");
 	strcat(filename, ".dat");
 
-	// simulation time
-	int sec, min, hr, day;
-	day = simulation.time_spent_in_seconds / (24*3600);
-	hr	= (simulation.time_spent_in_seconds - 24*3600*day) / 3600;
-	min = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
-	sec = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
+	// little header
 	FILE *out_sim_info;
 	out_sim_info = fopen(filename, "w");
-	fprintf(out_sim_info, "Time spent on simulation:");
-	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n\n",
-		day, hr, min, sec);
+	fprintf(out_sim_info, "This file contains all the data passed");
+	fprintf(out_sim_info, " to the program for this simulation.\n\n\n");
 	fclose(out_sim_info);
 
 	// copy input files info
 	FILE *in0_to_copy = fopen(simulation.main_input, "r");
 	FILE *in0_copy = fopen(filename, "a");
+	fprintf(in0_copy, "- General specs\n\n");
 	char ch0 = fgetc(in0_to_copy);
     while(ch0 != EOF)
     {
@@ -2014,6 +2009,7 @@ write_simulation_overview	(const siminf simulation)
 	fclose(in0_to_copy);
 	FILE *in1_to_copy = fopen(simulation.system_specs, "r");
 	FILE *in1_copy = fopen(filename, "a");
+	fprintf(in1_copy, "- System specs\n\n");
 	char ch1 = fgetc(in1_to_copy);
     while(ch1 != EOF)
     {
@@ -2025,6 +2021,7 @@ write_simulation_overview	(const siminf simulation)
 	fclose(in1_to_copy);
 	FILE *in2_to_copy = fopen(simulation.integration_specs, "r");
 	FILE *in2_copy = fopen(filename, "a");
+	fprintf(in2_copy, "- Integration specs\n\n");
 	char ch2 = fgetc(in2_to_copy);
     while(ch2 != EOF)
     {
@@ -2038,6 +2035,7 @@ write_simulation_overview	(const siminf simulation)
 	if (in3_to_copy != NULL)
 	{
 		FILE *in3_copy = fopen(filename, "a");
+		fprintf(in3_copy, "- Dev specs\n\n");
 		char ch3 = fgetc(in3_to_copy);
 		while(ch3 != EOF)
 		{
@@ -2052,9 +2050,38 @@ write_simulation_overview	(const siminf simulation)
 	// parameters calculated by the code
 	FILE *out_sim_info_2;
 	out_sim_info_2 = fopen(filename, "a");
-	fprintf(out_sim_info_2, "t_step(yr) = %1.10e\n", simulation.t_step);
-	fprintf(out_sim_info_2, "data_skip = %d\n\n", simulation.data_skip);
+	fprintf(out_sim_info_2, "- Specs used by the software\n\n");
+	fprintf(out_sim_info_2, "t_step(yr) = %1.5e\n", simulation.t_step);
+	fprintf(out_sim_info_2, "data_skip = %d\n\n\n", simulation.data_skip);
 	fclose(out_sim_info_2);
+
+	return 0;
+}
+
+int
+write_simulation_time_in_overview_file	(const siminf simulation)
+{
+	// creates info file
+	char filename[300];
+	strcpy(filename, simulation.output_folder);
+	strcat(filename, "results_");
+	strcat(filename, simulation.name);
+	strcat(filename, "_");
+	strcat(filename, "sim_info");
+	strcat(filename, ".dat");
+
+	// simulation time
+	int sec, min, hr, day;
+	day = simulation.time_spent_in_seconds / (24*3600);
+	hr	= (simulation.time_spent_in_seconds - 24*3600*day) / 3600;
+	min = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
+	sec = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
+	FILE *out_sim_info;
+	out_sim_info = fopen(filename, "a");
+	fprintf(out_sim_info, "- Program run time\n\n");
+	fprintf(out_sim_info, "%d days %d hours %d minutes %d seconds\n",
+		day, hr, min, sec);
+	fclose(out_sim_info);
 
 	return 0;
 }

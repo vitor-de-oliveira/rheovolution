@@ -87,12 +87,15 @@ main(int argc, char *argv[])
 			simulation.error_abs, simulation.error_rel);
 	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
 
+	/* determine data skip based on largest output size */
+	calculate_data_skip(&simulation, bodies);
+
+	/* write overview file */
+	write_simulation_overview(simulation);
+
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
 	create_output_files(bodies, simulation, out);
-
-	/* determine data skip based on largest output size */
-	calculate_data_skip(&simulation, bodies);
 
 	/* integration loop */
 	simulation.counter = 0;	
@@ -185,8 +188,8 @@ main(int argc, char *argv[])
 	simulation.time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
-	/* write overview file */
-	write_simulation_overview(simulation);
+	/* write simulation time on overview file */
+	write_simulation_time_in_overview_file(simulation);
 
 	return 0;
 }

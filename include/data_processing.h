@@ -110,6 +110,9 @@ close_output_files	(const siminf simulation,
 int
 write_simulation_overview	(const siminf simulation);
 
+int
+write_simulation_time_in_overview_file	(const siminf simulation);
+
 // reads the output of the program
 // and calculates orbital elements
 int
