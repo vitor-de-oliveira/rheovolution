@@ -408,7 +408,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	bool	input_I_received = false;
 	bool	input_M_received = false;
 	bool	input_w_received = false;
-	bool	input_OMEGA_received = false;
+	bool	input_Omega_received = false;
 	/* verification variables for angular velocity vector */
 	bool	input_omega_azi_received = false;
 	bool	input_omega_pol_received = false;
@@ -616,7 +616,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_w_received = true;
 		}
-		else if (strcmp(token, "OMEGA(deg)") == 0)
+		else if (strcmp(token, "Omega(deg)") == 0)
 		{
 			(*bodies)[0].Omega = NAN;
 			for (int i = 1; i < simulation.number_of_bodies; i++)
@@ -624,7 +624,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].Omega = atof(token);
 			}
-			input_OMEGA_received = true;
+			input_Omega_received = true;
 		}
 		else if (strcmp(token, "azi(deg)") == 0)
 		{
@@ -875,7 +875,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].w = 0.0;
 		}
 	}
-	if(input_OMEGA_received == false)
+	if(input_Omega_received == false)
 	{
 		(*bodies)[0].Omega = NAN;
 		for (int i = 1; i < simulation.number_of_bodies; i++)
