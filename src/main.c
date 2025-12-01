@@ -71,9 +71,10 @@ main(int argc, char *argv[])
 	/* define additional simulation parameters */
 	if (simulation.t_step_received == false)
 	{
-		simulation.t_step = find_shortest_time_scale(bodies, simulation);
+		simulation.t_step = 
+			find_shortest_time_scale(bodies, simulation) / 10.0;
 	}
-	simulation.t_step_init = simulation.t_step / 5.0;
+	simulation.t_step_init = simulation.t_step / 2.0;
 	simulation.t_step_min = simulation.t_step / 100.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
