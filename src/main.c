@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	double  *y;
 	mount_state_vector(&y, &dim_state_vec, params);
 
-	/* define additional simulation parameters */
+	/* set ODE numerical integrator (GSL) */
 	if (simulation.t_step_received == false)
 	{
 		simulation.t_step = 
@@ -78,9 +78,6 @@ main(int argc, char *argv[])
 	simulation.t_step_min = simulation.t_step / 100.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
-	simulation.largest_output_size = 100.0e6; // bytes
-
-	/* set ODE numerical integrator (GSL) */
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
 	gsl_odeiv2_driver *d = 
 		gsl_odeiv2_driver_alloc_y_new(&sys, 
@@ -89,6 +86,10 @@ main(int argc, char *argv[])
 	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
 
 	/* determine data skip based on largest output size */
+	if (simulation.max_output_size_received == false)
+	{
+		simulation.max_output_size = 100.0e6; // bytes
+	}
 	calculate_data_skip(&simulation, bodies);
 
 	/* write overview file */

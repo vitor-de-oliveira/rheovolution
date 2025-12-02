@@ -48,12 +48,16 @@ typedef struct SimulationInfo {
 	bool	two_bodies_aprox;			// removes interaction between
 										// orbiting bodies
 
-	/* numerical specs given by user */
+	/* numerical specs necessarily given by user */
 	double	t_init;						// initial time
 	double	t_trans;					// transient time
 	double	t_final;					// final time
-	double	t_step;						// time step
+
+	/* numerical specs possibly given by user */
 	bool	t_step_received;			// true if user provided t_step
+	bool	max_output_size_received;	// true if user provided max_output_size
+	double	t_step;						// time step
+	double 	max_output_size;			// max size of the largest output file
 
 	/* numerical specs defined by the program */
 	double 	t_step_init;				// initial time step
@@ -62,7 +66,6 @@ typedef struct SimulationInfo {
 	double	error_rel;					// relative error
 
 	/* output specs */
-	double 	largest_output_size;		// size of the largest output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
 	int		time_spent_in_seconds;		// real simulation time in sec
@@ -71,7 +74,6 @@ typedef struct SimulationInfo {
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
 	double	h;							// time step in integration loop
-
 } siminf;
 
 int

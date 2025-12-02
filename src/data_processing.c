@@ -48,15 +48,17 @@ print_SimulationInfo(siminf simulation)
 	printf("t init = %1.10e\n", simulation.t_init);
 	printf("t trans = %1.10e\n", simulation.t_trans);
 	printf("t final = %1.10e\n", simulation.t_final);
-	printf("t step = %1.10e\n", simulation.t_step);
-	printf("t step received = %d\n", simulation.t_step_received);
 
+	printf("t step received = %d\n", simulation.t_step_received);
+	printf("max size received = %d\n", simulation.max_output_size_received);
+	printf("t step = %1.10e\n", simulation.t_step);
+	printf("max output size = %1.5e\n", simulation.max_output_size);
+	
 	printf("t step init = %1.10e\n", simulation.t_step_init);
 	printf("t step min = %1.10e\n", simulation.t_step_min);
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
 
-	printf("largest output size = %1.5e\n", simulation.largest_output_size);
 	printf("data skip = %d\n", simulation.data_skip);
 
 	return 0;
@@ -273,6 +275,7 @@ parse_input(siminf *simulation,
 
 	/* presetting some values */
 	simulation->t_step_received = false;
+	simulation->max_output_size_received = false;
 	simulation->t_step_min = NAN;
 	simulation->error_abs = NAN;
 	simulation->error_rel = NAN;
@@ -310,6 +313,11 @@ parse_input(siminf *simulation,
 		{
 			simulation->t_step = atof(second_col);
 			simulation->t_step_received = true;
+		}
+		else if (strcmp(first_col, "max_size(B)") == 0)
+		{
+			simulation->max_output_size = atof(second_col);
+			simulation->max_output_size_received = true;
 		}
 		else if (strcmp(first_col, "data_skip") == 0)
 		{
@@ -1784,48 +1792,48 @@ calculate_data_skip (siminf *simulation,
 	}
 
 	// calculating data size
-	double header_size = 0.0;
-	double data_size_for_each_line = 0.0;
+	double header_size = NAN;
+	double data_size_for_each_line = NAN;
 
 	// everything is in bytes
 	if (deformable == true)
 	{
-		header_size = 156.0;
-		data_size_for_each_line = 22.0 * 27.0 + 1.0;
+		header_size = 157.0;
+		data_size_for_each_line = 571.0;
 	}
 	else if (extended == true)
 	{
-		header_size = 154.0;
-		data_size_for_each_line = 22.0 * 26.0 + 1.0;
+		header_size = 155.0;
+		data_size_for_each_line = 550.0;
 	}
 	else
 	{
-		header_size = 75.0;
-		data_size_for_each_line = 22.0 * 10.0 + 1.0;
+		header_size = 90.0;
+		data_size_for_each_line = 233.0;
 	}
 
 	// determine data skip
-	double number_of_data_lines_in_file 
-		= (simulation->largest_output_size - header_size) / data_size_for_each_line;
+	double max_number_of_data_lines_in_file 
+		= (simulation->max_output_size - header_size) / data_size_for_each_line;
 	double integration_time = simulation->t_final - simulation->t_trans;
 	double number_of_steps = integration_time / simulation->t_step;
 
-	if (number_of_data_lines_in_file < number_of_steps)
+	if (max_number_of_data_lines_in_file < number_of_steps)
 	{
 		double data_skip_double 
-			= number_of_steps / number_of_data_lines_in_file;
+			= number_of_steps / max_number_of_data_lines_in_file;
 		if (data_skip_double < (double) INT_MAX)
 		{
-			if (simulation->data_skip < (int) data_skip_double)
+			if (simulation->data_skip < (int)ceil(data_skip_double))
 			{
-				simulation->data_skip = (int) data_skip_double;
+				simulation->data_skip = (int)ceil(data_skip_double);
 			}
 		}
 		else
 		{
 			fprintf(stderr, "Error: could not calculate a data skip");
-			fprintf(stderr, " to guarantee a max data size of %f mb.\n", 
-				simulation->largest_output_size / 1e6);
+			fprintf(stderr, " to guarantee a max data size of %f MB.\n", 
+				simulation->max_output_size / 1e6);
 			fprintf(stderr, "Possible reason: final simulation time is");
 			fprintf(stderr, " probably much longer than time step.");
 			exit(13);
@@ -2047,11 +2055,12 @@ write_simulation_overview	(const siminf simulation)
 		fclose(in3_to_copy);
 	}
 
-	// parameters calculated by the code
+	// parameters used by the code
 	FILE *out_sim_info_2;
 	out_sim_info_2 = fopen(filename, "a");
 	fprintf(out_sim_info_2, "- Specs used by the software\n\n");
 	fprintf(out_sim_info_2, "t_step(yr) = %1.5e\n", simulation.t_step);
+	fprintf(out_sim_info_2, "max_size(B) = %1.5e\n", simulation.max_output_size);
 	fprintf(out_sim_info_2, "data_skip = %d\n\n\n", simulation.data_skip);
 	fclose(out_sim_info_2);
 
