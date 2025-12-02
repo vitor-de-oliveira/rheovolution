@@ -3135,39 +3135,63 @@ double
 find_shortest_time_scale(const cltbdy *bodies,
 						 const siminf simulation)
 {
-	// giant number for comparison
-	double giant_number = 1.0e20;
-
-	// define return variable
-    double shortest_time_scale = giant_number;
-
-	// orbit
-	bool	orbital_motion = false;
-    double 	shortest_orbital_period = giant_number;
+	// checking existence of timescales
+	bool orbital_motion = false;
+	bool rotational_motion = false;
+	bool deformation = false;
 	if (simulation.number_of_bodies > 1)
 	{
-		shortest_orbital_period = bodies[1].orb;
 		orbital_motion = true;
-		shortest_time_scale = shortest_orbital_period;
+	}
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			rotational_motion = true;
+			break;
+		}
+	}
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].deformable == true)
+		{
+			deformation = true;
+			break;
+		}
+	}
+	if ((orbital_motion == false) && 
+		(rotational_motion == false) && 
+		(deformation == false))
+	{
+		fprintf(stderr, "Error: the program could not");
+		fprintf(stderr, " determine a time scale.\n");
+		fprintf(stderr, "Possible reason: the input system");
+		fprintf(stderr, " contains only one body and it is");
+		fprintf(stderr, " set as a point mass.");
+		exit(14);		
 	}
 
-	// spin
-	bool	rotational_motion = false;
-	double	shortest_rotational_period = giant_number;
+	// define return variable
+    double shortest_time_scale = NAN;
+
+	// setting the basis for comparison in each case
+	double 	shortest_orbital_period = NAN;
+	double	shortest_rotational_period = NAN;
+	double	shortest_relaxation_time = NAN;
+	if (orbital_motion == true)
+	{
+		shortest_orbital_period = bodies[1].orb;
+		shortest_time_scale = shortest_orbital_period;
+	}
     for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if (bodies[i].point_mass == false)
 		{
 			shortest_rotational_period = bodies[i].rot;
-			rotational_motion = true;
 			shortest_time_scale = shortest_rotational_period;
 			break;
 		}
 	}
-	
-	// rheology
-	bool	deformation = false;
-	double	shortest_relaxation_time = giant_number;
     for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if (bodies[i].deformable == true)
@@ -3180,7 +3204,6 @@ find_shortest_time_scale(const cltbdy *bodies,
 			{   
 				shortest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
 			}
-			deformation = true;
 			shortest_time_scale = shortest_relaxation_time;
 			break;
 		}
@@ -3247,147 +3270,27 @@ find_shortest_time_scale(const cltbdy *bodies,
 		}
     } // end loop over bodies
 
-    if (shortest_orbital_period < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_orbital_period;
-    }
-    if (shortest_rotational_period < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_rotational_period;
-    }
-    if (shortest_relaxation_time < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_relaxation_time;
-    }
+	if (orbital_motion == true)
+	{
+		if (shortest_orbital_period < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_orbital_period;
+		}
+	}
+	if (rotational_motion == true)
+	{
+		if (shortest_rotational_period < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_rotational_period;
+		}
+	}
+	if (deformation == true)
+	{
+		if (shortest_relaxation_time < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_relaxation_time;
+		}
+	}
 
     return shortest_time_scale;
-}
-
-double
-find_largest_time_scale(const cltbdy *bodies,
-						const siminf simulation)
-{
-	// define return variable
-    double largest_time_scale = 0.0;
-
-	// orbit
-	bool	orbital_motion = false;
-    double 	largest_orbital_period = 0.0;
-	if (simulation.number_of_bodies > 1)
-	{
-		largest_orbital_period = bodies[1].orb;
-		orbital_motion = true;
-		largest_time_scale = largest_orbital_period;
-	}
-
-	// spin
-	bool	rotational_motion = false;
-	double	largest_rotational_period = 0.0;
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		if (bodies[i].point_mass == false)
-		{
-			largest_rotational_period = bodies[i].rot;
-			rotational_motion = true;
-			largest_time_scale = largest_rotational_period;
-			break;
-		}
-	}
-	
-	// rheology
-	bool	deformation = false;
-	double	largest_relaxation_time = 0.0;
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		if (bodies[i].deformable == true)
-		{
-			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
-			{
-				largest_relaxation_time = bodies[i].tau;
-			}
-			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
-			{   
-				largest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
-			}
-			deformation = true;
-			largest_time_scale = largest_relaxation_time;
-			break;
-		}
-	}
-
-	// loop over bodies
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-    {
-        // orbit
-		if (orbital_motion == true)
-		{
-			if (i > 0)
-			{
-				double body_orbital_period = bodies[i].orb;
-				if (body_orbital_period > largest_orbital_period)
-				{
-					largest_orbital_period = body_orbital_period;
-				}
-			}
-		}
-
-        // spin
-		if (rotational_motion == true)
-		{
-			if (bodies[i].point_mass == false)
-			{
-				double body_rotational_period = bodies[i].rot;
-				if (bodies[i].rot_ini > bodies[i].rot)
-				{
-					body_rotational_period = bodies[i].rot_ini;
-				}
-				if (body_rotational_period > largest_rotational_period)
-				{
-					largest_rotational_period = body_rotational_period;
-				}
-			}
-		}
-
-        // rheology
-		if (deformation == true)
-		{
-			double body_rheology_min_time = 0.0;
-			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
-			{
-				body_rheology_min_time = bodies[i].tau;
-			}
-			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
-			{   
-				body_rheology_min_time = bodies[i].eta / bodies[i].alpha;
-				for (int j = 0; j < bodies[i].elements; j++)
-				{
-					double body_rheology_min_time_element 
-						= bodies[i].eta_elements[j] / bodies[i].alpha_elements[j];
-					if (body_rheology_min_time_element > body_rheology_min_time)
-					{
-						body_rheology_min_time = body_rheology_min_time_element;
-					}
-				}           
-			}
-			if (body_rheology_min_time > largest_relaxation_time)
-			{
-				largest_relaxation_time = body_rheology_min_time;
-			}
-		}
-    } // end loop over bodies
-
-    if (largest_orbital_period > largest_time_scale)
-    {
-        largest_time_scale = largest_orbital_period;
-    }
-    if (largest_rotational_period > largest_time_scale)
-    {
-        largest_time_scale = largest_rotational_period;
-    }
-    if (largest_relaxation_time > largest_time_scale)
-    {
-        largest_time_scale = largest_relaxation_time;
-    }
-
-    return largest_time_scale;
 }

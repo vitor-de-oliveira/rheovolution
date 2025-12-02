@@ -138,9 +138,4 @@ double
 find_shortest_time_scale(const cltbdy *bodies,
 					 	 const siminf simulation);
 
-// returns largest time scale for given bodies
-double
-find_largest_time_scale(const cltbdy *bodies,
-					 	const siminf simulation);
-
 #endif
