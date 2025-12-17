@@ -404,12 +404,13 @@ calculate_eigenvectors_matrix(double M_eig[], const double M[])
 
 	gsl_eigen_symmv_sort(eval, evec, GSL_EIGEN_SORT_VAL_DESC);
 
-	// choose the direction of the last eigenvector
-	// as having a positive last entry
 	for (int i = 0; i < 9; i++)
 	{
 		M_eig[i] = evec->data[i];
 	}
+
+	// choose the direction of the last eigenvector
+	// as having a positive last entry
 	if (M_eig[8] < 0.0)
 	{
 		M_eig[2] *= -1.0;

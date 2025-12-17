@@ -908,14 +908,22 @@ angle_between_spin_axis_and_figure_axis_of_solid_frame(const cltbdy body)
 double
 angle_between_spin_axis_and_figure_axis(const cltbdy body)
 {
-	double P[9];
-	calculate_eigenvectors_matrix(P, body.b);
+    double Y[9], Y_trans[9];
+    rotation_matrix_from_quaternion(Y, body.q);
+    transpose_square_matrix(Y_trans, Y);	
+    double B[9];
+    square_matrix_times_square_matrix(B, body.b, Y);
+	square_matrix_times_square_matrix(B, Y_trans, B);
+    double P[9];
+    calculate_eigenvectors_matrix(P, B);
     double figure_axis_on_body[] = {0.0, 0.0, 1.0};
-    double figure_axis[3];
-    square_matrix_times_vector(figure_axis,
+    double figure_axis_inertial[3];
+    square_matrix_times_vector(figure_axis_inertial,
         P, figure_axis_on_body);
+    square_matrix_times_vector(figure_axis_inertial,
+        Y, figure_axis_inertial);
 
-	return angle_between_two_vectors(body.omega, figure_axis);
+	return angle_between_two_vectors(body.omega, figure_axis_inertial);
 }
 
 double
@@ -932,14 +940,53 @@ angle_between_relative_x_and_I1(const cltbdy body,
 	linear_combination_vector(relative_x,
 		1.0, body.x,
 		-1.0, body_ref.x);
+    double relative_x_dot[3];
+	linear_combination_vector(relative_x_dot,
+		1.0, body.x_dot,
+		-1.0, body_ref.x_dot);
 
-	double P[9];
-	calculate_eigenvectors_matrix(P, body.b);
+    double h[3]; // orbital momentum vector
+    cross_product(h, relative_x, relative_x_dot);
+
+    // diagonalization in the body's frame
+    double Y[9], Y_trans[9];
+    rotation_matrix_from_quaternion(Y, body.q);
+    transpose_square_matrix(Y_trans, Y);	
+    double B[9];
+    square_matrix_times_square_matrix(B, body.b, Y);
+	square_matrix_times_square_matrix(B, Y_trans, B);
+    double P[9];
+    calculate_eigenvectors_matrix(P, B);
     double I1_on_body[] = {1.0, 0.0, 0.0};
-    double I1[3];
-    square_matrix_times_vector(I1, P, I1_on_body);
+    double I1_inertial[3];
+    square_matrix_times_vector(I1_inertial,
+        P, I1_on_body);
+    square_matrix_times_vector(I1_inertial,
+        Y, I1_inertial);
 
-	return angle_between_two_vectors(relative_x, I1);
+    // projection of I1 to the orbit plane
+    double I1_inertial_projected_orbit_normal[3];
+    scale_vector(I1_inertial_projected_orbit_normal,
+        dot_product(I1_inertial, h) / dot_product(h, h),
+        h);
+    double I1_inertial_projected_orbit_plane[3];
+    linear_combination_vector(I1_inertial_projected_orbit_plane,
+         1.0, I1_inertial,
+        -1.0, I1_inertial_projected_orbit_normal);
+
+    double angle = angle_between_two_vectors(relative_x, 
+                    I1_inertial_projected_orbit_plane);
+
+    // defining the quadrant based on orbital momentum vector
+    double x_rel_cross_I1_plane[3];
+    cross_product(x_rel_cross_I1_plane,
+        relative_x, I1_inertial_projected_orbit_plane);
+    if (dot_product(h, x_rel_cross_I1_plane) < 0.0)
+    {
+        angle *= -1.0;
+    }
+    
+	return angle;
 }
 
 int

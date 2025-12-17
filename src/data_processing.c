@@ -1765,6 +1765,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	// for (int i = 0; i < simulation.number_of_bodies; i++)
 	// {
 	// 	print_CelestialBody((*bodies)[i]);
+	// 	printf("\n");
 	// }
 	// exit(99);
 
@@ -2350,14 +2351,14 @@ output_to_spin	(cltbdy *bodies,
 			fprintf(out_orientation, " |l|");
 			fprintf(out_orientation, " |b|");
 			fprintf(out_orientation, " obl(°)");
-			fprintf(out_orientation, " wI3(°)"); // angle w and I3
-			fprintf(out_orientation, " wI3sf(°)"); // angle w and I3 solid frame
-			fprintf(out_orientation, " wl(°)"); // angle w and l
-			fprintf(out_orientation, " azi(°)"); // nutation angle
-			fprintf(out_orientation, " aziPIM(°)"); // nutation angle on Principal
+			fprintf(out_orientation, " wI3(°)"); 	 // angle w and I3
+			fprintf(out_orientation, " wI3sf(°)"); 	 // angle w and I3 solid frame
+			fprintf(out_orientation, " wl(°)"); 	 // angle w and l
+			fprintf(out_orientation, " azi(°)"); 	 // nutation angle
+			fprintf(out_orientation, " aziPIM(°)");  // nutation angle on Principal
 													 // Inertia Momenta (PIM) frame
-			fprintf(out_orientation, " J2"); // J2 on PIM frame
-			fprintf(out_orientation, " C22"); // C22 on PIM frame
+			fprintf(out_orientation, " J2"); 		 // J2 on PIM frame
+			fprintf(out_orientation, " C22"); 		 // C22 on PIM frame
 			fprintf(out_orientation, " |q|");
 			if (i > 0)
 			{
@@ -2471,7 +2472,7 @@ output_to_spin	(cltbdy *bodies,
 				/* nutation frequency */
 				double Y_i[9], Y_i_trans[9];
 				rotation_matrix_from_quaternion(Y_i, bodies[i].q);
-				transpose_square_matrix(Y_i_trans, Y_i);		
+				transpose_square_matrix(Y_i_trans, Y_i);
 				double ang_vel_body_frame[3];
 				square_matrix_times_vector(ang_vel_body_frame,
 					Y_i_trans, bodies[i].omega);
@@ -2482,26 +2483,26 @@ output_to_spin	(cltbdy *bodies,
 				fprintf (out_orientation, " %.14e", bodies[i].azi * rad_to_deg);
 
 				/* nutation frequency on Principal Inertia Momenta (PIM) frame */
-				double P_i[9], P_i_trans[9];
-				calculate_eigenvectors_matrix(P_i, bodies[i].b);
-				transpose_square_matrix(P_i_trans, P_i);	
+				double B[9];
+				square_matrix_times_square_matrix(B, bodies[i].b, Y_i);
+				square_matrix_times_square_matrix(B, Y_i_trans, B);
+				double P[9], P_trans[9];
+				calculate_eigenvectors_matrix(P, B);
+				transpose_square_matrix(P_trans, P);
 				square_matrix_times_vector(ang_vel_body_frame,
-					P_i_trans, bodies[i].omega);
+					P_trans, ang_vel_body_frame);
 				cartesian_to_spherical_coordinates(ang_vel_body_frame_spherical,
 					ang_vel_body_frame);
 				fprintf (out_orientation, " %.14e", 
 					ang_vel_body_frame_spherical[1] * rad_to_deg);
 
 				/* Stokes coefficients on Principal Inertia Momenta (PIM) frame */
-				double B[9];
-				square_matrix_times_square_matrix(B, bodies[i].b, Y_i);
-				square_matrix_times_square_matrix(B, Y_i_trans, B);
-				double B_diag_i[9];
-				calculate_diagonalized_square_matrix(B_diag_i, B);
-				double Iner_diag_i[9];
-				calculate_inertia_tensor(Iner_diag_i, bodies[i].I0, B_diag_i);
-				bodies[i].J2  = calculate_J2 (bodies[i].mass, bodies[i].R, Iner_diag_i);
-				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag_i);
+				double B_diag[9];
+				calculate_diagonalized_square_matrix(B_diag, B);
+				double Iner_diag[9];
+				calculate_inertia_tensor(Iner_diag, bodies[i].I0, B_diag);
+				bodies[i].J2  = calculate_J2 (bodies[i].mass, bodies[i].R, Iner_diag);
+				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag);
 				fprintf (out_orientation, " %.14e %.14e", bodies[i].J2, bodies[i].C22);
 
 				/* norm of quaternion */
