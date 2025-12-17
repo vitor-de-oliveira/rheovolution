@@ -48,15 +48,18 @@ print_SimulationInfo(siminf simulation)
 	printf("t init = %1.10e\n", simulation.t_init);
 	printf("t trans = %1.10e\n", simulation.t_trans);
 	printf("t final = %1.10e\n", simulation.t_final);
-	printf("t step = %1.10e\n", simulation.t_step);
+
 	printf("t step received = %d\n", simulation.t_step_received);
+	printf("max size received = %d\n", simulation.max_output_size_received);
+	printf("t step = %1.10e\n", simulation.t_step);
+	printf("max output size = %1.5e\n", simulation.max_output_size);
+	printf("integration scheme = %s\n", simulation.integration_scheme);
 
 	printf("t step init = %1.10e\n", simulation.t_step_init);
 	printf("t step min = %1.10e\n", simulation.t_step_min);
 	printf("eps abs = %1.10e\n", simulation.error_abs);
 	printf("eps rel = %1.10e\n", simulation.error_rel);
 
-	printf("output size = %1.5e\n", simulation.largest_output_size);
 	printf("data skip = %d\n", simulation.data_skip);
 
 	return 0;
@@ -273,9 +276,12 @@ parse_input(siminf *simulation,
 
 	/* presetting some values */
 	simulation->t_step_received = false;
+	simulation->max_output_size_received = false;
 	simulation->t_step_min = NAN;
 	simulation->error_abs = NAN;
 	simulation->error_rel = NAN;
+	simulation->data_skip = 1;
+	strcpy(simulation->integration_scheme, "rk8pd");
 
 	/* verification variables for integration input */
 	int 	number_integration_inputs = 3;
@@ -309,6 +315,19 @@ parse_input(siminf *simulation,
 		{
 			simulation->t_step = atof(second_col);
 			simulation->t_step_received = true;
+		}
+		else if (strcmp(first_col, "max_size(B)") == 0)
+		{
+			simulation->max_output_size = atof(second_col);
+			simulation->max_output_size_received = true;
+		}
+		else if (strcmp(first_col, "data_skip") == 0)
+		{
+			simulation->data_skip = atof(second_col);
+		}
+		else if (strcmp(first_col, "scheme") == 0)
+		{
+			strcpy(simulation->integration_scheme, second_col);
 		}
 	}
 	fclose(in2);
@@ -403,7 +422,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	bool	input_I_received = false;
 	bool	input_M_received = false;
 	bool	input_w_received = false;
-	bool	input_OMEGA_received = false;
+	bool	input_Omega_received = false;
 	/* verification variables for angular velocity vector */
 	bool	input_omega_azi_received = false;
 	bool	input_omega_pol_received = false;
@@ -611,7 +630,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			}
 			input_w_received = true;
 		}
-		else if (strcmp(token, "OMEGA(deg)") == 0)
+		else if (strcmp(token, "Omega(deg)") == 0)
 		{
 			(*bodies)[0].Omega = NAN;
 			for (int i = 1; i < simulation.number_of_bodies; i++)
@@ -619,7 +638,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 				token = strtok(NULL, tok_del);
 				(*bodies)[i].Omega = atof(token);
 			}
-			input_OMEGA_received = true;
+			input_Omega_received = true;
 		}
 		else if (strcmp(token, "azi(deg)") == 0)
 		{
@@ -870,7 +889,7 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			(*bodies)[i].w = 0.0;
 		}
 	}
-	if(input_OMEGA_received == false)
+	if(input_Omega_received == false)
 	{
 		(*bodies)[0].Omega = NAN;
 		for (int i = 1; i < simulation.number_of_bodies; i++)
@@ -1752,10 +1771,57 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	// for (int i = 0; i < simulation.number_of_bodies; i++)
 	// {
 	// 	print_CelestialBody((*bodies)[i]);
+	// 	printf("\n");
 	// }
 	// exit(99);
 
 	return 0;
+}
+
+const gsl_odeiv2_step_type *
+set_integrator (const char *integrator)
+{
+    if (strcmp(integrator, "rk2") == 0)
+	{
+		return gsl_odeiv2_step_rk2;
+	}
+	else if (strcmp(integrator, "rk4") == 0)
+	{
+		return gsl_odeiv2_step_rk4;
+	}
+	else if (strcmp(integrator, "rk45") == 0)
+	{
+		return gsl_odeiv2_step_rkf45;
+	}
+	else if (strcmp(integrator, "rkck") == 0)
+	{
+		return gsl_odeiv2_step_rkck;
+	}
+	else if (strcmp(integrator, "rk8pd") == 0)
+	{
+		return gsl_odeiv2_step_rk8pd;
+	}
+	else if (strcmp(integrator, "rk4imp") == 0)
+	{
+		return gsl_odeiv2_step_rk4imp;
+	}
+	else if (strcmp(integrator, "bsimp") == 0)
+	{
+		return gsl_odeiv2_step_bsimp;
+	}
+	else if (strcmp(integrator, "msadams") == 0)
+	{
+		return gsl_odeiv2_step_msadams;
+	}
+	else if (strcmp(integrator, "msbdf") == 0)
+	{
+		return gsl_odeiv2_step_msbdf;	
+	}
+	else
+	{
+		printf("Warning: invalid GSL integrator integrator\n");
+		exit(2);
+	}
 }
 
 int
@@ -1779,51 +1845,50 @@ calculate_data_skip (siminf *simulation,
 	}
 
 	// calculating data size
-	double header_size = 0.0;
-	double data_size_for_each_line = 0.0;
+	double header_size = NAN;
+	double data_size_for_each_line = NAN;
 
 	// everything is in bytes
 	if (deformable == true)
 	{
-		header_size = 156.0;
-		data_size_for_each_line = 22.0 * 27.0 + 1.0;
+		header_size = 157.0;
+		data_size_for_each_line = 571.0;
 	}
 	else if (extended == true)
 	{
-		header_size = 154.0;
-		data_size_for_each_line = 22.0 * 26.0 + 1.0;
+		header_size = 155.0;
+		data_size_for_each_line = 550.0;
 	}
 	else
 	{
-		header_size = 75.0;
-		data_size_for_each_line = 22.0 * 10.0 + 1.0;
+		header_size = 90.0;
+		data_size_for_each_line = 233.0;
 	}
 
 	// determine data skip
-	double number_of_data_lines_in_file 
-		= (simulation->largest_output_size - header_size) / data_size_for_each_line;
+	double max_number_of_data_lines_in_file 
+		= (simulation->max_output_size - header_size) / data_size_for_each_line;
 	double integration_time = simulation->t_final - simulation->t_trans;
 	double number_of_steps = integration_time / simulation->t_step;
 
-	if (number_of_data_lines_in_file > number_of_steps)
-	{
-		simulation->data_skip = 1;
-	}
-	else
+	if (max_number_of_data_lines_in_file < number_of_steps)
 	{
 		double data_skip_double 
-			= number_of_steps / number_of_data_lines_in_file;
+			= number_of_steps / max_number_of_data_lines_in_file;
 		if (data_skip_double < (double) INT_MAX)
 		{
-			simulation->data_skip = (int) data_skip_double;
+			if (simulation->data_skip < (int)ceil(data_skip_double))
+			{
+				simulation->data_skip = (int)ceil(data_skip_double);
+			}
 		}
 		else
 		{
 			fprintf(stderr, "Error: could not calculate a data skip");
-			fprintf(stderr, " to guarantee a max data size of %f mb.\n", 
-				simulation->largest_output_size / 1e6);
+			fprintf(stderr, " to guarantee a max data size of %f MB.\n", 
+				simulation->max_output_size / 1e6);
 			fprintf(stderr, "Possible reason: final simulation time is");
-			fprintf(stderr, " probably much higher than time step.");
+			fprintf(stderr, " probably much longer than time step.");
 			exit(13);
 		}
 	}
@@ -1983,22 +2048,17 @@ write_simulation_overview	(const siminf simulation)
 	strcat(filename, "sim_info");
 	strcat(filename, ".dat");
 
-	// simulation time
-	int sec, min, hr, day;
-	day = simulation.time_spent_in_seconds / (24*3600);
-	hr	= (simulation.time_spent_in_seconds - 24*3600*day) / 3600;
-	min = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
-	sec = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
+	// little header
 	FILE *out_sim_info;
 	out_sim_info = fopen(filename, "w");
-	fprintf(out_sim_info, "Time spent on simulation:");
-	fprintf(out_sim_info, " %d days %d hours %d minutes %d seconds.\n\n",
-		day, hr, min, sec);
+	fprintf(out_sim_info, "This file contains all the data passed");
+	fprintf(out_sim_info, " to the program for this simulation.\n\n\n");
 	fclose(out_sim_info);
 
 	// copy input files info
 	FILE *in0_to_copy = fopen(simulation.main_input, "r");
 	FILE *in0_copy = fopen(filename, "a");
+	fprintf(in0_copy, "- General specs\n\n");
 	char ch0 = fgetc(in0_to_copy);
     while(ch0 != EOF)
     {
@@ -2010,6 +2070,7 @@ write_simulation_overview	(const siminf simulation)
 	fclose(in0_to_copy);
 	FILE *in1_to_copy = fopen(simulation.system_specs, "r");
 	FILE *in1_copy = fopen(filename, "a");
+	fprintf(in1_copy, "- System specs\n\n");
 	char ch1 = fgetc(in1_to_copy);
     while(ch1 != EOF)
     {
@@ -2021,6 +2082,7 @@ write_simulation_overview	(const siminf simulation)
 	fclose(in1_to_copy);
 	FILE *in2_to_copy = fopen(simulation.integration_specs, "r");
 	FILE *in2_copy = fopen(filename, "a");
+	fprintf(in2_copy, "- Integration specs\n\n");
 	char ch2 = fgetc(in2_to_copy);
     while(ch2 != EOF)
     {
@@ -2034,6 +2096,7 @@ write_simulation_overview	(const siminf simulation)
 	if (in3_to_copy != NULL)
 	{
 		FILE *in3_copy = fopen(filename, "a");
+		fprintf(in3_copy, "- Dev specs\n\n");
 		char ch3 = fgetc(in3_to_copy);
 		while(ch3 != EOF)
 		{
@@ -2045,12 +2108,43 @@ write_simulation_overview	(const siminf simulation)
 		fclose(in3_to_copy);
 	}
 
-	// parameters calculated by the code
+	// parameters used by the code
 	FILE *out_sim_info_2;
 	out_sim_info_2 = fopen(filename, "a");
-	fprintf(out_sim_info_2, "t_step(yr) = %1.10e\n", simulation.t_step);
-	fprintf(out_sim_info_2, "data_skip = %d\n\n", simulation.data_skip);
+	fprintf(out_sim_info_2, "- Specs used by the software\n\n");
+	fprintf(out_sim_info_2, "t_step(yr) = %1.5e\n", simulation.t_step);
+	fprintf(out_sim_info_2, "max_size(B) = %1.5e\n", simulation.max_output_size);
+	fprintf(out_sim_info_2, "data_skip = %d\n", simulation.data_skip);
+	fprintf(out_sim_info_2, "scheme = %s\n\n\n", simulation.integration_scheme);
 	fclose(out_sim_info_2);
+
+	return 0;
+}
+
+int
+write_simulation_time_in_overview_file	(const siminf simulation)
+{
+	// creates info file
+	char filename[300];
+	strcpy(filename, simulation.output_folder);
+	strcat(filename, "results_");
+	strcat(filename, simulation.name);
+	strcat(filename, "_");
+	strcat(filename, "sim_info");
+	strcat(filename, ".dat");
+
+	// simulation time
+	int sec, min, hr, day;
+	day = simulation.time_spent_in_seconds / (24*3600);
+	hr	= (simulation.time_spent_in_seconds - 24*3600*day) / 3600;
+	min = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr) / 60;
+	sec = (simulation.time_spent_in_seconds - 24*3600*day - 3600*hr - 60*min) / 1;
+	FILE *out_sim_info;
+	out_sim_info = fopen(filename, "a");
+	fprintf(out_sim_info, "- Program run time\n\n");
+	fprintf(out_sim_info, "%d days %d hours %d minutes %d seconds\n",
+		day, hr, min, sec);
+	fclose(out_sim_info);
 
 	return 0;
 }
@@ -2310,14 +2404,14 @@ output_to_spin	(cltbdy *bodies,
 			fprintf(out_orientation, " |l|");
 			fprintf(out_orientation, " |b|");
 			fprintf(out_orientation, " obl(°)");
-			fprintf(out_orientation, " wI3(°)"); // angle w and I3
-			fprintf(out_orientation, " wI3sf(°)"); // angle w and I3 solid frame
-			fprintf(out_orientation, " wl(°)"); // angle w and l
-			fprintf(out_orientation, " azi(°)"); // nutation angle
-			fprintf(out_orientation, " aziPIM(°)"); // nutation angle on Principal
+			fprintf(out_orientation, " wI3(°)"); 	 // angle w and I3
+			fprintf(out_orientation, " wI3sf(°)"); 	 // angle w and I3 solid frame
+			fprintf(out_orientation, " wl(°)"); 	 // angle w and l
+			fprintf(out_orientation, " azi(°)"); 	 // nutation angle
+			fprintf(out_orientation, " aziPIM(°)");  // nutation angle on Principal
 													 // Inertia Momenta (PIM) frame
-			fprintf(out_orientation, " J2"); // J2 on PIM frame
-			fprintf(out_orientation, " C22"); // C22 on PIM frame
+			fprintf(out_orientation, " J2"); 		 // J2 on PIM frame
+			fprintf(out_orientation, " C22"); 		 // C22 on PIM frame
 			fprintf(out_orientation, " |q|");
 			if (i > 0)
 			{
@@ -2431,7 +2525,7 @@ output_to_spin	(cltbdy *bodies,
 				/* nutation frequency */
 				double Y_i[9], Y_i_trans[9];
 				rotation_matrix_from_quaternion(Y_i, bodies[i].q);
-				transpose_square_matrix(Y_i_trans, Y_i);		
+				transpose_square_matrix(Y_i_trans, Y_i);
 				double ang_vel_body_frame[3];
 				square_matrix_times_vector(ang_vel_body_frame,
 					Y_i_trans, bodies[i].omega);
@@ -2442,26 +2536,26 @@ output_to_spin	(cltbdy *bodies,
 				fprintf (out_orientation, " %.14e", bodies[i].azi * rad_to_deg);
 
 				/* nutation frequency on Principal Inertia Momenta (PIM) frame */
-				double P_i[9], P_i_trans[9];
-				calculate_eigenvectors_matrix(P_i, bodies[i].b);
-				transpose_square_matrix(P_i_trans, P_i);	
+				double B[9];
+				square_matrix_times_square_matrix(B, bodies[i].b, Y_i);
+				square_matrix_times_square_matrix(B, Y_i_trans, B);
+				double P[9], P_trans[9];
+				calculate_eigenvectors_matrix(P, B);
+				transpose_square_matrix(P_trans, P);
 				square_matrix_times_vector(ang_vel_body_frame,
-					P_i_trans, bodies[i].omega);
+					P_trans, ang_vel_body_frame);
 				cartesian_to_spherical_coordinates(ang_vel_body_frame_spherical,
 					ang_vel_body_frame);
 				fprintf (out_orientation, " %.14e", 
 					ang_vel_body_frame_spherical[1] * rad_to_deg);
 
 				/* Stokes coefficients on Principal Inertia Momenta (PIM) frame */
-				double B[9];
-				square_matrix_times_square_matrix(B, bodies[i].b, Y_i);
-				square_matrix_times_square_matrix(B, Y_i_trans, B);
-				double B_diag_i[9];
-				calculate_diagonalized_square_matrix(B_diag_i, B);
-				double Iner_diag_i[9];
-				calculate_inertia_tensor(Iner_diag_i, bodies[i].I0, B_diag_i);
-				bodies[i].J2  = calculate_J2 (bodies[i].mass, bodies[i].R, Iner_diag_i);
-				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag_i);
+				double B_diag[9];
+				calculate_diagonalized_square_matrix(B_diag, B);
+				double Iner_diag[9];
+				calculate_inertia_tensor(Iner_diag, bodies[i].I0, B_diag);
+				bodies[i].J2  = calculate_J2 (bodies[i].mass, bodies[i].R, Iner_diag);
+				bodies[i].C22 = calculate_C22(bodies[i].mass, bodies[i].R, Iner_diag);
 				fprintf (out_orientation, " %.14e %.14e", bodies[i].J2, bodies[i].C22);
 
 				/* norm of quaternion */
@@ -3104,39 +3198,63 @@ double
 find_shortest_time_scale(const cltbdy *bodies,
 						 const siminf simulation)
 {
-	// giant number for comparison
-	double giant_number = 1.0e20;
-
-	// define return variable
-    double shortest_time_scale = giant_number;
-
-	// orbit
-	bool	orbital_motion = false;
-    double 	shortest_orbital_period = giant_number;
+	// checking existence of timescales
+	bool orbital_motion = false;
+	bool rotational_motion = false;
+	bool deformation = false;
 	if (simulation.number_of_bodies > 1)
 	{
-		shortest_orbital_period = bodies[1].orb;
 		orbital_motion = true;
-		shortest_time_scale = shortest_orbital_period;
+	}
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].point_mass == false)
+		{
+			rotational_motion = true;
+			break;
+		}
+	}
+    for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		if (bodies[i].deformable == true)
+		{
+			deformation = true;
+			break;
+		}
+	}
+	if ((orbital_motion == false) && 
+		(rotational_motion == false) && 
+		(deformation == false))
+	{
+		fprintf(stderr, "Error: the program could not");
+		fprintf(stderr, " determine a time scale.\n");
+		fprintf(stderr, "Possible reason: the input system");
+		fprintf(stderr, " contains only one body and it is");
+		fprintf(stderr, " set as a point mass.");
+		exit(14);		
 	}
 
-	// spin
-	bool	rotational_motion = false;
-	double	shortest_rotational_period = giant_number;
+	// define return variable
+    double shortest_time_scale = NAN;
+
+	// setting the basis for comparison in each case
+	double 	shortest_orbital_period = NAN;
+	double	shortest_rotational_period = NAN;
+	double	shortest_relaxation_time = NAN;
+	if (orbital_motion == true)
+	{
+		shortest_orbital_period = bodies[1].orb;
+		shortest_time_scale = shortest_orbital_period;
+	}
     for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if (bodies[i].point_mass == false)
 		{
 			shortest_rotational_period = bodies[i].rot;
-			rotational_motion = true;
 			shortest_time_scale = shortest_rotational_period;
 			break;
 		}
 	}
-	
-	// rheology
-	bool	deformation = false;
-	double	shortest_relaxation_time = giant_number;
     for (int i = 0; i < simulation.number_of_bodies; i++)
 	{
 		if (bodies[i].deformable == true)
@@ -3149,7 +3267,6 @@ find_shortest_time_scale(const cltbdy *bodies,
 			{   
 				shortest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
 			}
-			deformation = true;
 			shortest_time_scale = shortest_relaxation_time;
 			break;
 		}
@@ -3216,147 +3333,27 @@ find_shortest_time_scale(const cltbdy *bodies,
 		}
     } // end loop over bodies
 
-    if (shortest_orbital_period < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_orbital_period;
-    }
-    if (shortest_rotational_period < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_rotational_period;
-    }
-    if (shortest_relaxation_time < shortest_time_scale)
-    {
-        shortest_time_scale = shortest_relaxation_time;
-    }
+	if (orbital_motion == true)
+	{
+		if (shortest_orbital_period < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_orbital_period;
+		}
+	}
+	if (rotational_motion == true)
+	{
+		if (shortest_rotational_period < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_rotational_period;
+		}
+	}
+	if (deformation == true)
+	{
+		if (shortest_relaxation_time < shortest_time_scale)
+		{
+			shortest_time_scale = shortest_relaxation_time;
+		}
+	}
 
     return shortest_time_scale;
-}
-
-double
-find_largest_time_scale(const cltbdy *bodies,
-						const siminf simulation)
-{
-	// define return variable
-    double largest_time_scale = 0.0;
-
-	// orbit
-	bool	orbital_motion = false;
-    double 	largest_orbital_period = 0.0;
-	if (simulation.number_of_bodies > 1)
-	{
-		largest_orbital_period = bodies[1].orb;
-		orbital_motion = true;
-		largest_time_scale = largest_orbital_period;
-	}
-
-	// spin
-	bool	rotational_motion = false;
-	double	largest_rotational_period = 0.0;
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		if (bodies[i].point_mass == false)
-		{
-			largest_rotational_period = bodies[i].rot;
-			rotational_motion = true;
-			largest_time_scale = largest_rotational_period;
-			break;
-		}
-	}
-	
-	// rheology
-	bool	deformation = false;
-	double	largest_relaxation_time = 0.0;
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-	{
-		if (bodies[i].deformable == true)
-		{
-			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
-			{
-				largest_relaxation_time = bodies[i].tau;
-			}
-			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
-			{   
-				largest_relaxation_time = bodies[i].eta / bodies[i].alpha; 
-			}
-			deformation = true;
-			largest_time_scale = largest_relaxation_time;
-			break;
-		}
-	}
-
-	// loop over bodies
-    for (int i = 0; i < simulation.number_of_bodies; i++)
-    {
-        // orbit
-		if (orbital_motion == true)
-		{
-			if (i > 0)
-			{
-				double body_orbital_period = bodies[i].orb;
-				if (body_orbital_period > largest_orbital_period)
-				{
-					largest_orbital_period = body_orbital_period;
-				}
-			}
-		}
-
-        // spin
-		if (rotational_motion == true)
-		{
-			if (bodies[i].point_mass == false)
-			{
-				double body_rotational_period = bodies[i].rot;
-				if (bodies[i].rot_ini > bodies[i].rot)
-				{
-					body_rotational_period = bodies[i].rot_ini;
-				}
-				if (body_rotational_period > largest_rotational_period)
-				{
-					largest_rotational_period = body_rotational_period;
-				}
-			}
-		}
-
-        // rheology
-		if (deformation == true)
-		{
-			double body_rheology_min_time = 0.0;
-			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
-			{
-				body_rheology_min_time = bodies[i].tau;
-			}
-			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
-			{   
-				body_rheology_min_time = bodies[i].eta / bodies[i].alpha;
-				for (int j = 0; j < bodies[i].elements; j++)
-				{
-					double body_rheology_min_time_element 
-						= bodies[i].eta_elements[j] / bodies[i].alpha_elements[j];
-					if (body_rheology_min_time_element > body_rheology_min_time)
-					{
-						body_rheology_min_time = body_rheology_min_time_element;
-					}
-				}           
-			}
-			if (body_rheology_min_time > largest_relaxation_time)
-			{
-				largest_relaxation_time = body_rheology_min_time;
-			}
-		}
-    } // end loop over bodies
-
-    if (largest_orbital_period > largest_time_scale)
-    {
-        largest_time_scale = largest_orbital_period;
-    }
-    if (largest_rotational_period > largest_time_scale)
-    {
-        largest_time_scale = largest_rotational_period;
-    }
-    if (largest_relaxation_time > largest_time_scale)
-    {
-        largest_time_scale = largest_relaxation_time;
-    }
-
-    return largest_time_scale;
 }

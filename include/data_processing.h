@@ -15,6 +15,10 @@
 #include <sys/stat.h>
 #include <sys/types.h> // ssize_t
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv2.h>
+
 #include "linear_algebra.h"
 #include "celestial_mechanics.h"
 #include "tidal_theory.h"
@@ -48,12 +52,18 @@ typedef struct SimulationInfo {
 	bool	two_bodies_aprox;			// removes interaction between
 										// orbiting bodies
 
-	/* numerical specs given by user */
+	/* numerical specs necessarily given by user */
 	double	t_init;						// initial time
 	double	t_trans;					// transient time
 	double	t_final;					// final time
-	double	t_step;						// time step
+
+	/* numerical specs possibly given by user */
 	bool	t_step_received;			// true if user provided t_step
+	bool	max_output_size_received;	// true if user provided max_output_size
+	double	t_step;						// time step
+	double 	max_output_size;			// max size of the largest output file
+	char	integration_scheme[100];	// scheme for the numerical 
+										// integration of ODEs
 
 	/* numerical specs defined by the program */
 	double 	t_step_init;				// initial time step
@@ -62,7 +72,6 @@ typedef struct SimulationInfo {
 	double	error_rel;					// relative error
 
 	/* output specs */
-	double 	largest_output_size;		// size of the largest output file
 	int		data_skip;					// number of data points
 										// to be skipped on printing
 	int		time_spent_in_seconds;		// real simulation time in sec
@@ -71,7 +80,6 @@ typedef struct SimulationInfo {
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
 	double	h;							// time step in integration loop
-
 } siminf;
 
 int
@@ -84,6 +92,11 @@ parse_input(siminf *simulation,
 int
 fill_in_bodies_data	(cltbdy	**bodies,
 				 	 const siminf simulation);
+
+/* GSL handling */
+
+const gsl_odeiv2_step_type *
+set_integrator (const char *integrator);
 
 /* output handling */
 
@@ -110,6 +123,9 @@ close_output_files	(const siminf simulation,
 int
 write_simulation_overview	(const siminf simulation);
 
+int
+write_simulation_time_in_overview_file	(const siminf simulation);
+
 // reads the output of the program
 // and calculates orbital elements
 int
@@ -134,10 +150,5 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 double
 find_shortest_time_scale(const cltbdy *bodies,
 					 	 const siminf simulation);
-
-// returns largest time scale for given bodies
-double
-find_largest_time_scale(const cltbdy *bodies,
-					 	const siminf simulation);
 
 #endif

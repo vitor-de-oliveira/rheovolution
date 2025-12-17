@@ -15,8 +15,6 @@
 #include "dynamical_system.h"
 #include "data_processing.h"
 
-#define t(n) printf("Here %d\n", n) // for testing
-
 int
 main(int argc, char *argv[]) 
 {
@@ -68,31 +66,38 @@ main(int argc, char *argv[])
 	double  *y;
 	mount_state_vector(&y, &dim_state_vec, params);
 
-	/* define additional simulation parameters */
+	/* set ODE numerical integrator (GSL) */
 	if (simulation.t_step_received == false)
 	{
-		simulation.t_step = find_shortest_time_scale(bodies, simulation);
+		simulation.t_step = 
+			find_shortest_time_scale(bodies, simulation) / 10.0;
 	}
-	simulation.t_step_init = simulation.t_step / 5.0;
+	simulation.t_step_init = simulation.t_step / 2.0;
 	simulation.t_step_min = simulation.t_step / 100.0;
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
-	simulation.largest_output_size = 100.0e6; // bytes
-
-	/* set ODE numerical integrator (GSL) */
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
+	const gsl_odeiv2_step_type *integration_scheme_GSL 
+		= set_integrator(simulation.integration_scheme);
 	gsl_odeiv2_driver *d = 
 		gsl_odeiv2_driver_alloc_y_new(&sys, 
-			gsl_odeiv2_step_rk8pd, simulation.t_step_init, 
+			integration_scheme_GSL, simulation.t_step_init, 
 			simulation.error_abs, simulation.error_rel);
 	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
+
+	/* determine data skip based on largest output size */
+	if (simulation.max_output_size_received == false)
+	{
+		simulation.max_output_size = 100.0e6; // bytes
+	}
+	calculate_data_skip(&simulation, bodies);
+
+	/* write overview file */
+	write_simulation_overview(simulation);
 
 	/* create output files */
 	FILE *out[simulation.number_of_bodies + 1];
 	create_output_files(bodies, simulation, out);
-
-	/* determine data skip based on largest output size */
-	calculate_data_skip(&simulation, bodies);
 
 	/* integration loop */
 	simulation.counter = 0;	
@@ -185,8 +190,8 @@ main(int argc, char *argv[])
 	simulation.time_spent_in_seconds 
 		= (end_time - begin_time) / CLOCKS_PER_SEC;
 
-	/* write overview file */
-	write_simulation_overview(simulation);
+	/* write simulation time on overview file */
+	write_simulation_time_in_overview_file(simulation);
 
 	return 0;
 }
