@@ -15,6 +15,10 @@
 #include <sys/stat.h>
 #include <sys/types.h> // ssize_t
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv2.h>
+
 #include "linear_algebra.h"
 #include "celestial_mechanics.h"
 #include "tidal_theory.h"
@@ -58,6 +62,8 @@ typedef struct SimulationInfo {
 	bool	max_output_size_received;	// true if user provided max_output_size
 	double	t_step;						// time step
 	double 	max_output_size;			// max size of the largest output file
+	char	integration_scheme[100];	// scheme for the numerical 
+										// integration of ODEs
 
 	/* numerical specs defined by the program */
 	double 	t_step_init;				// initial time step
@@ -86,6 +92,11 @@ parse_input(siminf *simulation,
 int
 fill_in_bodies_data	(cltbdy	**bodies,
 				 	 const siminf simulation);
+
+/* GSL handling */
+
+const gsl_odeiv2_step_type *
+set_integrator (const char *integrator);
 
 /* output handling */
 

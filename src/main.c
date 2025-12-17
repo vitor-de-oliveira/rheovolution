@@ -15,8 +15,6 @@
 #include "dynamical_system.h"
 #include "data_processing.h"
 
-#define t(n) printf("Here %d\n", n) // for testing
-
 int
 main(int argc, char *argv[]) 
 {
@@ -79,9 +77,11 @@ main(int argc, char *argv[])
 	simulation.error_abs = 1.0e-13;
 	simulation.error_rel = 0.0;
 	gsl_odeiv2_system sys = {field, NULL, dim_state_vec, &params};
+	const gsl_odeiv2_step_type *integration_scheme_GSL 
+		= set_integrator(simulation.integration_scheme);
 	gsl_odeiv2_driver *d = 
 		gsl_odeiv2_driver_alloc_y_new(&sys, 
-			gsl_odeiv2_step_rk8pd, simulation.t_step_init, 
+			integration_scheme_GSL, simulation.t_step_init, 
 			simulation.error_abs, simulation.error_rel);
 	gsl_odeiv2_driver_set_hmin(d, simulation.t_step_min);
 

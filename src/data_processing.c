@@ -53,7 +53,8 @@ print_SimulationInfo(siminf simulation)
 	printf("max size received = %d\n", simulation.max_output_size_received);
 	printf("t step = %1.10e\n", simulation.t_step);
 	printf("max output size = %1.5e\n", simulation.max_output_size);
-	
+	printf("integration scheme = %s\n", simulation.integration_scheme);
+
 	printf("t step init = %1.10e\n", simulation.t_step_init);
 	printf("t step min = %1.10e\n", simulation.t_step_min);
 	printf("eps abs = %1.10e\n", simulation.error_abs);
@@ -280,6 +281,7 @@ parse_input(siminf *simulation,
 	simulation->error_abs = NAN;
 	simulation->error_rel = NAN;
 	simulation->data_skip = 1;
+	strcpy(simulation->integration_scheme, "rk8pd");
 
 	/* verification variables for integration input */
 	int 	number_integration_inputs = 3;
@@ -322,6 +324,10 @@ parse_input(siminf *simulation,
 		else if (strcmp(first_col, "data_skip") == 0)
 		{
 			simulation->data_skip = atof(second_col);
+		}
+		else if (strcmp(first_col, "scheme") == 0)
+		{
+			strcpy(simulation->integration_scheme, second_col);
 		}
 	}
 	fclose(in2);
@@ -1772,6 +1778,52 @@ fill_in_bodies_data	(cltbdy	**bodies,
 	return 0;
 }
 
+const gsl_odeiv2_step_type *
+set_integrator (const char *integrator)
+{
+    if (strcmp(integrator, "rk2") == 0)
+	{
+		return gsl_odeiv2_step_rk2;
+	}
+	else if (strcmp(integrator, "rk4") == 0)
+	{
+		return gsl_odeiv2_step_rk4;
+	}
+	else if (strcmp(integrator, "rk45") == 0)
+	{
+		return gsl_odeiv2_step_rkf45;
+	}
+	else if (strcmp(integrator, "rkck") == 0)
+	{
+		return gsl_odeiv2_step_rkck;
+	}
+	else if (strcmp(integrator, "rk8pd") == 0)
+	{
+		return gsl_odeiv2_step_rk8pd;
+	}
+	else if (strcmp(integrator, "rk4imp") == 0)
+	{
+		return gsl_odeiv2_step_rk4imp;
+	}
+	else if (strcmp(integrator, "bsimp") == 0)
+	{
+		return gsl_odeiv2_step_bsimp;
+	}
+	else if (strcmp(integrator, "msadams") == 0)
+	{
+		return gsl_odeiv2_step_msadams;
+	}
+	else if (strcmp(integrator, "msbdf") == 0)
+	{
+		return gsl_odeiv2_step_msbdf;	
+	}
+	else
+	{
+		printf("Warning: invalid GSL integrator integrator\n");
+		exit(2);
+	}
+}
+
 int
 calculate_data_skip (siminf *simulation,
 					 const cltbdy *bodies)
@@ -2062,7 +2114,8 @@ write_simulation_overview	(const siminf simulation)
 	fprintf(out_sim_info_2, "- Specs used by the software\n\n");
 	fprintf(out_sim_info_2, "t_step(yr) = %1.5e\n", simulation.t_step);
 	fprintf(out_sim_info_2, "max_size(B) = %1.5e\n", simulation.max_output_size);
-	fprintf(out_sim_info_2, "data_skip = %d\n\n\n", simulation.data_skip);
+	fprintf(out_sim_info_2, "data_skip = %d\n", simulation.data_skip);
+	fprintf(out_sim_info_2, "scheme = %s\n\n\n", simulation.integration_scheme);
 	fclose(out_sim_info_2);
 
 	return 0;
