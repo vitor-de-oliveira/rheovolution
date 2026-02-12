@@ -17,6 +17,14 @@
 
 #include "linear_algebra.h"
 
+/**
+ * tolerance for considering circular (e=0) 
+ * or planar (I=0) orbits
+**/
+#ifndef CM_zero_tol
+#define CM_zero_tol	1.0e-13
+#endif
+
 /* Kepler 3rd law */
 double
 kepler_period(double m1, double m2, double G, double a);
@@ -72,12 +80,25 @@ calculate_S21(const double m, const double R, const double I[9]);
 
 /* orbital elements from state vectors */
 
+int
+calculate_ascending_node_vector	(double n_vec[],
+                                 const double x[],
+                                 const double v[]);
+
 double
 calculate_semi_major_axis   (const double G,
                              const double m1,
                              const double m2,
                              const double x[],
                              const double v[]);
+
+int
+calculate_eccentricity_vector  	(double e_vec[],
+                                 const double G,
+                                 const double m1,
+                                 const double m2,
+                                 const double x[],
+                                 const double v[]);
 
 double
 calculate_eccentricity  (const double G,
