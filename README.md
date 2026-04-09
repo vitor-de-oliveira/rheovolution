@@ -1,25 +1,25 @@
-# RheoVolution
-Software for numerically investigating the dynamical evolution of deformable celestial bodies based on the tidal theory developed by Clodoaldo Ragazzo and Lucas Ruiz.
-
-This work is part of a postdoctoral project from the São Paulo Research Foundation (FAPESP - Grants 2021/11306-0 and 2022/12785-1), carried out by Vitor M. de Oliveira at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and the Centre for Physics of the University of Coimbra (Portugal), under the supervision of Prof. Clodoaldo Ragazzo (IME/USP) and with the collaboration of Prof. Alexandre Correia (CFisUC).
-
 >Author: V. M. de Oliveira
 >
->Contact: <vitormo@ime.usp.br>
+>Contact: <oliveira.vitormartins(at)gmail.com>
 >
->Last update on this file: November 13, 2024
+>Last update on this file: April 9, 2026
 
-## Important notes
+# RheoVolution
+This is a software for numerically investigating the dynamical evolution of deformable celestial bodies based on the tidal theory developed by Clodoaldo Ragazzo and Lucas Ruiz, which describes the bodies' deformation in the time domain. See, for example,
 
-### Description
+> Ragazzo, C., Ruiz, L. S. (2017). Viscoelastic tides: models for use in Celestial Mechanics. *Celestial Mechanics and Dynamical Astronomy*, v. 128, p. 19-59.
 
 This program simulates the tidal evolution of celestial bodies interacting gravitationally with each other. The rheological model adopted here is based on the generalised Voigt viscoelastic model, which can be reduced to the Maxwell viscoelastic model. The equations of motion are numerically integrated using a Prince-Dormand Runge-Kutta scheme of 7th and 8th order with adaptive stepsize from the GNU Scientific Library (GSL). It was developed in Ubuntu 22.04.5 LTS and tested in Ubuntu 22.04.5 LTS, Ubuntu 24.04.1 LTS and Fedora 41.
 
-### Theory
+For more information on the theory and some notes on the technical side, please check the following article:
 
-The tidal theory used here deals with the celestial bodies' deformation in the time domain. For more information, please check the following article:
+>de Oliveira, V. M., Ragazzo, C., Correia, A. C. M. (2025). RheoVolution: An N-body simulator for tidally evolving bodies with complex rheological models. *Astronomy & Astrophysics*, v. 693, p. A5.
 
->de Oliveira, V. M., Ragazzo, C., Correia, A. C. M. (2024). RheoVolution: An N-body simulator for tidally evolving bodies with complex rheological models. *Astronomy & Astrophysics*, to be published.
+A full documentation on the software is being prepared. For now, this README file provides succinct information on how to use it. Please contact the author for more details.
+
+## Acknowledgements
+
+This work began as part of a postdoctoral project conducted by the author at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and the Centre for Physics of the University of Coimbra (Portugal), under the supervision of Prof. Clodoaldo Ragazzo (IME/USP) and in collaboration with Prof. Alexandre Correia (CFisUC), with funding from the São Paulo Research Foundation (FAPESP, Brazil – Grants 2021/11306-0 and 2022/12785-1). It is currently being continued as part of a postdoctoral project at the German Aerospace Center, Institute of Space Research (DLR, Berlin), supported by the Alexander von Humboldt Foundation (AvH, Germany) and the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES, Brazil).
 
 ## Building from source
 
@@ -106,6 +106,7 @@ For convenience, the aforementioned commands are already implemented in the Make
 
 ```bash
 make run INPUT=configuration_file.dat
+make orbit INPUT=configuration_file.dat
 make spin INPUT=configuration_file.dat
 make plot INPUT=configuration_file.dat
 ```
