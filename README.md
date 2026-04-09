@@ -1,6 +1,6 @@
 >Author: V. M. de Oliveira
 >
->Contact: <oliveira.vitormartins(at)gmail.com>
+>Contact: oliveira.vitormartins (at) gmail.com
 >
 >Last update on this file: April 9, 2026
 
@@ -19,7 +19,7 @@ A full documentation on the software is being prepared. For now, this README fil
 
 ## Acknowledgements
 
-This work began as part of a postdoctoral project conducted by the author at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and the Centre for Physics of the University of Coimbra (Portugal), under the supervision of Prof. Clodoaldo Ragazzo (IME/USP) and in collaboration with Prof. Alexandre Correia (CFisUC), with funding from the São Paulo Research Foundation (FAPESP, Brazil – Grants 2021/11306-0 and 2022/12785-1). It is currently being continued as part of a postdoctoral project at the German Aerospace Center, Institute of Space Research (DLR, Berlin), supported by the Alexander von Humboldt Foundation (AvH, Germany) and the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES, Brazil).
+This work began as part of a postdoctoral project at the Institute of Mathematics and Statistics of the University of São Paulo (Brazil) and the Centre for Physics of the University of Coimbra (Portugal), with funding from the São Paulo Research Foundation (FAPESP, Brazil – Grants 2021/11306-0 and 2022/12785-1). It is currently being continued as part of a postdoctoral project at the German Aerospace Center, Institute of Space Research (DLR, Berlin), supported by the Alexander von Humboldt Foundation (AvH, Germany) and the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES, Brazil).
 
 ## Building from source
 
