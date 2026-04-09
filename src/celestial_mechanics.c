@@ -163,6 +163,25 @@ calculate_S21(const double m, const double R, const double I[9])
 	return S21;
 }
 
+int
+calculate_ascending_node_vector	(double n_vec[],
+                                 const double x[],
+                                 const double v[])
+{
+    // orbital momentum vector
+    double h[3];
+    cross_product(h, x, v);
+
+    // vector pointing towards the ascending node
+    double z_vec[] = {0.0, 0.0, 1.0};
+    double n_vec_local[3];
+    cross_product(n_vec_local, z_vec, h);
+
+    copy_vector(n_vec, n_vec_local);
+
+    return 0;
+}
+
 double
 calculate_semi_major_axis   (const double G,
                              const double m1,
@@ -173,18 +192,16 @@ calculate_semi_major_axis   (const double G,
     // standard gravitational parameter
     double mu = G * (m1 + m2);
 
-    // semi-major axis
-    double a = 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
-
-    return a;
+    return 1.0 / ((2.0 / norm_vector(x)) - (norm_squared_vector(v) / mu));
 }
 
-double
-calculate_eccentricity  (const double G,
-                         const double m1,
-                         const double m2,
-                         const double x[],
-                         const double v[])
+int
+calculate_eccentricity_vector  	(double e_vec[],
+                                 const double G,
+                                 const double m1,
+                                 const double m2,
+                                 const double x[],
+                                 const double v[])
 {
     // standard gravitational parameter
     double mu = G * (m1 + m2);
@@ -200,15 +217,29 @@ calculate_eccentricity  (const double G,
     scale_vector(term_1, 1.0 / mu, v_cross_h);
     double term_2[] = {0.0, 0.0, 0.0};
     scale_vector(term_2, -1.0 / norm_vector(x), x);
-    double e_vec[] = {0.0, 0.0, 0.0};
-    linear_combination_vector(e_vec, 
+    double e_vec_local[] = {0.0, 0.0, 0.0};
+    linear_combination_vector(e_vec_local, 
         1.0, term_1, 1.0, term_2);
 
-    // eccentricity
-    double e = norm_vector(e_vec);
+    copy_vector(e_vec, e_vec_local);
 
-    return e;
+    return 0;
 }
+
+double
+calculate_eccentricity  (const double G,
+                         const double m1,
+                         const double m2,
+                         const double x[],
+                         const double v[])
+{
+    // eccentricity vector
+    double e_vec[3];
+    calculate_eccentricity_vector(e_vec, G, m1, m2, x, v);
+
+    return norm_vector(e_vec);
+}
+
 
 double
 calculate_inclination   (const double G,
@@ -221,10 +252,7 @@ calculate_inclination   (const double G,
     double h[3];
     cross_product(h, x, v);
 
-    // inclination
-    double I = acos(h[2] / norm_vector(h));
-
-    return I;
+    return acos(h[2] / norm_vector(h));
 }
 
 double
@@ -234,36 +262,26 @@ calculate_true_anomaly  (const double G,
                          const double x[],
                          const double v[])
 {
-    // standard gravitational parameter
-    double mu = G * (m1 + m2);
-
     // orbital momentum vector
     double h[3];
     cross_product(h, x, v);
 
     // eccentricity vector
-    double v_cross_h[3];
-    cross_product(v_cross_h, v, h);
-    double term_1[] = {0.0, 0.0, 0.0};
-    scale_vector(term_1, 1.0 / mu, v_cross_h);
-    double term_2[] = {0.0, 0.0, 0.0};
-    scale_vector(term_2, -1.0 / norm_vector(x), x);
-    double e_vec[] = {0.0, 0.0, 0.0};
-    linear_combination_vector(e_vec, 
-        1.0, term_1, 1.0, term_2);
+    double e_vec[3];
+    calculate_eccentricity_vector(e_vec, G, m1, m2, x, v);
+    double e = norm_vector(e_vec);
 
-    // inclination
-    double I = calculate_inclination(G, m1, m2, x, v);
-
-    // eccentricity
-    double e = calculate_eccentricity(G, m1, m2, x, v);
+    // vector pointing towards the ascending node
+    double n_vec[3];
+    calculate_ascending_node_vector(n_vec, x, v);
+    double n_norm = norm_vector(n_vec);
 
     // true anomaly
     double nu;
 
-    if (e < 1e-15)
+    if (e < CM_zero_tol)
     {
-        if (I < 1e-15)
+        if (n_norm < CM_zero_tol) // equivalent to low inclination
         {
             nu = acos(x[0] / norm_vector(x));
             if (v[0] > 0.0)
@@ -273,13 +291,8 @@ calculate_true_anomaly  (const double G,
         }
         else
         {
-            // vector pointing towards the ascending node
-            double z_vec[] = {0.0, 0.0, 1.0};
-            double n[3];
-            cross_product(n, z_vec, h);
-
-            nu = acos(dot_product(n, x) / (norm_vector(n) * norm_vector(x)));
-            if (dot_product(n, v) > 0.0)
+            nu = acos(dot_product(n_vec, x) / (n_norm * norm_vector(x)));
+            if (dot_product(n_vec, v) > 0.0)
             {
                 nu = 2.0 * M_PI - nu;
             }
@@ -287,7 +300,7 @@ calculate_true_anomaly  (const double G,
     }
     else
     {
-        nu = acos(dot_product(e_vec, x) / (norm_vector(e_vec) *  norm_vector(x)));
+        nu = acos(dot_product(e_vec, x) / (e * norm_vector(x)));
         if (dot_product(x, v) < 0.0)
         {
             nu = 2.0 * M_PI - nu;
@@ -310,10 +323,7 @@ calculate_eccentric_anomaly (const double G,
     // eccentricity
     double e = calculate_eccentricity(G, m1, m2, x, v);
 
-    // eccentric anomaly
-    double E = 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
-
-    return E;
+    return 2.0 * atan2( tan(0.5*nu), sqrt((1.0 + e)/(1.0 - e)) );
 }
 
 double
@@ -323,16 +333,13 @@ calculate_mean_anomaly  (const double G,
                          const double x[],
                          const double v[])
 {
-    // true anomaly
+    // eccentric anomaly
     double E = calculate_eccentric_anomaly(G, m1, m2, x, v);
 
     // eccentricity
     double e = calculate_eccentricity(G, m1, m2, x, v);
 
-    // mean anomaly
-    double M = E - e * sin(E);
-
-    return M;
+    return E - e * sin(E);
 }
 
 
@@ -343,57 +350,28 @@ calculate_argument_of_periapsis (const double G,
                                  const double x[],
                                  const double v[])
 {
-    // standard gravitational parameter
-    double mu = G * (m1 + m2);
-    
-    // orbital momentum vector
-    double h[3];
-    cross_product(h, x, v);
-
     // eccentricity vector
-    double v_cross_h[3];
-    cross_product(v_cross_h, v, h);
-    double term_1[] = {0.0, 0.0, 0.0};
-    scale_vector(term_1, 1.0 / mu, v_cross_h);
-    double term_2[] = {0.0, 0.0, 0.0};
-    scale_vector(term_2, -1.0 / norm_vector(x), x);
-    double e_vec[] = {0.0, 0.0, 0.0};
-    linear_combination_vector(e_vec, 
-        1.0, term_1, 1.0, term_2);
-
-    // inclination
-    double I = calculate_inclination(G, m1, m2, x, v);
-
-    // eccentricity
-    double e = calculate_eccentricity(G, m1, m2, x, v);
+    double e_vec[3];
+    calculate_eccentricity_vector(e_vec, G, m1, m2, x, v);
+    double e = norm_vector(e_vec);
+    
+    // vector pointing towards the ascending node
+    double n_vec[3];
+    calculate_ascending_node_vector(n_vec, x, v);
+    double n_norm = norm_vector(n_vec);
 
     // argument of periapsis
-    double w;
+    double w = NAN;
 
-    if (e < 1e-15)
+    if (e > CM_zero_tol && n_norm > CM_zero_tol) 
     {
-        w = 0.0;
-    }
-    else
-    {
-        if (I < 1e-15)
-        {
-            w = acos(e_vec[0] / e);
-        }
-        else
-        {
-            // vector pointing towards the ascending node
-            double z_vec[] = {0.0, 0.0, 1.0};
-            double n[3];
-            cross_product(n, z_vec, h);
+        w = acos(dot_product(n_vec, e_vec) / (n_norm * e));
 
-            w = acos(dot_product(n, e_vec) / (norm_vector(n) * norm_vector(e_vec)));
-        }
         if (e_vec[2] < 0.0)
         {
             w = 2.0 * M_PI - w;
         }
-    }
+    } // n_norm restriction equivalent to not low inclination
 
     return w;
 }
@@ -405,29 +383,18 @@ calculate_longitude_of_the_ascending_node   (const double G,
                                              const double x[],
                                              const double v[])
 {
-    // inclination
-    double I = calculate_inclination(G, m1, m2, x, v);
+    // vector pointing towards the ascending node
+    double n_vec[3];
+    calculate_ascending_node_vector(n_vec, x, v);
+    double n_norm = norm_vector(n_vec);
 
     // longitude of the ascending node
-    double Omega;
+    double Omega = NAN;
 
-    if (I < 1e-15)
+    if (n_norm > CM_zero_tol) // equivalent to not low inclination
     {
-        Omega = 0.0;
-    }
-    else
-    {
-        // orbital momentum vector
-        double h[3];
-        cross_product(h, x, v);
-
-        // vector pointing towards the ascending node
-        double z_vec[] = {0.0, 0.0, 1.0};
-        double n[3];
-        cross_product(n, z_vec, h);
-
-        Omega = acos(n[0] / norm_vector(n));
-        if (n[1] < 0.0)
+        Omega = acos(n_vec[0] / n_norm);
+        if (n_vec[1] < 0.0)
         {
             Omega = 2.0 * M_PI - Omega;
         }
