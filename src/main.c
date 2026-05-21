@@ -99,10 +99,15 @@ main(int argc, char *argv[])
 	FILE *out[simulation.number_of_bodies + 1];
 	create_output_files(bodies, simulation, out);
 
-	/* integration loop */
+	/* integration variables */
 	simulation.counter = 0;	
 	simulation.t = simulation.t_init;
 	simulation.h = simulation.t_step;
+
+	/* write initial condition */
+	write_output(bodies, simulation, out);
+
+	/* integration loop */
 	while (simulation.t < simulation.t_final)
 	{
 		/* determine final stepsize */
