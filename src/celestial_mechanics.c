@@ -358,20 +358,36 @@ calculate_argument_of_periapsis (const double G,
     // vector pointing towards the ascending node
     double n_vec[3];
     calculate_ascending_node_vector(n_vec, x, v);
-    double n_norm = norm_vector(n_vec);
+
+    // inclination
+    double I = calculate_inclination(G, m1, m2, x, v);
 
     // argument of periapsis
-    double w = NAN;
+    double w;
 
-    if (e > CM_zero_tol && n_norm > CM_zero_tol) 
+    if (e < CM_zero_tol)
     {
-        w = acos(dot_product(n_vec, e_vec) / (n_norm * e));
-
-        if (e_vec[2] < 0.0)
+        w = 0.0;
+    }
+    else
+    {
+        if (I < CM_zero_tol)
         {
-            w = 2.0 * M_PI - w;
+            w = atan2(e_vec[1], e_vec[0]);
         }
-    } // n_norm restriction equivalent to not low inclination
+        else
+        {
+            double n_cross_e[3];
+            cross_product(n_cross_e, n_vec, e_vec);
+            double n_dot_e = dot_product(n_vec, e_vec);
+
+            w = atan2(n_cross_e[2], n_dot_e);
+        }
+        // if (w < 0.0)
+        // {
+        //     w += 2.0 * M_PI;
+        // }
+    }
 
     return w;
 }
@@ -386,18 +402,25 @@ calculate_longitude_of_the_ascending_node   (const double G,
     // vector pointing towards the ascending node
     double n_vec[3];
     calculate_ascending_node_vector(n_vec, x, v);
-    double n_norm = norm_vector(n_vec);
+
+    // inclination
+    double I = calculate_inclination(G, m1, m2, x, v);
 
     // longitude of the ascending node
-    double Omega = NAN;
+    double Omega;
 
-    if (n_norm > CM_zero_tol) // equivalent to not low inclination
+    if (I < CM_zero_tol)
     {
-        Omega = acos(n_vec[0] / n_norm);
-        if (n_vec[1] < 0.0)
-        {
-            Omega = 2.0 * M_PI - Omega;
-        }
+        Omega = 0.0;
+    }
+    else
+    {
+        Omega = atan2(n_vec[1], n_vec[0]);
+
+        // if (Omega < 0.0)
+        // {
+        //     Omega += 2.0 * M_PI;
+        // }
     }
 
     return Omega;
