@@ -1171,9 +1171,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 							if (j < (*bodies)[i].elements)
 							{
 								(*bodies)[i].alpha_elements[j] = atof(token);
-							}
-							if ((*bodies)[i].elements > 0)
-							{
 								input_element_alpha_received[i][j] = true;
 							}
 						}
@@ -1186,9 +1183,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 							if (j < (*bodies)[i].elements)
 							{
 								(*bodies)[i].eta_elements[j] = atof(token);
-							}
-							if ((*bodies)[i].elements > 0)
-							{
 								input_element_eta_received[i][j] = true;
 							}
 						}
