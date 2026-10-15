@@ -374,6 +374,9 @@ parse_input(siminf *simulation,
 		fclose(in3);
 	}
 
+	/* free buffer */
+	free(line);
+
 	return 0;
 }
 
@@ -1171,9 +1174,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 							if (j < (*bodies)[i].elements)
 							{
 								(*bodies)[i].alpha_elements[j] = atof(token);
-							}
-							if ((*bodies)[i].elements > 0)
-							{
 								input_element_alpha_received[i][j] = true;
 							}
 						}
@@ -1186,9 +1186,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 							if (j < (*bodies)[i].elements)
 							{
 								(*bodies)[i].eta_elements[j] = atof(token);
-							}
-							if ((*bodies)[i].elements > 0)
-							{
 								input_element_eta_received[i][j] = true;
 							}
 						}
@@ -1221,6 +1218,9 @@ fill_in_bodies_data	(cltbdy	**bodies,
 			free(input_element_eta_received);
 		}
 	}
+
+	/* free buffer */
+	free(line);
 
 	/* hierarchy conditions (just to be safe) */
 	for (int i = 0; i < simulation.number_of_bodies; i++)
@@ -2320,12 +2320,18 @@ output_to_orbit(cltbdy *bodies,
 			fprintf(out_orbital, "\n");		
 		}
 
+		/* free buffer */
+		free(line_first_body);
+
 		/* close all files */				
 		fclose(in_state);
 		fclose(out_orbital);
 		fclose(in_state_first_body);
 
 	} // end loop over bodies except first one
+
+	/* free buffer */
+	free(line);
 
 	return 0;
 }
@@ -2572,6 +2578,8 @@ output_to_spin	(cltbdy *bodies,
 				fprintf(out_orientation, "\n");		
 			}
 
+			free(line_first_body);
+
 			/* close all files */				
 			fclose(in_state);
 			fclose(out_orientation);
@@ -2579,6 +2587,9 @@ output_to_spin	(cltbdy *bodies,
 		}
 
 	} // end loop over all bodies
+
+	/* free buffer */
+	free(line);
 
 	return 0;
 }
