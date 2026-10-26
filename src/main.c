@@ -52,11 +52,15 @@ main(int argc, char *argv[])
 		}
 		else
 		{
-			fprintf(stderr, "Warning: could not recognize 2nd argument of main.\n");
+			fprintf(stderr, "Warning: could not recognize");
+			fprintf(stderr, " 2nd argument of main.\n");
 			fprintf(stderr, "Exiting the program now.\n");
 			exit(13);
 		}
 	}
+
+	/* writes k2 for every deformable body for verification */
+	write_k2 (bodies, simulation);
 
 	/* field parameters */
 	fldpar params = {simulation, bodies};
@@ -147,8 +151,10 @@ main(int argc, char *argv[])
 		{		
 			if (bodies[i].point_mass == false)
 			{
-				calculate_omega(i, bodies, simulation.number_of_bodies, simulation.G);
-				calculate_b(i, bodies, simulation.number_of_bodies, simulation.G);
+				calculate_omega(i, bodies, 
+					simulation.number_of_bodies, simulation.G);
+				calculate_b(i, bodies, 
+					simulation.number_of_bodies, simulation.G);
 			}
 		}
 

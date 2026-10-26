@@ -151,4 +151,9 @@ double
 find_shortest_time_scale(const cltbdy *bodies,
 					 	 const siminf simulation);
 
+// writes Love number for all bodies for verification
+int
+write_k2(const cltbdy *bodies,
+		 const siminf simulation);
+
 #endif
