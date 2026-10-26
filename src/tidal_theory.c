@@ -34,7 +34,28 @@ parameter_gamma_0	(const double G,
 					 const double R,
 					 const double k0)
 {
-	return 3.0 * I0 * G / (pow(R, 5.0) * k0);
+	/* gamma_0 = 3 I0 G / R5 k0 */
+
+	double R2 = R * R;
+	double R4 = R2 * R2;
+	double R5 = R4 * R;
+
+	return 3.0 * I0 * G / (R5 * k0);
+}
+
+double
+parameter_k0(const double G,
+			 const double I0, 
+			 const double R,
+			 const double gamma_0)
+{
+	/* k0 = 3 I0 G / R5 gamma_0 */
+
+	double R2 = R * R;
+	double R4 = R2 * R2;
+	double R5 = R4 * R;
+
+	return 3.0 * I0 * G / (R5 * gamma_0);
 }
 
 int
@@ -584,4 +605,56 @@ dissipation_function(const cltbdy body)
 	D += body.I0 * (0.5 * body.eta * norm_squared_B_eta_dot);
 
 	return D;
+}
+
+int
+calculate_k2(double k2[2], 
+			 const double sigma,
+			 const cltbdy body)
+{
+	/**
+	 * 
+	 * k2 = k0 * (1 + i sigma tau_a) / (1 + i sigma tau_b) 
+	 * 
+	 * Re k2 = k0 * (1 + sigma^2 tau_a tau_b) / (1 + sigma^2 tau_b^2)
+	 * 
+	 * Im k2 = k0 * sigma * (tau_a - tau_b) / (1 + sigma^2 tau_b^2)
+	 * 
+	**/
+
+	double sigma_squared = sigma * sigma;
+
+	/* tau_a and tau_b excluding Voigt elements (Maxwell rheology) */
+	double tau_a_maxwell = body.eta / body.alpha;
+	double tau_b_maxwell = body.eta / body.alpha + body.eta / body.gamma_0;
+
+	/* summation over Voigt elements */
+	double sum_alpha_normalized = 0.0;
+	double sum_eta_normalized = 0.0;
+	for (int i = 0; i < body.elements; i++)
+	{
+		double alpha_elements_squared
+			= body.alpha_elements[i] * body.alpha_elements[i];
+		double eta_elements_squared
+			= body.eta_elements[i] * body.eta_elements[i]; 
+		double normalization 
+			= alpha_elements_squared 
+			+ sigma_squared * eta_elements_squared;
+		sum_alpha_normalized += body.alpha_elements[i] / normalization;
+		sum_eta_normalized += body.eta_elements[i] / normalization;
+	}
+
+	/* tau_a and tau_b including Voigt elements */
+	double offset_parameter = body.eta * sum_alpha_normalized;
+	double scale_parameter 
+		= 1.0 + sigma_squared * body.eta * sum_eta_normalized;
+	double tau_a = (tau_a_maxwell + offset_parameter) / scale_parameter;
+	double tau_b = (tau_b_maxwell + offset_parameter) / scale_parameter;
+
+	/* tidal Love number k2 for a generalized Voigt rheology */
+	double denominator = 1.0 + sigma_squared * tau_b * tau_b;
+	k2[0] = body.k0 * (1.0 + sigma_squared * tau_a * tau_b) / denominator;
+	k2[1] = body.k0 * sigma * (tau_a - tau_b) / denominator;
+
+	return 0;
 }

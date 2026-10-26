@@ -1445,10 +1445,6 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		double	w = (*bodies)[i].w;
 		double	Omega = (*bodies)[i].Omega;
 
-		double	k0 = (*bodies)[i].k0;
-		double	Dt = (*bodies)[i].Dt;
-		double	tau = (*bodies)[i].tau;
-		
 		/* 1st set of variables - x and x_dot */
 		double qr_1_I[4];
 		double qr_3_Omega[4];
@@ -1545,13 +1541,13 @@ fill_in_bodies_data	(cltbdy	**bodies,
 		{
 			if (strcmp(simulation.rheology_model, "Maxwell") == 0)
 			{
-				(*bodies)[i].gamma_0 = parameter_gamma_0(simulation.G, (*bodies)[i].I0, R, k0);
-				(*bodies)[i].alpha 	 = (*bodies)[i].gamma_0 * Dt / (tau - Dt);
-				(*bodies)[i].eta   	 = (*bodies)[i].gamma_0 * Dt;
+				(*bodies)[i].gamma_0 = parameter_gamma_0(simulation.G, (*bodies)[i].I0, R, (*bodies)[i].k0);
+				(*bodies)[i].alpha 	 = (*bodies)[i].gamma_0 * (*bodies)[i].Dt / ((*bodies)[i].tau - (*bodies)[i].Dt);
+				(*bodies)[i].eta   	 = (*bodies)[i].gamma_0 * (*bodies)[i].Dt;
 			}
 			else if (strcmp(simulation.rheology_model, "gen_Voigt") == 0)
 			{
-				(*bodies)[i].k0  = NAN;
+				(*bodies)[i].k0  = parameter_k0(simulation.G, (*bodies)[i].I0, R, (*bodies)[i].gamma_0);
 				(*bodies)[i].tau = NAN;
 				(*bodies)[i].Dt  = NAN;
 			}
@@ -2653,6 +2649,81 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 			fprintf(gnuplotPipe, "set title \"%s's energy dissipation\"\n", bodies[i].name);
 			fprintf(gnuplotPipe, "plot \'%s\' u 1:27 w l lw 3", filename_get);
 			pclose(gnuplotPipe);
+			/* get output files for k2 of each body */
+			strcpy(filename_get, simulation.output_folder);
+			strcat(filename_get, "results_");
+			strcat(filename_get, simulation.name);
+			strcat(filename_get, "_");
+			strcat(filename_get, bodies[i].name);
+			strcat(filename_get, "_k2");
+			strcat(filename_get, ".dat");
+			/* plot outputs */
+			/* Love number k2 */
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_Love_number_k2_real_part");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"10^{%T}\"");
+			fprintf(gnuplotPipe, "set xlabel \"{/Symbol s}(rad/yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"Re k_2\"\n");
+			fprintf(gnuplotPipe, "set logscale x\n");
+			fprintf(gnuplotPipe, "set title \"%s's Love number k2\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u ($1):($2) w l lw 3", filename_get);
+			pclose(gnuplotPipe);
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_Love_number_k2_imaginary_part");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"10^{%T}\"");
+			fprintf(gnuplotPipe, "set format y %s\n", "\"10^{%T}\"");
+			fprintf(gnuplotPipe, "set xlabel \"{/Symbol s}(rad/yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"- Im k_2\"\n");
+			fprintf(gnuplotPipe, "set logscale x\n");
+			fprintf(gnuplotPipe, "set logscale y\n");
+			fprintf(gnuplotPipe, "set title \"%s's Love number k2\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u ($1):($3) w l lw 3", filename_get);
+			pclose(gnuplotPipe);
+			strcpy(filename_plot, plot_folder);
+			strcat(filename_plot, "figure_");
+			strcat(filename_plot, simulation.name);
+			strcat(filename_plot, "_");
+			strcat(filename_plot, bodies[i].name);
+			strcat(filename_plot, "_Love_number_k2_absolute_value");
+			strcat(filename_plot, ".png");
+			gnuplotPipe = popen("gnuplot -persistent", "w");
+			fprintf(gnuplotPipe, "reset\n");
+			fprintf(gnuplotPipe, "set terminal pngcairo size 2000,2000 font \"fonts/cmr10.ttf,25\"\n");
+			fprintf(gnuplotPipe, "set loadpath \"%s\"\n", simulation.output_folder);
+			fprintf(gnuplotPipe, "set output \"%s\"\n", filename_plot);
+			fprintf(gnuplotPipe, "set border lw 2 \n");
+			fprintf(gnuplotPipe, "unset key\n");
+			fprintf(gnuplotPipe, "set format x %s\n", "\"10^{%T}\"");
+			fprintf(gnuplotPipe, "set xlabel \"{/Symbol s}(rad/yr)\"\n");
+			fprintf(gnuplotPipe, "set ylabel \"|k_2|\"\n");
+			fprintf(gnuplotPipe, "set logscale x\n");
+			fprintf(gnuplotPipe, "set title \"%s's Love number k2\"\n", bodies[i].name);
+			fprintf(gnuplotPipe, "plot \'%s\' u ($1):(sqrt($2*$2+$3*$3)) w l lw 3", filename_get);
+			pclose(gnuplotPipe);
 		}
 		/* reads output files of orbital elements of each body */
 		strcpy(filename_get, simulation.output_folder);
@@ -3367,4 +3438,55 @@ find_shortest_time_scale(const cltbdy *bodies,
 	}
 
     return shortest_time_scale;
+}
+
+int
+write_k2(const cltbdy *bodies,
+		 const siminf simulation)
+{
+	/* perturbation frequency interval (rad/yr) */
+	double sigma_min = 1e-10;
+	double sigma_max = 1e10;
+	double sigma_scale = 1.01;
+
+	/* loop over all bodies */
+	for (int i = 0; i < simulation.number_of_bodies; i++)
+	{
+		/* select only deformable bodies */
+		if (bodies[i].point_mass == false && bodies[i].deformable == true)
+		{
+			/* create output file */
+			FILE *out;
+			char filename[300];
+			strcpy(filename, simulation.output_folder);
+			strcat(filename, "results_");
+			strcat(filename, simulation.name);
+			strcat(filename, "_");
+			strcat(filename, bodies[i].name);
+			strcat(filename, "_k2");
+			strcat(filename, ".dat");
+			out = fopen(filename, "w");
+
+			/* calculate k2 in the selected interval */
+			double sigma_loop = NAN;
+			for (sigma_loop = sigma_min; 
+				 sigma_loop < sigma_max; 
+				 sigma_loop *= sigma_scale)
+			{
+				double k2[2];
+
+				calculate_k2(k2, sigma_loop, bodies[i]);
+
+				fprintf(out, "%1.10e %1.10e %1.10e\n", 
+					sigma_loop, 
+					k2[0],
+					-1.0 * k2[1]);
+			}
+
+			/* close output file */
+			fclose(out);
+		}
+	}
+
+	return 0;
 }
