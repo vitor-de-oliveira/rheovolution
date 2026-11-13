@@ -107,12 +107,24 @@ main(int argc, char *argv[])
 	simulation.counter = 0;	
 	simulation.t = simulation.t_init;
 	simulation.h = simulation.t_step;
+	simulation.final_step = false;
 	while (simulation.t < simulation.t_final)
 	{
+		/* write output */
+		if (simulation.t > simulation.t_trans - 0.5 * simulation.t_step)
+		{
+			if (simulation.counter % simulation.data_skip == 0)
+			{
+				write_output(bodies, simulation, out);
+			}
+			simulation.counter++;
+		}
+
 		/* determine final stepsize */
 		if (fabs(simulation.t_final-simulation.t) < simulation.t_step)
 		{
 			simulation.h = simulation.t_final - simulation.t;
+			simulation.final_step = true;
 		}
 
 		/* evolve system via driver */
@@ -158,8 +170,8 @@ main(int argc, char *argv[])
 			}
 		}
 
-		/* write output */
-		if (simulation.t > simulation.t_trans)
+		/* write last step */
+		if (simulation.final_step == true)
 		{
 			if (simulation.counter % simulation.data_skip == 0)
 			{

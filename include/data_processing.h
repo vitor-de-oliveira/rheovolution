@@ -77,6 +77,8 @@ typedef struct SimulationInfo {
 	int		time_spent_in_seconds;		// real simulation time in sec
 
 	/* auxiliary variables */
+	bool	final_step;					// true if it is the final step
+										// of the integration
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
 	double	h;							// time step in integration loop
