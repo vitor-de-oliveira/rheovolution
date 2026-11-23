@@ -77,6 +77,8 @@ typedef struct SimulationInfo {
 	int		time_spent_in_seconds;		// real simulation time in sec
 
 	/* auxiliary variables */
+	bool	final_step;					// true if it is the final step
+										// of the integration
 	int		counter;					// counter for data skipping
 	double	t;							// simulation time
 	double	h;							// time step in integration loop
@@ -150,5 +152,10 @@ plot_output_comma_orbit_and_spin(const cltbdy *bodies,
 double
 find_shortest_time_scale(const cltbdy *bodies,
 					 	 const siminf simulation);
+
+// writes Love number for all bodies for verification
+int
+write_k2(const cltbdy *bodies,
+		 const siminf simulation);
 
 #endif

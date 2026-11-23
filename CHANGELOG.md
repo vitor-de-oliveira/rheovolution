@@ -1,8 +1,17 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are being documented in this file.
 
 ## [Unreleased]
+
+## [1.0.2] - 2026-11-23
+
+### Added
+- Tidal Love number k2 as a function of frequency as output.
+
+### Changed
+- The first line of the output is now the initial condition (when there is no transient time).
+- When the orbital inclination is low, the longitude of periapsis is written instead of NAN for the argument of periapsis.
 
 ## [1.0.1] - 2026-10-15
 

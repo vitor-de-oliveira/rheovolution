@@ -25,6 +25,12 @@ parameter_gamma_0	(const double G,
 					 const double R,
 					 const double k0);
 
+double
+parameter_k0(const double G,
+			 const double I0, 
+			 const double R,
+			 const double gamma_0);
+
 int
 calculate_Y_and_Y_transpose(cltbdy *body);
 
@@ -94,5 +100,10 @@ total_energy_without_deformation(const cltbdy *bodies,
 
 double
 dissipation_function(const cltbdy body);
+
+int
+calculate_k2(double k2[2], 
+			 const double sigma, 
+			 const cltbdy body);
 
 #endif
