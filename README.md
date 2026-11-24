@@ -111,7 +111,7 @@ make spin INPUT=configuration_file.dat
 make plot INPUT=configuration_file.dat
 ```
 
-If the user wants to run the code and calculate all of the additional features with one command, it can be done by typing
+If the user wants to run the code and calculate some of the additional features with one command (orbit and spin), it can be done by typing
 
 ```bash
 make all INPUT=configuration_file.dat
