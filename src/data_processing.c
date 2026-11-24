@@ -275,6 +275,8 @@ parse_input(siminf *simulation,
 	}
 
 	/* presetting some values */
+	simulation->t_init = 0.0;
+	simulation->t_trans = 0.0;
 	simulation->t_step_received = false;
 	simulation->max_output_size_received = false;
 	simulation->t_step_min = NAN;
@@ -283,13 +285,8 @@ parse_input(siminf *simulation,
 	simulation->data_skip = 1;
 	strcpy(simulation->integration_scheme, "rk8pd");
 
-	/* verification variables for integration input */
-	int 	number_integration_inputs = 3;
-	bool	input_integration_received[number_integration_inputs];
-	for (int i = 0; i < number_integration_inputs; i++)
-	{
-		input_integration_received[i] = false;
-	}
+	/* verification variable for t_final input */
+	bool t_final_received = false;
 
 	/* reading integration specs from user */
 	FILE *in2 = fopen(simulation->integration_specs, "r");
@@ -299,17 +296,15 @@ parse_input(siminf *simulation,
 		if (strcmp(first_col, "t_init(yr)") == 0)
 		{
 			simulation->t_init = atof(second_col);
-			input_integration_received[0] = true;
 		}
 		else if (strcmp(first_col, "t_trans(yr)") == 0)
 		{
 			simulation->t_trans = atof(second_col);
-			input_integration_received[1] = true;
 		}
 		else if (strcmp(first_col, "t_final(yr)") == 0)
 		{
 			simulation->t_final = atof(second_col);
-			input_integration_received[2] = true;
+			t_final_received = true;
 		}
 		else if (strcmp(first_col, "t_step(yr)") == 0)
 		{
@@ -333,14 +328,11 @@ parse_input(siminf *simulation,
 	fclose(in2);
 
 	/* parameter input verification */
-	for (int i = 0; i < number_integration_inputs; i++)
+	if(t_final_received == false)
 	{
-		if(input_integration_received[i] == false)
-		{
-			fprintf(stderr, "Error: there is at least one missing input ");
-			fprintf(stderr, "from %s.\n", simulation->integration_specs);
-			exit(13);
-		}
+		fprintf(stderr, "Error: there is at least one missing input ");
+		fprintf(stderr, "from %s.\n", simulation->integration_specs);
+		exit(13);
 	}
 
 	/* gravitational constant */
