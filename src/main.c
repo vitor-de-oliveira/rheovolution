@@ -74,7 +74,8 @@ main(int argc, char *argv[])
 	if (simulation.t_step_received == false)
 	{
 		simulation.t_step = 
-			find_shortest_time_scale(bodies, simulation) / 10.0;
+			find_shortest_time_scale(bodies, simulation) / 
+			(M_PI * M_PI); // pi^2 = 9.8696...
 	}
 	simulation.t_step_init = simulation.t_step / 2.0;
 	simulation.t_step_min = simulation.t_step / 100.0;
