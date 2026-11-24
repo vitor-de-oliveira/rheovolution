@@ -66,13 +66,14 @@ spin: input_check
 plot: input_check
 	./$(TARGET) $(INPUT) plot
 
-all: input_check run orbit spin plot
+all: input_check run orbit spin
 
 example_1_EMS:
 	$(eval EXAMPLE_NAME := Example 1: Earth-Moon-Sun system)
 	$(eval EXAMPLE_DIR := examples/Example_1_EMS.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 example_2_E_rigid:
@@ -80,6 +81,7 @@ example_2_E_rigid:
 	$(eval EXAMPLE_DIR := examples/Example_2_E_rigid.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 example_3_E_deformable:
@@ -87,6 +89,7 @@ example_3_E_deformable:
 	$(eval EXAMPLE_DIR := examples/Example_3_E_deformable.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 example_4_EM_Maxwell:
@@ -94,6 +97,7 @@ example_4_EM_Maxwell:
 	$(eval EXAMPLE_DIR := examples/Example_4_EM.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 example_5_EM_Burgers_wobble:
@@ -101,6 +105,7 @@ example_5_EM_Burgers_wobble:
 	$(eval EXAMPLE_DIR := examples/Example_5_EM_Burgers_Chandler_Wobble.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 example_6_EM_Burgers_drift:
@@ -108,6 +113,7 @@ example_6_EM_Burgers_drift:
 	$(eval EXAMPLE_DIR := examples/Example_6_EM_Burgers_Moon_orbital_drift.dat)
 	@echo "Running $(EXAMPLE_NAME)."
 	@$(MAKE) -j 1 all INPUT=$(EXAMPLE_DIR)
+	@$(MAKE) -j 1 plot INPUT=$(EXAMPLE_DIR)
 	@echo "Finished running $(EXAMPLE_NAME)."
 
 examples: example_1_EMS example_2_E_rigid example_3_E_deformable example_4_EM_Maxwell example_5_EM_Burgers_wobble example_6_EM_Burgers_drift
